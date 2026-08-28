@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mathe-Werkstatt · Interaktive Arbeitsblätter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --chalk-bg:#24372E;
+    --chalk-bg-dark:#1B2B23;
+    --paper:#F6F2E7;
+    --paper-line:#DCD4BC;
+    --grid-line: rgba(143,179,172,0.38);
+    --grid-line-chalk: rgba(246,242,231,0.09);
+    --accent-yellow:#E7B740;
+    --accent-teal:#7FA39B;
+    --wood:#7A4B32;
+    --wood-dark:#5C3722;
+    --wood-light:#9C6B49;
+    --ink:#1D2B24;
+    --ink-soft:#4B5A50;
+    --paper-ink:#F6F2E7;
+    --radius: 14px;
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0;
+    font-family:'Nunito', sans-serif;
+    color:var(--ink);
+    background:var(--paper);
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{
+    font-family:'Space Grotesk', sans-serif;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+  a{ color:inherit; }
+  img{ max-width:100%; display:block; }
+
+  /* focus visibility for keyboard users */
+  a:focus-visible, button:focus-visible, input:focus-visible{
+    outline:3px solid var(--accent-yellow);
+    outline-offset:2px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.01ms !important; transition-duration:0.01ms !important; }
+  }
+
+  /* ---------- Header ---------- */
+  .site-header{
+    position:sticky; top:0; z-index:20;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 6vw;
+    background:var(--paper);
+    border-bottom:2px solid var(--ink);
+  }
+  .brand{
+    display:flex; align-items:center; gap:10px;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700; font-size:1.15rem;
+  }
+  .brand-mark{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:34px; height:34px;
+    border:2px solid var(--ink);
+    border-radius:8px;
+    font-size:1.1rem;
+    background:var(--accent-yellow);
+    transform:rotate(-4deg);
+  }
+  nav ul{ list-style:none; display:flex; gap:28px; margin:0; padding:0; }
+  nav a{
+    text-decoration:none; font-weight:700; font-size:0.95rem;
+    padding-bottom:3px; border-bottom:2px solid transparent;
+  }
+  nav a:hover{ border-color:var(--accent-yellow); }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position:relative;
+    padding:8vw 6vw 6vw;
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 34px 34px;
+    background-color:var(--paper);
+    overflow:hidden;
+  }
+  .hero-eyebrow{
+    display:inline-block;
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.8rem; font-weight:600;
+    background:var(--ink); color:var(--paper);
+    padding:5px 12px; border-radius:20px;
+    margin-bottom:20px;
+  }
+  .hero h1{
+    font-size:clamp(2.2rem, 5vw, 3.6rem);
+    max-width:14ch;
+    line-height:1.05;
+  }
+  .hero h1 .accent{
+    color:var(--wood);
+    position:relative;
+    display:inline-block;
+  }
+  .hero p{
+    max-width:52ch; font-size:1.1rem; color:var(--ink-soft);
+    margin-top:18px;
+  }
+  .hero-actions{ margin-top:32px; display:flex; gap:14px; flex-wrap:wrap; }
+  .btn{
+    font-family:'JetBrains Mono', monospace;
+    font-weight:600; font-size:0.9rem;
+    padding:12px 20px; border-radius:10px;
+    text-decoration:none; display:inline-block;
+    border:2px solid var(--ink);
+    transition:transform .15s ease;
+  }
+  .btn:hover{ transform:translateY(-2px); }
+  .btn-primary{ background:var(--accent-yellow); color:var(--ink); }
+  .btn-ghost{ background:transparent; color:var(--ink); }
+
+  /* ---------- Sections shared ---------- */
+  .section{ padding:6vw 6vw; }
+  .section-head{ max-width:60ch; margin-bottom:42px; }
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.8rem; font-weight:600;
+    letter-spacing:0.04em;
+  }
+  .section--paper{ background:var(--paper); }
+  .section--paper .eyebrow{ color:var(--wood); }
+  .section--paper h2{ font-size:clamp(1.8rem,3vw,2.4rem); margin-top:8px; }
+  .section--paper .section-head p{ color:var(--ink-soft); margin-top:10px; }
+
+  /* torn / spiral divider between sections */
+  .tear-divider{
+    height:34px;
+    background:
+      radial-gradient(circle at 17px 0, transparent 15px, var(--chalk-bg) 16px) repeat-x;
+    background-size:34px 34px;
+    background-position:top;
+    background-color:var(--paper);
+  }
+
+  /* ---------- Notebook cards (student area) ---------- */
+  .notebook-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(300px,1fr));
+    gap:28px;
+  }
+  .notebook-card{
+    background:#fff;
+    border:2px solid var(--ink);
+    border-radius:var(--radius);
+    padding:26px 26px 22px;
+    position:relative;
+    box-shadow:6px 6px 0 var(--paper-line);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .notebook-card:hover{
+    transform:translate(-3px,-3px);
+    box-shadow:9px 9px 0 var(--paper-line);
+  }
+  .card-tag{
+    display:inline-block;
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.75rem; font-weight:600;
+    background:var(--accent-teal); color:#fff;
+    padding:4px 10px; border-radius:20px;
+    margin-bottom:14px;
+  }
+  .notebook-card h3{ font-size:1.35rem; margin-bottom:6px; }
+  .notebook-card .card-sub{ color:var(--ink-soft); font-size:0.92rem; margin-bottom:18px; }
+  .worksheet-list{ list-style:none; margin:0; padding:0; }
+  .worksheet-list li + li{ border-top:1px dashed var(--paper-line); }
+  .worksheet-link{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:12px; padding:12px 4px;
+    text-decoration:none; font-weight:700; color:var(--ink);
+    border-radius:8px;
+  }
+  .worksheet-link:hover{ background:#FAF7EF; }
+  .ws-meta{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.72rem; font-weight:600;
+    color:var(--ink-soft);
+    white-space:nowrap;
+  }
+  .card-note{
+    margin-top:16px; font-size:0.82rem; color:var(--ink-soft);
+    font-style:italic;
+  }
+
+  /* ---------- Chalk / Lehrerzimmer section ---------- */
+  .section--chalk{
+    background:var(--chalk-bg);
+    background-image:
+      linear-gradient(var(--grid-line-chalk) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line-chalk) 1px, transparent 1px);
+    background-size:34px 34px;
+    color:var(--paper);
+  }
+  .section--chalk .eyebrow{ color:var(--accent-yellow); }
+  .section--chalk h2{ color:var(--paper); font-size:clamp(1.8rem,3vw,2.4rem); margin-top:8px; }
+  .section--chalk .section-head p{ color:#CFE0DA; margin-top:10px; }
+
+  .drawer{
+    max-width:560px;
+    background:var(--wood);
+    border:2px solid var(--wood-dark);
+    border-radius:var(--radius);
+    padding:34px 32px;
+    position:relative;
+    box-shadow:0 14px 0 var(--wood-dark);
+  }
+  .drawer::before{
+    content:"";
+    position:absolute; left:24px; right:24px; top:14px;
+    height:8px; border-radius:6px;
+    background:var(--wood-dark);
+    opacity:0.6;
+  }
+  .keyhole{
+    width:46px; height:46px; margin:6px auto 18px;
+    border-radius:50%;
+    background:var(--chalk-bg-dark);
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.3rem;
+  }
+  #pwForm{ display:flex; flex-direction:column; gap:12px; }
+  #pwForm label{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.8rem; font-weight:600; color:var(--paper);
+    text-align:center;
+  }
+  #pwInput{
+    padding:12px 14px; border-radius:8px; border:none;
+    font-family:'Nunito', sans-serif; font-size:1rem;
+    text-align:center;
+  }
+  .drawer button{
+    padding:12px 14px; border-radius:8px; border:none;
+    background:var(--accent-yellow); color:var(--ink);
+    font-family:'JetBrains Mono', monospace; font-weight:700;
+    cursor:pointer; transition:transform .15s ease;
+  }
+  .drawer button:hover{ transform:translateY(-2px); }
+  .pw-error{
+    text-align:center; color:#F3B5A6; font-size:0.85rem; margin:0;
+  }
+
+  .drawer-content{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px,1fr));
+    gap:20px;
+  }
+  .resource-card{
+    background:var(--chalk-bg-dark);
+    border:1px solid rgba(246,242,231,0.15);
+    border-radius:10px;
+    padding:20px;
+  }
+  .resource-card h4{
+    font-family:'Space Grotesk', sans-serif;
+    margin:0 0 6px; font-size:1.05rem;
+  }
+  .resource-card p{ margin:0; font-size:0.88rem; color:#CFE0DA; }
+  .resource-card a{
+    display:inline-block; margin-top:12px;
+    font-family:'JetBrains Mono', monospace; font-size:0.8rem;
+    font-weight:600; color:var(--accent-yellow); text-decoration:none;
+  }
+  .logout{
+    margin-top:26px; background:none; border:1px solid rgba(246,242,231,0.3);
+    color:var(--paper); padding:9px 16px; border-radius:8px;
+    font-family:'JetBrains Mono', monospace; font-size:0.8rem; cursor:pointer;
+  }
+
+  /* ---------- Footer ---------- */
+  footer{
+    padding:28px 6vw; background:var(--ink); color:var(--paper);
+    display:flex; flex-wrap:wrap; gap:10px; justify-content:space-between;
+    font-size:0.85rem;
+  }
+
+  @media (max-width:640px){
+    .site-header{ padding:14px 5vw; }
+    nav ul{ gap:16px; }
+    .section{ padding:14vw 6vw; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="brand"><span class="brand-mark">⟂</span> Mathe-Werkstatt</div>
+  <nav>
+    <ul>
+      <li><a href="#schueler">Für Schüler:innen</a></li>
+      <li><a href="#lehrerzimmer">Lehrerzimmer</a></li>
+    </ul>
+  </nav>
+</header>
+
+<section class="hero">
+  <span class="hero-eyebrow">Klasse 5 &amp; Klasse 9 · Niedersachsen</span>
+  <h1>Mathe zum <span class="accent">Anfassen.</span></h1>
+  <p>Interaktive Arbeitsblätter zum Üben, Wiederholen und Vertiefen – direkt online, ohne Ausdrucken.</p>
+  <div class="hero-actions">
+    <a href="#schueler" class="btn btn-primary">Zu den Arbeitsblättern</a>
+    <a href="#lehrerzimmer" class="btn btn-ghost">Lehrerzimmer</a>
+  </div>
+</section>
+
+<section id="schueler" class="section section--paper">
+  <div class="section-head">
+    <span class="eyebrow">OFFEN FÜR ALLE</span>
+    <h2>Für Schüler:innen</h2>
+    <p>Wählt eure Klasse aus und startet direkt mit dem passenden Arbeitsblatt.</p>
+  </div>
+
+  <div class="notebook-grid">
+    <!-- Klasse 5 -->
+    <article class="notebook-card">
+      <span class="card-tag">Klasse 5</span>
+      <h3>Einmaleins</h3>
+      <p class="card-sub">Wiederholung &amp; Vertiefung der Kernreihen</p>
+      <ul class="worksheet-list">
+        <li>
+          <a class="worksheet-link" href="#" target="_blank" rel="noopener">
+            Wiederholung: 11er-Reihe <span class="ws-meta">interaktiv</span>
+          </a>
+        </li>
+        <li>
+          <a class="worksheet-link" href="#" target="_blank" rel="noopener">
+            Wiederholung: 12er-Reihe <span class="ws-meta">interaktiv</span>
+          </a>
+        </li>
+        <li>
+          <a class="worksheet-link" href="#" target="_blank" rel="noopener">
+            Vertiefung: Einmaleins gemischt <span class="ws-meta">interaktiv</span>
+          </a>
+        </li>
+      </ul>
+      <p class="card-note">Link-Ziele bitte durch die echten Arbeitsblatt-URLs ersetzen (href="#").</p>
+    </article>
+
+    <!-- Klasse 9 -->
+    <article class="notebook-card">
+      <span class="card-tag">Klasse 9</span>
+      <h3>Satz des Pythagoras</h3>
+      <p class="card-sub">Umkehrung, Hypotenuse &amp; Kathete</p>
+      <ul class="worksheet-list">
+        <li>
+          <a class="worksheet-link" href="/Users/lenaschrader/Desktop/MatheWebsite/pythagoras-umkehrung-arbeitsblatt_1.html" target="_blank" rel="noopener">
+            Umkehrung des Satzes von Pythagoras <span class="ws-meta">interaktiv</span>
+          </a>
+        </li>
+        <li>
+          <a class="worksheet-link" href="#" target="_blank" rel="noopener">
+            Übung: Hypotenuse &amp; Kathete <span class="ws-meta">interaktiv</span>
+          </a>
+        </li>
+      </ul>
+      <p class="card-note">Link-Ziele bitte durch die echten Arbeitsblatt-URLs ersetzen (href="#").</p>
+    </article>
+  </div>
+</section>
+
+<div class="tear-divider" aria-hidden="true"></div>
+
+<section id="lehrerzimmer" class="section section--chalk">
+  <div class="section-head">
+    <span class="eyebrow">NUR FÜR KOLLEG:INNEN</span>
+    <h2>Lehrerzimmer</h2>
+    <p>Musterlösungen, Vorlagen und Material zum Weiterverwenden – geschützt mit Kennwort.</p>
+  </div>
+
+  <div class="drawer" id="drawer">
+    <div id="drawerLocked">
+      <div class="keyhole">🔒</div>
+      <form id="pwForm">
+        <label for="pwInput">Kennwort eingeben</label>
+        <input type="password" id="pwInput" autocomplete="off" required>
+        <button type="submit">Freischalten</button>
+        <p class="pw-error" id="pwError" hidden>Falsches Kennwort – bitte erneut versuchen.</p>
+      </form>
+    </div>
+
+    <div id="drawerContent" hidden>
+      <div class="drawer-content">
+        <div class="resource-card">
+          <h4>Musterlösungen</h4>
+          <p>Lösungen zu allen aktuellen Arbeitsblättern beider Klassen.</p>
+          <a href="#" target="_blank" rel="noopener">Öffnen →</a>
+        </div>
+        <div class="resource-card">
+          <h4>Klassenarbeits-Vorlagen</h4>
+          <p>Vorlagen zu Einmaleins (Kl. 5) und Pythagoras (Kl. 9).</p>
+          <a href="#" target="_blank" rel="noopener">Öffnen →</a>
+        </div>
+        <div class="resource-card">
+          <h4>Methodenkarten</h4>
+          <p>Kurze Impulse für Einstieg, Übung und Sicherung.</p>
+          <a href="#" target="_blank" rel="noopener">Öffnen →</a>
+        </div>
+      </div>
+      <button class="logout" id="logoutBtn">Bereich wieder sperren</button>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span>© 2026 Mathe-Werkstatt</span>
+  <span>Impressum · Kontakt</span>
+</footer>
+
+<script>
+  // --- Einfacher Passwortschutz für das "Lehrerzimmer" ---
+  // WICHTIG: Das ist nur eine leichte Zugangshürde, KEIN echter Schutz.
+  // Der Quelltext dieser Seite ist im Browser einsehbar; jede/r, der/die
+  // technisch versiert ist, kann den Hash-Vergleich umgehen. Für wirklich
+  // sensible Unterlagen (z. B. Klassenarbeiten vor dem Termin) sollte
+  // stattdessen ein serverseitiger Schutz genutzt werden (z. B. ein
+  // passwortgeschützter Ordner beim Hoster, oder Hosting-Dienste mit
+  // eingebautem Passwortschutz wie Netlify/Vercel "Password Protection").
+
+  // aktuelles Kennwort: "kollegium2026" (SHA-256-Hash unten)
+  const CORRECT_HASH = "03c3131f65467cb67abfef3d134c1315bc697bfa6fb5b1bea6f3ea8ba016078";
+
+  async function sha256(text){
+    const data = new TextEncoder().encode(text);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hashBuffer))
+      .map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  const pwForm = document.getElementById('pwForm');
+  const pwInput = document.getElementById('pwInput');
+  const pwError = document.getElementById('pwError');
+  const drawerLocked = document.getElementById('drawerLocked');
+  const drawerContent = document.getElementById('drawerContent');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  pwForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const hash = await sha256(pwInput.value.trim());
+    if (hash === CORRECT_HASH){
+      drawerLocked.hidden = true;
+      drawerContent.hidden = false;
+      pwError.hidden = true;
+    } else {
+      pwError.hidden = false;
+      pwInput.value = '';
+      pwInput.focus();
+    }
+  });
+
+  logoutBtn.addEventListener('click', () => {
+    drawerContent.hidden = true;
+    drawerLocked.hidden = false;
+    pwInput.value = '';
+  });
+</script>
+
+</body>
+</html>

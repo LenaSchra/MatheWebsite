@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Station 1: Der Tempel des Poseidon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&amp;family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-title">
+    <span class="header-emblem">𐤔</span>
+    <span>Kroton, 530 v. Chr.</span>
+  </div>
+  <div class="seal-scroll" aria-label="Fortschritt: gefundene Siegel">
+    <div class="seal-slot" data-seal="1"><span class="seal-icon">🏛</span></div>
+    <div class="seal-slot" data-seal="2"><span class="seal-icon">🗼</span></div>
+    <div class="seal-slot" data-seal="3"><span class="seal-icon">🛡</span></div>
+    <div class="seal-slot" data-seal="4"><span class="seal-icon">🔺</span></div>
+    <div class="seal-slot" data-seal="5"><span class="seal-icon">📜</span></div>
+  </div>
+  <button class="btn-help" data-action="open-help" aria-haspopup="dialog">❔ Hilfe &amp; Formeln</button>
+</header>
+
+<main class="page station">
+  <div class="station-inner">
+    <a class="btn-back" href="karte.html">← Zur Karte</a>
+    <div class="station-header">
+      <span class="station-icon">🏛</span>
+      <div>
+        <h2>Der Tempel des Poseidon</h2>
+        <span class="difficulty-tag">Schwierigkeit ●○○○○</span>
+      </div>
+    </div>
+
+    <div class="station-body">
+      <div class="station-story">
+        <p>Am Tempel des Poseidon errichten Handwerker ein neues Dach. Die waagerechte Balkenlänge beträgt <strong>9 Ellen</strong>, die Höhe des Dreiecksgiebels <strong>12 Ellen</strong>.</p>
+        <svg viewBox="0 0 260 180" class="diagram" role="img" aria-label="Rechtwinkliges Dreieck mit den Seiten 9 und 12 Ellen und einer gesuchten Seite">
+          <polygon points="30,150 230,150 230,30" class="diagram-triangle"/>
+          <path d="M215,150 L215,135 L230,135" class="diagram-rightangle"/>
+          <text x="120" y="172" class="diagram-label">9 Ellen</text>
+          <text x="240" y="95" class="diagram-label" transform="rotate(90 240,95)">12 Ellen</text>
+          <text x="115" y="80" class="diagram-label diagram-label--unknown">?</text>
+        </svg>
+      </div>
+
+      <div class="station-task">
+        <p class="task-question"><strong>Deine Aufgabe:</strong> Berechne die Länge der schrägen Dachbalken in Ellen.</p>
+        <div class="answer-row">
+          <label for="input-1">Ergebnis:</label>
+          <input type="text" inputmode="decimal" id="input-1" placeholder="?">
+          <button class="btn-check" data-action="check" data-station="1">Prüfen</button>
+        </div>
+        <p class="feedback" id="feedback-1" aria-live="polite"></p>
+
+        <div class="solved-panel" id="solved-1" hidden>
+          <p>🎉 Gelöst! Die Zahl der Weisheit lautet <strong>15</strong>.</p>
+          <p>Code-Ziffer (Einerziffer): <strong class="code-digit-display">5</strong> — gehört zu Siegel-Position 1 (🏛 Tempel).</p>
+        </div>
+
+        <div class="hints">
+          <p class="hints-label">🦉 Frag das Orakel von Delphi:</p>
+          <div class="hint-buttons">
+            <button data-action="hint" data-station="1" data-level="1">Tipp 1</button>
+            <button data-action="hint" data-station="1" data-level="2" disabled>Tipp 2</button>
+          </div>
+          <div class="hint-text" id="hint-1-1" hidden>Erinnere dich an den Satz des Pythagoras: a² + b² = c². Welche der drei Seiten des Dreiecks kennst du schon, welche nicht?</div>
+          <div class="hint-text" id="hint-1-2" hidden>Setze deine beiden bekannten Seiten in die Formel ein und berechne zunächst ihre Quadrate einzeln, bevor du sie addierst oder subtrahierst.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="modal-overlay" id="modal-help" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-help-title">
+    <button class="modal-close" data-action="close-help" aria-label="Schließen">✕</button>
+    <h3 id="modal-help-title">📐 Formelsammlung &amp; Hilfe</h3>
+    <p><strong>Satz des Pythagoras:</strong> In jedem rechtwinkligen Dreieck gilt a² + b² = c².</p>
+    <ul>
+      <li><strong>c</strong> = Hypotenuse (liegt gegenüber dem rechten Winkel, ist immer die längste Seite)</li>
+      <li><strong>a, b</strong> = Katheten (die beiden Seiten, die den rechten Winkel bilden)</li>
+    </ul>
+    <p><strong>Hypotenuse gesucht:</strong> c = √(a² + b²)</p>
+    <p><strong>Kathete gesucht:</strong> a = √(c² − b²) bzw. b = √(c² − a²)</p>
+    <p><strong>Rechtwinklig prüfen (Umkehrung):</strong> Gilt für die längste Seite a² + b² = c², ist das Dreieck rechtwinklig.</p>
+    <hr>
+    <p>🙋 Kommt ihr trotz der Tipps nicht weiter? Meldet euch bei eurer Lehrkraft!</p>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

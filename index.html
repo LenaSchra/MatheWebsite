@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lernseite · Arbeitsblätter für Klasse 5 bis 13</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue-900:#12325C;
+    --blue-700:#1D4E89;
+    --blue-500:#2E6FBF;
+    --blue-300:#8FB6E3;
+    --blue-100:#DCE9F8;
+    --blue-50:#EFF5FC;
+    --ink:#12325C;
+    --ink-soft:#557093;
+    --white:#FFFFFF;
+    --shadow:#C6D9F0;
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0;
+    font-family:'Nunito', sans-serif;
+    color:var(--ink);
+    background:var(--blue-50);
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{ font-family:'Space Grotesk', sans-serif; margin:0; letter-spacing:-0.01em; }
+  a{ color:inherit; }
+
+  a:focus-visible, button:focus-visible{
+    outline:3px solid var(--blue-500);
+    outline-offset:3px;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.01ms !important; transition-duration:0.01ms !important; }
+  }
+
+  /* ---------- Header ---------- */
+  .site-header{
+    display:flex; align-items:center; gap:10px;
+    padding:18px 6vw;
+    background:var(--blue-900); color:var(--white);
+  }
+  .brand-mark{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:34px; height:34px; border-radius:9px;
+    background:var(--blue-500); font-size:1.05rem;
+  }
+  .brand{ font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:1.15rem; }
+
+  /* ---------- Layout ---------- */
+  main{ padding:5vw 6vw 8vw; max-width:1000px; margin:0 auto; }
+
+  .page-head{ margin-bottom:34px; }
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.78rem; font-weight:600; letter-spacing:0.04em;
+    color:var(--blue-500);
+  }
+  h1{ font-size:clamp(1.9rem, 4vw, 2.8rem); margin-top:8px; }
+  .page-head p{ color:var(--ink-soft); margin-top:10px; font-size:1.05rem; max-width:55ch; }
+
+  .back-link{
+    display:inline-block; margin-bottom:22px;
+    font-family:'JetBrains Mono', monospace; font-size:0.82rem; font-weight:600;
+    color:var(--blue-500); background:none; border:none; padding:0;
+    cursor:pointer; text-decoration:none;
+  }
+  .back-link:hover{ text-decoration:underline; }
+
+  /* ---------- Auswahl-Buttons ---------- */
+  .choice-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(120px,1fr));
+    gap:16px;
+  }
+  .choice-grid.subjects{ grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); }
+
+  .choice-btn{
+    background:var(--white);
+    border:2px solid var(--blue-100);
+    border-radius:14px;
+    padding:26px 18px;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700; font-size:1.25rem;
+    color:var(--ink);
+    cursor:pointer;
+    box-shadow:5px 5px 0 var(--shadow);
+    transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    text-align:center;
+  }
+  .choice-btn:hover{
+    transform:translate(-3px,-3px);
+    box-shadow:8px 8px 0 var(--shadow);
+    border-color:var(--blue-500);
+  }
+  .choice-btn .label{
+    display:block;
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.72rem; font-weight:600;
+    color:var(--ink-soft); margin-top:6px;
+  }
+  .choice-btn .icon{ display:block; font-size:1.8rem; margin-bottom:8px; }
+
+  /* ---------- Listenkarte ---------- */
+  .list-card{
+    background:var(--white);
+    border:2px solid var(--blue-100);
+    border-radius:14px;
+    padding:26px 26px 22px;
+    box-shadow:6px 6px 0 var(--shadow);
+  }
+  .list-card h2{ font-size:1.4rem; margin-bottom:4px; }
+  .list-card .card-sub{ color:var(--ink-soft); font-size:0.92rem; margin:0 0 16px; }
+
+  .worksheet-list{ list-style:none; margin:0; padding:0; }
+  .worksheet-list li + li{ border-top:1px dashed var(--blue-100); }
+  .worksheet-link{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:14px; padding:13px 8px;
+    text-decoration:none; font-weight:700; color:var(--ink);
+    border-radius:8px;
+  }
+  .worksheet-link:hover{ background:var(--blue-50); }
+  .ws-meta{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.72rem; font-weight:600;
+    color:var(--ink-soft); white-space:nowrap;
+  }
+  .empty-note{
+    color:var(--ink-soft); font-size:0.95rem;
+    padding:14px 8px; margin:0;
+  }
+
+  footer{
+    padding:26px 6vw; background:var(--blue-900); color:var(--blue-300);
+    display:flex; flex-wrap:wrap; gap:10px; justify-content:space-between;
+    font-size:0.85rem;
+  }
+
+  [hidden]{ display:none !important; }
+
+  @media (max-width:640px){
+    main{ padding:9vw 6vw 14vw; }
+    .choice-grid{ grid-template-columns:repeat(auto-fill, minmax(96px,1fr)); gap:12px; }
+    .choice-btn{ padding:20px 12px; font-size:1.1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <span class="brand-mark">✎</span>
+  <span class="brand">Lernseite</span>
+</header>
+
+<main>
+  <!-- ========== Ansicht 1: Klassenauswahl ========== -->
+  <section id="viewClasses">
+    <div class="page-head">
+      <span class="eyebrow">SCHRITT 1</span>
+      <h1>In welche Klasse gehst du?</h1>
+      <p>Wähle deine Klassenstufe aus, dann kommst du zu deinen Fächern.</p>
+    </div>
+    <div class="choice-grid" id="classGrid"></div>
+  </section>
+
+  <!-- ========== Ansicht 2: Fachauswahl ========== -->
+  <section id="viewSubjects" hidden>
+    <button class="back-link" data-goto="classes">← Zurück zur Klassenauswahl</button>
+    <div class="page-head">
+      <span class="eyebrow">SCHRITT 2</span>
+      <h1 id="subjectsTitle">Klasse</h1>
+      <p>Wähle dein Fach aus.</p>
+    </div>
+    <div class="choice-grid subjects" id="subjectGrid"></div>
+  </section>
+
+  <!-- ========== Ansicht 3: Materialliste ========== -->
+  <section id="viewMaterial" hidden>
+    <button class="back-link" data-goto="subjects">← Zurück zur Fachauswahl</button>
+    <div class="page-head">
+      <span class="eyebrow" id="materialEyebrow">KLASSE</span>
+      <h1 id="materialTitle">Fach</h1>
+    </div>
+    <div class="list-card">
+      <h2 id="materialCardTitle">Lerninhalte</h2>
+      <p class="card-sub">Klicke auf einen Eintrag, um ihn zu öffnen.</p>
+      <ul class="worksheet-list" id="materialList"></ul>
+      <p class="empty-note" id="emptyNote" hidden>Hier sind noch keine Inhalte eingetragen.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span>© 2026 Lernseite</span>
+  <span>Impressum · Kontakt</span>
+</footer>
+
+<script>
+/* =========================================================================
+   HIER TRÄGST DU DEINE INHALTE EIN
+   -------------------------------------------------------------------------
+   Aufbau:  inhalte["<Klasse>"]["<Fach>"] = [ ...Einträge... ]
+   Ein Eintrag:  { titel: "Name des Links", url: "https://...", typ: "interaktiv" }
+   "typ" ist optional – z. B. "interaktiv", "PDF", "Video", "Übung".
+   Leere Listen [] zeigen automatisch den Hinweis "noch keine Inhalte".
+   ========================================================================= */
+const inhalte = {
+  "5": {
+    "Mathe": [
+      { titel: "Wiederholung: 11er-Reihe", url: "#", typ: "interaktiv" },
+      { titel: "Wiederholung: 12er-Reihe", url: "#", typ: "interaktiv" },
+      { titel: "Einmaleins gemischt", url: "#", typ: "Übung" }
+    ],
+    "Chemie": [],
+    "Informatik": []
+  },
+  "9": {
+    "Mathe": [
+      { titel: "Umkehrung des Satzes von Pythagoras", url: "#", typ: "interaktiv" },
+      { titel: "Hypotenuse und Kathete benennen", url: "#", typ: "Übung" }
+    ],
+    "Chemie": [],
+    "Informatik": []
+  }
+};
+
+/* ---------- Konfiguration ---------- */
+const KLASSEN = ["5","6","7","8","9","10","11","12","13"];
+const FAECHER = [
+  { name: "Mathe",      icon: "📐" },
+  { name: "Chemie",     icon: "⚗️" },
+  { name: "Informatik", icon: "💻" }
+];
+
+/* ---------- Ansichten ---------- */
+const views = {
+  classes:  document.getElementById('viewClasses'),
+  subjects: document.getElementById('viewSubjects'),
+  material: document.getElementById('viewMaterial')
+};
+let aktuelleKlasse = null;
+let aktuellesFach  = null;
+
+function zeige(view){
+  Object.values(views).forEach(v => v.hidden = true);
+  views[view].hidden = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ---------- Klassen-Buttons aufbauen ---------- */
+const classGrid = document.getElementById('classGrid');
+KLASSEN.forEach(k => {
+  const btn = document.createElement('button');
+  btn.className = 'choice-btn';
+  btn.innerHTML = `${k}<span class="label">KLASSE</span>`;
+  btn.addEventListener('click', () => oeffneKlasse(k));
+  classGrid.appendChild(btn);
+});
+
+/* ---------- Fach-Buttons aufbauen ---------- */
+const subjectGrid = document.getElementById('subjectGrid');
+FAECHER.forEach(f => {
+  const btn = document.createElement('button');
+  btn.className = 'choice-btn';
+  btn.innerHTML = `<span class="icon">${f.icon}</span>${f.name}`;
+  btn.addEventListener('click', () => oeffneFach(f.name));
+  subjectGrid.appendChild(btn);
+});
+
+/* ---------- Navigation ---------- */
+function oeffneKlasse(klasse){
+  aktuelleKlasse = klasse;
+  document.getElementById('subjectsTitle').textContent = `Klasse ${klasse}`;
+  zeige('subjects');
+}
+
+function oeffneFach(fach){
+  aktuellesFach = fach;
+  document.getElementById('materialEyebrow').textContent = `KLASSE ${aktuelleKlasse}`;
+  document.getElementById('materialTitle').textContent = fach;
+  document.getElementById('materialCardTitle').textContent = `${fach} – Lerninhalte`;
+
+  const liste = document.getElementById('materialList');
+  const hinweis = document.getElementById('emptyNote');
+  liste.innerHTML = '';
+
+  const eintraege = (inhalte[aktuelleKlasse] && inhalte[aktuelleKlasse][fach]) || [];
+
+  if (eintraege.length === 0){
+    hinweis.hidden = false;
+  } else {
+    hinweis.hidden = true;
+    eintraege.forEach(e => {
+      const li = document.createElement('li');
+      const a  = document.createElement('a');
+      a.className = 'worksheet-link';
+      a.href = e.url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.innerHTML = `<span>${e.titel}</span>` +
+                    (e.typ ? `<span class="ws-meta">${e.typ}</span>` : '');
+      li.appendChild(a);
+      liste.appendChild(li);
+    });
+  }
+  zeige('material');
+}
+
+document.querySelectorAll('[data-goto]').forEach(btn => {
+  btn.addEventListener('click', () => zeige(btn.dataset.goto));
+});
+</script>
+
+</body>
+</html>

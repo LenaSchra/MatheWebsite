@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intervallschachtelung – Seitenlänge eines Quadrats</title>
+<style>
+  html, body { margin: 0; padding: 0; }
+  .qw-root {
+    --akzent: #0B6E75;
+    --akzent-hell: rgba(11,110,117,0.22);
+    --grau: #8A9199;
+    --grau-hell: #E9ECEF;
+    --text: #1F2933;
+    --gedimmt: #5B6670;
+    --linie: #D8DEE3;
+    background: #F6F8F8;
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    padding: 18px;
+    min-height: 100vh;
+    box-sizing: border-box;
+    font-size: 16px;
+    line-height: 1.45;
+    -webkit-text-size-adjust: 100%;
+  }
+  .qw-root * { box-sizing: border-box; }
+  .qw-h1 { font-size: 21px; font-weight: 700; margin: 0 0 2px; }
+  .qw-sub { color: var(--gedimmt); margin: 0 0 14px; font-size: 15px; }
+  .qw-grid {
+    display: grid;
+    grid-template-columns: minmax(0,1fr) minmax(0,1.05fr);
+    gap: 18px; align-items: start;
+  }
+  @media (max-width: 760px) { .qw-grid { grid-template-columns: minmax(0,1fr); } }
+  .qw-karte { background: #fff; border: 1px solid var(--linie); border-radius: 10px; padding: 14px; }
+  .qw-karte + .qw-karte { margin-top: 16px; }
+  .qw-titel {
+    font-size: 13px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--gedimmt); margin: 0 0 10px;
+  }
+  .qw-kopfzeile { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .qw-anleitung { margin-bottom: 16px; }
+  .qw-anleitung ol { margin: 0; padding-left: 22px; }
+  .qw-anleitung li { margin-bottom: 7px; }
+  .qw-anleitung li:last-child { margin-bottom: 0; }
+  .qw-anleitung .ziel {
+    margin: 0 0 10px; padding: 10px 12px; border-radius: 8px;
+    background: #EAF3F4; border-left: 5px solid var(--akzent);
+  }
+  .qw-wahl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .qw-wahl-btn {
+    font: inherit; font-variant-numeric: tabular-nums;
+    padding: 8px 14px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--linie); background: #fff; color: var(--text);
+  }
+  .qw-wahl-btn:hover { background: #F0F3F4; }
+  .qw-wahl-btn[aria-pressed="true"] {
+    background: var(--akzent); border-color: var(--akzent); color: #fff; font-weight: 700;
+  }
+  .qw-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  .qw-chip {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 14px; padding: 5px 10px; border-radius: 6px;
+    background: #F2F5F6; font-variant-numeric: tabular-nums;
+  }
+  .qw-chip i { width: 13px; height: 13px; border-radius: 3px; display: inline-block; }
+  .qw-chip.grau i { background: var(--grau-hell); border: 2px solid var(--grau); }
+  .qw-chip.akz i { background: var(--akzent-hell); border: 2px solid var(--akzent); }
+  .qw-svg { width: 100%; height: auto; display: block; }
+  .qw-zoom {
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--linie);
+  }
+  .qw-zoom input[type=range] { flex: 1 1 130px; min-width: 110px; accent-color: var(--akzent); }
+  .qw-zoom-wert { font-variant-numeric: tabular-nums; font-size: 14px; color: var(--gedimmt); min-width: 72px; }
+  .qw-bereich { font-size: 24px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; margin: 6px 0 2px; }
+  .qw-breite { text-align: center; color: var(--gedimmt); font-size: 14px; margin-bottom: 6px; }
+  .qw-eingabe { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .qw-eingabe input {
+    flex: 1 1 130px; min-width: 110px;
+    font-size: 22px; font-variant-numeric: tabular-nums;
+    padding: 10px 12px; border: 2px solid var(--linie); border-radius: 8px;
+    background: #fff; color: var(--text);
+  }
+  .qw-eingabe input:focus { outline: 3px solid rgba(11,110,117,.35); border-color: var(--akzent); }
+  .qw-btn {
+    font: inherit; font-size: 16px; padding: 11px 16px; border-radius: 8px;
+    border: 1px solid var(--linie); background: #fff; color: var(--text); cursor: pointer;
+    display: inline-block;
+  }
+  .qw-btn:hover { background: #F0F3F4; }
+  .qw-btn:focus-visible { outline: 3px solid rgba(11,110,117,.45); }
+  .qw-btn-haupt { background: var(--akzent); border-color: var(--akzent); color: #fff; font-weight: 600; }
+  .qw-btn-haupt:hover { background: #095A60; }
+  .qw-btn-klein { padding: 7px 12px; font-size: 15px; }
+  .qw-btn:disabled { opacity: .45; cursor: default; }
+  .qw-btnzeile { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .qw-rueck {
+    margin-top: 12px; padding: 12px 14px; border-radius: 8px;
+    background: #F2F5F6; border-left: 5px solid var(--grau); font-size: 16px;
+  }
+  .qw-rueck.zuGross { border-left-color: #B4560A; background: #FDF3EA; }
+  .qw-rueck.zuKlein { border-left-color: var(--akzent); background: #EAF3F4; }
+  .qw-rueck.exakt { border-left-color: #1B7F3B; background: #ECF6EF; }
+  .qw-rueck.abgelehnt { border-left-color: #6B7280; background: #F1F2F4; }
+  .qw-pfeil { font-weight: 700; margin-right: 6px; }
+  .qw-tab { width: 100%; border-collapse: collapse; font-size: 15px; }
+  .qw-tab th {
+    text-align: right; font-size: 12px; letter-spacing: .04em; text-transform: uppercase;
+    color: var(--gedimmt); padding: 6px 8px; border-bottom: 1px solid var(--linie); white-space: nowrap;
+  }
+  .qw-tab th:first-child, .qw-tab td:first-child { text-align: left; }
+  .qw-tab td {
+    text-align: right; padding: 7px 8px; border-bottom: 1px solid #F0F2F3;
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .qw-tab td.ziel { color: var(--gedimmt); }
+  .qw-tab tr.seed td { color: var(--gedimmt); }
+  .qw-scroll { max-height: 280px; overflow: auto; }
+  .qw-vorschau { margin-top: 12px; }
+  .qw-vorschau img { width: 100%; height: auto; display: block; border: 1px solid var(--linie); border-radius: 8px; background: #fff; }
+  .qw-hinweis { font-size: 14px; color: var(--gedimmt); margin: 8px 0 0; }
+  .qw-ende { margin-top: 14px; padding: 14px; border-radius: 10px; background: #EAF3F4; border: 1px solid var(--akzent); }
+  .qw-ende h3 { margin: 0 0 6px; font-size: 18px; }
+  .qw-ende p { margin: 0 0 6px; }
+  .versteckt { display: none !important; }
+</style>
+</head>
+<body>
+<div class="qw-root">
+
+  <h1 class="qw-h1">Wie lang ist die Seite?</h1>
+  <p class="qw-sub">Ein Quadrat hat den Flächeninhalt A = <span class="varA">20</span>.
+    Grenze die Seitenlänge s Schritt für Schritt ein.</p>
+
+  <!-- Anleitung -->
+  <div class="qw-karte qw-anleitung">
+    <div class="qw-kopfzeile">
+      <p class="qw-titel">So gehst du vor</p>
+      <button class="qw-btn qw-btn-klein" id="btnAnleitung" aria-expanded="true">Ausblenden</button>
+    </div>
+    <div id="anleitungInhalt">
+      <p class="ziel">Gesucht ist die Zahl, die mit sich selbst multipliziert <span class="varA">20</span> ergibt.
+        Ausrechnen kannst du sie noch nicht — aber du kannst sie so eng einkreisen, wie du willst.</p>
+      <ol>
+        <li>Oben wählst du den Flächeninhalt. Der Suchbereich startet zwischen den beiden ganzen Zahlen,
+          die zu klein und zu groß sind.</li>
+        <li>Tippe eine Zahl aus dem Suchbereich ein und drücke <strong>Prüfen</strong>. Das farbige Quadrat
+          verändert sich sofort und zeigt, ob es aus dem grauen Rahmen ragt oder darin verschwindet.</li>
+        <li>Ist s · s größer als <span class="varA">20</span>, war deine Seite zu lang — deine Zahl wird zur neuen
+          <strong>Obergrenze</strong>. Ist s · s kleiner, wird sie zur neuen <strong>Untergrenze</strong>.
+          Der Bereich schrumpft also bei jedem Versuch.</li>
+        <li>Zahlen außerhalb des Bereichs werden abgelehnt: die hast du längst ausgeschlossen. Mit
+          <strong>Mitte vorschlagen</strong> halbierst du den Bereich, mit <strong>Zurück</strong> nimmst du
+          einen Versuch zurück.</li>
+        <li>Wird der Unterschied zu klein zum Sehen, hilft die <strong>Lupe</strong> unter dem Bild.
+          Fertig bist du, wenn der Suchbereich schmaler als 0,001 ist.</li>
+        <li>Am Ende speicherst du deine Tabelle mit <strong>Tabelle als Bild speichern</strong> für deine Mappe.</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- Flächenauswahl -->
+  <div class="qw-karte" style="margin-bottom:16px">
+    <p class="qw-titel">Flächeninhalt wählen</p>
+    <div class="qw-wahl" id="flaechenWahl"></div>
+  </div>
+
+  <div class="qw-grid">
+    <!-- linke Spalte -->
+    <div>
+      <div class="qw-karte">
+        <p class="qw-titel">Die beiden Quadrate übereinander</p>
+        <div class="qw-chips">
+          <span class="qw-chip grau"><i></i><span id="chipZiel"></span></span>
+          <span class="qw-chip akz"><i></i><span id="chipDein"></span></span>
+        </div>
+
+        <svg class="qw-svg" viewBox="0 0 320 320" id="svgQ" role="img" aria-label="Zielquadrat und dein Quadrat">
+          <defs><clipPath id="qwclip"><rect x="2" y="2" width="316" height="316"></rect></clipPath></defs>
+          <g clip-path="url(#qwclip)">
+            <g id="zoomG">
+              <rect id="rZiel" fill="var(--grau-hell)" stroke="var(--grau)" stroke-width="2" vector-effect="non-scaling-stroke"></rect>
+              <rect id="rSch" fill="var(--akzent-hell)" stroke="var(--akzent)" stroke-width="2.5" vector-effect="non-scaling-stroke"></rect>
+              <rect id="rZiel2" fill="none" stroke="var(--grau)" stroke-width="2" vector-effect="non-scaling-stroke"></rect>
+            </g>
+          </g>
+          <g id="beschriftung">
+            <text id="tA" font-size="15" fill="#5B6670" paint-order="stroke" stroke="#fff" stroke-width="4"></text>
+            <text id="tFrage" font-size="15" fill="#5B6670" text-anchor="end" paint-order="stroke" stroke="#fff" stroke-width="4">s = ?</text>
+            <text id="tSS" font-size="16" fill="var(--akzent)" font-weight="700" paint-order="stroke" stroke="#fff" stroke-width="4"></text>
+            <line id="dimL" stroke="var(--akzent)" stroke-width="1.5"></line>
+            <line id="dimC1" stroke="var(--akzent)" stroke-width="1.5"></line>
+            <line id="dimC2" stroke="var(--akzent)" stroke-width="1.5"></line>
+            <text id="tS" font-size="16" fill="var(--akzent)" text-anchor="middle" font-weight="700"></text>
+          </g>
+          <text id="tLupe" x="10" y="20" font-size="13" fill="#5B6670" class="versteckt"></text>
+        </svg>
+
+        <div class="qw-zoom">
+          <label for="zoomRegler" style="font-size:14px;color:var(--gedimmt)">Lupe</label>
+          <input id="zoomRegler" type="range" min="0" max="100" value="0">
+          <span class="qw-zoom-wert" id="zoomWert">1-fach</span>
+          <button class="qw-btn qw-btn-klein" id="btnAuto">Unterschied zeigen</button>
+          <button class="qw-btn qw-btn-klein" id="btnGanz">Ganzes Quadrat</button>
+        </div>
+      </div>
+
+      <div class="qw-karte">
+        <p class="qw-titel">Dein nächster Versuch</p>
+        <div class="qw-eingabe" id="eingabeZeile">
+          <input id="eingabe" type="text" inputmode="decimal" aria-label="Seitenlänge eingeben">
+          <button class="qw-btn qw-btn-haupt" id="btnPruefen">Prüfen</button>
+        </div>
+        <div class="qw-btnzeile">
+          <button class="qw-btn" id="btnMitte">Mitte vorschlagen</button>
+          <button class="qw-btn" id="btnZurueck">Zurück</button>
+          <button class="qw-btn" id="btnNeu">Neu starten</button>
+        </div>
+        <div class="qw-rueck" id="rueck" aria-live="polite"></div>
+        <div id="ende"></div>
+      </div>
+    </div>
+
+    <!-- rechte Spalte -->
+    <div>
+      <div class="qw-karte">
+        <p class="qw-titel">Suchbereich auf dem Zahlenstrahl</p>
+        <div class="qw-bereich" id="bereichText"></div>
+        <div class="qw-breite" id="breiteText"></div>
+
+        <svg class="qw-svg" viewBox="0 0 340 110" role="img" aria-label="Suchbereich">
+          <rect id="band" y="44" height="22" fill="var(--akzent-hell)" stroke="var(--akzent)" stroke-width="1.5"></rect>
+          <line x1="26" y1="66" x2="314" y2="66" stroke="#9AA3AB" stroke-width="1.5"></line>
+          <g id="ticks"></g>
+          <line id="gLo" y1="36" y2="70" stroke="var(--akzent)" stroke-width="2.5"></line>
+          <line id="gHi" y1="36" y2="70" stroke="var(--akzent)" stroke-width="2.5"></line>
+          <circle id="marker" cy="55" r="4.5" fill="var(--akzent)" class="versteckt"></circle>
+          <text x="26" y="24" font-size="13" fill="#5B6670">Untergrenze</text>
+          <text x="314" y="24" font-size="13" fill="#5B6670" text-anchor="end">Obergrenze</text>
+        </svg>
+      </div>
+
+      <div class="qw-karte">
+        <div class="qw-kopfzeile">
+          <p class="qw-titel">Alle Versuche</p>
+          <button class="qw-btn qw-btn-klein" id="btnBild">Tabelle als Bild speichern</button>
+        </div>
+        <div class="qw-scroll">
+          <table class="qw-tab">
+            <thead>
+              <tr><th>Nr.</th><th>Seite s</th><th>s · s</th><th>Ziel A</th><th>Ergebnis</th></tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <div class="qw-vorschau versteckt" id="vorschau">
+          <img id="vorschauImg" alt="Vorschau der gespeicherten Tabelle">
+          <p class="qw-hinweis">Falls der Download nicht startet: Bild lange antippen beziehungsweise mit der
+            rechten Maustaste anklicken und „Bild speichern unter“ wählen.</p>
+          <div class="qw-btnzeile">
+            <a class="qw-btn qw-btn-klein" id="linkBild" style="text-decoration:none">Bild speichern</a>
+            <button class="qw-btn qw-btn-klein" id="btnVorschauZu">Vorschau schließen</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- Konstanten ---------- */
+  var FLAECHEN = [2, 3, 5, 16, 20, 50];
+  var EPS = 0.001, MAXZ = 2000;
+  var OX = 56, OY = 268, CX = 168, CY = 150;
+
+  /* ---------- Zahlen ---------- */
+  function fmt(x, maxDec) {
+    if (maxDec === undefined) maxDec = 6;
+    if (x === null || x === undefined || !isFinite(x)) return "–";
+    var s = x.toFixed(maxDec);
+    if (s.indexOf(".") >= 0) s = s.replace(/0+$/, "").replace(/\.$/, "");
+    return s.replace(".", ",");
+  }
+  function fmtFix(x, d) { return x.toFixed(d).replace(".", ","); }
+  function parseNumber(str) {
+    var t = String(str).trim().replace(",", ".");
+    if (!/^\d*\.?\d+$/.test(t)) return null;
+    var v = parseFloat(t);
+    return isFinite(v) ? v : null;
+  }
+  function startGrenzen(a) {
+    var lo = Math.floor(Math.sqrt(a));
+    while (lo * lo >= a) lo -= 1;
+    var hi = Math.ceil(Math.sqrt(a));
+    while (hi * hi <= a) hi += 1;
+    return [lo, hi];
+  }
+  function istQuadratzahl(a) { return Number.isInteger(Math.sqrt(a)); }
+  function niceStep(width) {
+    var raw = width / 4;
+    var mag = Math.pow(10, Math.floor(Math.log(raw) / Math.LN10));
+    var norm = raw / mag, m = 10;
+    if (norm < 1.5) m = 1; else if (norm < 3) m = 2; else if (norm < 7) m = 5;
+    return m * mag;
+  }
+  function umbrechen(ctx, text, maxW) {
+    var worte = String(text).split(" "), zeilen = [], z = "";
+    for (var i = 0; i < worte.length; i++) {
+      var test = z ? z + " " + worte[i] : worte[i];
+      if (z && ctx.measureText(test).width > maxW) { zeilen.push(z); z = worte[i]; }
+      else z = test;
+    }
+    if (z) zeilen.push(z);
+    return zeilen;
+  }
+
+  /* ---------- Zustand ---------- */
+  var S = { A: 20, lo: 4, hi: 5, history: [], exakt: null, zoom: 1, msg: null, anleitung: true };
+  var anim = { side: 4, lo: 4, hi: 5, vLo: 3.7, vHi: 5.3, zoom: 1 };
+  var targ = { side: 4, lo: 4, hi: 5, vLo: 3.7, vHi: 5.3, zoom: 1 };
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function grenzen() { return startGrenzen(S.A); }
+  function seedRows() {
+    var g = grenzen();
+    return [
+      { s: g[0], sq: g[0] * g[0], tooBig: false, label: "Start" },
+      { s: g[1], sq: g[1] * g[1], tooBig: true, label: "Start" }
+    ];
+  }
+  function letzter() {
+    if (S.history.length) return S.history[S.history.length - 1];
+    var g = grenzen();
+    return { s: g[0], sq: g[0] * g[0], tooBig: false };
+  }
+  function alleZeilen() {
+    var r = seedRows();
+    for (var i = 0; i < S.history.length; i++) {
+      var h = S.history[i];
+      r.push({ s: h.s, sq: h.sq, tooBig: h.tooBig, label: String(i + 1) });
+    }
+    return r;
+  }
+  function breite() { return S.hi - S.lo; }
+  function fertig() { return S.exakt !== null || breite() < EPS; }
+
+  /* ---------- Elemente ---------- */
+  var E = {};
+  ["btnAnleitung", "anleitungInhalt", "flaechenWahl", "chipZiel", "chipDein", "zoomG",
+   "rZiel", "rSch", "rZiel2", "beschriftung", "tA", "tFrage", "tSS", "dimL", "dimC1",
+   "dimC2", "tS", "tLupe", "zoomRegler", "zoomWert", "btnAuto", "btnGanz", "eingabe",
+   "eingabeZeile", "btnPruefen", "btnMitte", "btnZurueck", "btnNeu", "rueck", "ende",
+   "bereichText", "breiteText", "band", "ticks", "gLo", "gHi", "marker", "tbody",
+   "btnBild", "vorschau", "vorschauImg", "linkBild", "btnVorschauZu"
+  ].forEach(function (id) { E[id] = document.getElementById(id); });
+
+  /* Tickmarken einmalig anlegen */
+  var NS = "http://www.w3.org/2000/svg";
+  var tickPool = [];
+  for (var i = 0; i < 12; i++) {
+    var g = document.createElementNS(NS, "g");
+    var ln = document.createElementNS(NS, "line");
+    ln.setAttribute("y1", 66); ln.setAttribute("y2", 73);
+    ln.setAttribute("stroke", "#9AA3AB"); ln.setAttribute("stroke-width", "1.5");
+    var tx = document.createElementNS(NS, "text");
+    tx.setAttribute("y", 90); tx.setAttribute("font-size", "13");
+    tx.setAttribute("fill", "#5B6670"); tx.setAttribute("text-anchor", "middle");
+    g.appendChild(ln); g.appendChild(tx); E.ticks.appendChild(g);
+    tickPool.push({ g: g, ln: ln, tx: tx });
+  }
+
+  /* Flächen-Schaltflächen */
+  FLAECHEN.forEach(function (f) {
+    var b = document.createElement("button");
+    b.className = "qw-wahl-btn";
+    b.textContent = "A = " + f;
+    b.onclick = function () { waehleFlaeche(f); };
+    b.dataset.f = String(f);
+    E.flaechenWahl.appendChild(b);
+  });
+
+  /* ---------- Animation ---------- */
+  var laeuft = false;
+  function setzeZiele() {
+    var w = breite(), pad = w > 0 ? w * 0.28 : 0.1;
+    targ.side = letzter().s;
+    targ.lo = S.lo; targ.hi = S.hi;
+    targ.vLo = S.lo - pad; targ.vHi = S.hi + pad;
+    targ.zoom = S.zoom;
+    if (reduce) { for (var k in targ) anim[k] = targ[k]; zeichne(); return; }
+    if (!laeuft) { laeuft = true; requestAnimationFrame(tick); }
+  }
+  function tick() {
+    var offen = false;
+    for (var k in targ) {
+      var d = targ[k] - anim[k];
+      var tol = Math.max(1e-7, Math.abs(targ[k]) * 1e-5);
+      if (Math.abs(d) > tol) { anim[k] += d * 0.18; offen = true; }
+      else anim[k] = targ[k];
+    }
+    zeichne();
+    if (offen) requestAnimationFrame(tick); else laeuft = false;
+  }
+
+  /* ---------- Zeichnen (animierte Geometrie) ---------- */
+  function zeichne() {
+    var g = grenzen(), U = 220 / g[1];
+    var zielSeite = Math.sqrt(S.A), zielPx = zielSeite * U, seitePx = anim.side * U;
+
+    [E.rZiel, E.rZiel2].forEach(function (r) {
+      r.setAttribute("x", OX); r.setAttribute("y", OY - zielPx);
+      r.setAttribute("width", zielPx); r.setAttribute("height", zielPx);
+    });
+    E.rSch.setAttribute("x", OX); E.rSch.setAttribute("y", OY - seitePx);
+    E.rSch.setAttribute("width", seitePx); E.rSch.setAttribute("height", seitePx);
+
+    var z = anim.zoom, Fx = OX + zielPx, Fy = OY - zielPx, t = 1 - 1 / z;
+    var ax = Fx + (CX - Fx) * t, ay = Fy + (CY - Fy) * t;
+    E.zoomG.setAttribute("transform",
+      "translate(" + (ax - Fx * z) + " " + (ay - Fy * z) + ") scale(" + z + ")");
+
+    var gezoomt = z > 1.05;
+    E.beschriftung.classList.toggle("versteckt", gezoomt);
+    E.tLupe.classList.toggle("versteckt", !gezoomt);
+    E.tLupe.textContent = "Lupe auf die rechte obere Ecke · " + fmt(z, z < 10 ? 1 : 0) + "-fach";
+    E.zoomWert.textContent = fmt(S.zoom, S.zoom < 10 ? 1 : 0) + "-fach";
+
+    E.tA.setAttribute("x", OX); E.tA.setAttribute("y", OY - zielPx - 8);
+    E.tFrage.setAttribute("x", OX - 8); E.tFrage.setAttribute("y", OY - zielPx / 2);
+    E.tSS.setAttribute("x", OX + 10); E.tSS.setAttribute("y", OY - 16);
+    E.dimL.setAttribute("x1", OX); E.dimL.setAttribute("y1", OY + 16);
+    E.dimL.setAttribute("x2", OX + seitePx); E.dimL.setAttribute("y2", OY + 16);
+    E.dimC1.setAttribute("x1", OX); E.dimC1.setAttribute("y1", OY + 11);
+    E.dimC1.setAttribute("x2", OX); E.dimC1.setAttribute("y2", OY + 21);
+    E.dimC2.setAttribute("x1", OX + seitePx); E.dimC2.setAttribute("y1", OY + 11);
+    E.dimC2.setAttribute("x2", OX + seitePx); E.dimC2.setAttribute("y2", OY + 21);
+    E.tS.setAttribute("x", OX + seitePx / 2); E.tS.setAttribute("y", OY + 36);
+
+    /* Zahlenstrahl */
+    var NX0 = 26, NX1 = 314;
+    var spann = Math.max(anim.vHi - anim.vLo, 1e-12);
+    function xOf(v) { return NX0 + ((v - anim.vLo) / spann) * (NX1 - NX0); }
+
+    var w = breite(), pad = w > 0 ? w * 0.28 : 0.1;
+    var step = niceStep(Math.max(w + 2 * pad, 1e-9));
+    var dec = Math.max(0, Math.ceil(-Math.log(step) / Math.LN10 - 1e-9));
+    var start = Math.ceil(anim.vLo / step) * step, n = 0;
+    for (var v = start; v <= anim.vHi + step * 0.001 && n < 12; v += step, n++) {
+      var wert = Math.round(v / step) * step, px = xOf(wert), p = tickPool[n];
+      p.g.classList.remove("versteckt");
+      p.ln.setAttribute("x1", px); p.ln.setAttribute("x2", px);
+      p.tx.setAttribute("x", px); p.tx.textContent = fmtFix(wert, dec);
+    }
+    for (var k = n; k < 12; k++) tickPool[k].g.classList.add("versteckt");
+
+    var bx = xOf(anim.lo), bw = Math.max(xOf(anim.hi) - xOf(anim.lo), 3);
+    E.band.setAttribute("x", bx); E.band.setAttribute("width", bw);
+    E.gLo.setAttribute("x1", bx); E.gLo.setAttribute("x2", bx);
+    E.gHi.setAttribute("x1", bx + bw); E.gHi.setAttribute("x2", bx + bw);
+    E.marker.setAttribute("cx", xOf(anim.side));
+    E.marker.classList.toggle("versteckt", S.history.length === 0);
+  }
+
+  /* ---------- Oberfläche (Texte, Tabelle) ---------- */
+  function render() {
+    var A = S.A, l = letzter(), w = breite(), fer = fertig();
+
+    Array.prototype.forEach.call(document.querySelectorAll(".varA"), function (el) {
+      el.textContent = String(A);
+    });
+    Array.prototype.forEach.call(E.flaechenWahl.children, function (b) {
+      b.setAttribute("aria-pressed", Number(b.dataset.f) === A ? "true" : "false");
+    });
+
+    E.chipZiel.textContent = "Zielquadrat · A = " + A + " · s = ?";
+    E.chipDein.textContent = "Dein Quadrat · s = " + fmt(l.s) + " · s · s = " + fmt(l.sq);
+    E.tA.textContent = "A = " + A;
+    E.tSS.textContent = "s · s = " + fmt(l.sq);
+    E.tS.textContent = "s = " + fmt(l.s);
+
+    E.bereichText.textContent = S.exakt !== null
+      ? "s = " + fmt(S.exakt)
+      : fmt(S.lo) + " < s < " + fmt(S.hi);
+    E.breiteText.textContent = "Breite des Bereichs: " + fmt(w, 8);
+
+    E.eingabe.placeholder = "zwischen " + fmt(S.lo) + " und " + fmt(S.hi);
+    E.eingabeZeile.classList.toggle("versteckt", fer);
+    E.btnMitte.classList.toggle("versteckt", fer);
+    E.btnZurueck.disabled = S.history.length === 0;
+
+    var m = S.msg;
+    E.rueck.className = "qw-rueck " + m.kind;
+    var pfeil = m.kind === "zuGross" ? "▲ zu groß " : m.kind === "zuKlein" ? "▼ zu klein " :
+                m.kind === "exakt" ? "● genau " : "";
+    E.rueck.innerHTML = (pfeil ? '<span class="qw-pfeil">' + pfeil + "</span>" : "") +
+      m.text.replace(/</g, "&lt;");
+
+    /* Abschlusstext */
+    if (!fer) { E.ende.innerHTML = ""; }
+    else if (S.exakt !== null) {
+      E.ende.innerHTML = '<div class="qw-ende"><h3>Genau getroffen</h3><p>' +
+        fmt(S.exakt) + " · " + fmt(S.exakt) + " = " + A + ". Die Seite ist also genau " +
+        fmt(S.exakt) + " lang — hier musst du gar nicht weiter eingrenzen.</p><p>Man schreibt dafür √" +
+        A + " = " + fmt(S.exakt) + ". Bei " + A + " geht die Quadratwurzel auf, weil " + A +
+        " eine Quadratzahl ist. Probier zum Vergleich einmal eine andere Fläche.</p></div>";
+    } else if (istQuadratzahl(A)) {
+      var r = fmt(Math.sqrt(A));
+      E.ende.innerHTML = '<div class="qw-ende"><h3>Hier geht es auf</h3><p>Der Suchbereich ist schmaler als 0,001: s liegt zwischen ' +
+        fmt(S.lo) + " und " + fmt(S.hi) + ".</p><p>Die gesuchte Zahl ist genau " + r + ", denn " +
+        r + " · " + r + " = " + A + ". Man schreibt √" + A + " = " + r +
+        ". Gib den Wert direkt ein, dann triffst du exakt.</p></div>";
+    } else {
+      E.ende.innerHTML = '<div class="qw-ende"><h3>Genau genug — und trotzdem nie fertig</h3><p>Der Suchbereich ist jetzt schmaler als 0,001: s liegt zwischen ' +
+        fmt(S.lo) + " und " + fmt(S.hi) + ".</p><p>Diese Zahl heißt <strong>Quadratwurzel aus " + A +
+        "</strong>, geschrieben √" + A + " ≈ " + fmtFix(Math.sqrt(A), 4) +
+        ". Sie lässt sich weder als Bruch noch als abbrechende Dezimalzahl schreiben. Du kannst den Bereich immer weiter halbieren und wirst nie exakt bei " +
+        A + " landen.</p></div>";
+    }
+
+    /* Tabelle */
+    var html = "";
+    alleZeilen().forEach(function (r) {
+      var erg = r.tooBig === null ? "● genau" : r.tooBig ? "▲ zu groß" : "▼ zu klein";
+      html += '<tr class="' + (r.label === "Start" ? "seed" : "") + '"><td>' + r.label +
+        "</td><td>" + fmt(r.s) + "</td><td>" + fmt(r.sq) +
+        '</td><td class="ziel">' + A + "</td><td>" + erg + "</td></tr>";
+    });
+    E.tbody.innerHTML = html;
+
+    E.zoomRegler.value = String(Math.round(100 * Math.log(S.zoom) / Math.log(MAXZ)));
+    setzeZiele();
+  }
+
+  /* ---------- Aktionen ---------- */
+  function startMeldung(a) {
+    var g = startGrenzen(a);
+    return { kind: "start", text: "Wir wissen schon: " + g[0] + " · " + g[0] + " = " + (g[0] * g[0]) +
+      " ist zu wenig, " + g[1] + " · " + g[1] + " = " + (g[1] * g[1]) + " ist zu viel. " +
+      "Die gesuchte Seitenlänge liegt also zwischen " + g[0] + " und " + g[1] + "." };
+  }
+
+  function waehleFlaeche(a) {
+    var g = startGrenzen(a);
+    S.A = a; S.lo = g[0]; S.hi = g[1]; S.history = []; S.exakt = null; S.zoom = 1;
+    S.msg = startMeldung(a);
+    E.eingabe.value = "";
+    E.vorschau.classList.add("versteckt");
+    render();
+  }
+
+  function pruefen() {
+    var v = parseNumber(E.eingabe.value), A = S.A;
+    if (v === null) {
+      S.msg = { kind: "abgelehnt", text: "Bitte gib eine Zahl ein — zum Beispiel 4,5." };
+      render(); return;
+    }
+    if (v <= S.lo) {
+      S.msg = { kind: "abgelehnt", text: fmt(v) + " liegt nicht mehr im Suchbereich. Wir wissen schon: " +
+        fmt(S.lo) + " · " + fmt(S.lo) + " = " + fmt(S.lo * S.lo) + ", und das ist weniger als " + A +
+        ". Die Seite muss also länger als " + fmt(S.lo) + " sein." };
+      render(); return;
+    }
+    if (v >= S.hi) {
+      S.msg = { kind: "abgelehnt", text: fmt(v) + " liegt nicht mehr im Suchbereich. Wir wissen schon: " +
+        fmt(S.hi) + " · " + fmt(S.hi) + " = " + fmt(S.hi * S.hi) + ", und das ist mehr als " + A +
+        ". Die Seite muss also kürzer als " + fmt(S.hi) + " sein." };
+      render(); return;
+    }
+
+    var sq = v * v;
+    if (sq === A) {
+      S.history.push({ s: v, sq: sq, tooBig: null, loBefore: S.lo, hiBefore: S.hi });
+      S.lo = v; S.hi = v; S.exakt = v;
+      S.msg = { kind: "exakt", text: fmt(v) + " · " + fmt(v) + " = " + fmt(sq) + " — genau " + A + ". Volltreffer!" };
+      E.eingabe.value = ""; render(); return;
+    }
+
+    var tooBig = sq > A;
+    S.history.push({ s: v, sq: sq, tooBig: tooBig, loBefore: S.lo, hiBefore: S.hi });
+    if (tooBig) S.hi = v; else S.lo = v;
+    S.msg = { kind: tooBig ? "zuGross" : "zuKlein",
+      text: fmt(v) + " · " + fmt(v) + " = " + fmt(sq) + " — das ist " + (tooBig ? "mehr" : "weniger") +
+        " als " + A + ". Deine Seite ist noch zu " + (tooBig ? "lang" : "kurz") + ". Neue " +
+        (tooBig ? "Obergrenze" : "Untergrenze") + ": " + fmt(v) + "." };
+    E.eingabe.value = "";
+    render();
+    E.eingabe.focus();
+  }
+
+  function zurueck() {
+    if (!S.history.length) return;
+    var l = S.history.pop();
+    S.lo = l.loBefore; S.hi = l.hiBefore; S.exakt = null;
+    S.msg = { kind: "info", text: "Der Versuch " + fmt(l.s) + " wurde zurückgenommen. Der Suchbereich ist wieder von " +
+      fmt(l.loBefore) + " bis " + fmt(l.hiBefore) + "." };
+    E.eingabe.value = "";
+    render();
+  }
+
+  /* ---------- Tabelle als Bild ---------- */
+  function fussText() {
+    var A = S.A, w = breite();
+    if (S.exakt !== null)
+      return "Ergebnis: Die Seitenlänge ist genau " + fmt(S.exakt) + ", denn " + fmt(S.exakt) +
+        " · " + fmt(S.exakt) + " = " + A + ". Man schreibt dafür √" + A + " = " + fmt(S.exakt) + ".";
+    if (w < EPS && istQuadratzahl(A)) {
+      var r = fmt(Math.sqrt(A));
+      return "Ergebnis: " + fmt(S.lo) + " < s < " + fmt(S.hi) + ". Die gesuchte Zahl ist genau " + r +
+        ", denn " + r + " · " + r + " = " + A + ". Man schreibt √" + A + " = " + r + ".";
+    }
+    if (w < EPS)
+      return "Ergebnis: " + fmt(S.lo) + " < s < " + fmt(S.hi) + ". Diese Zahl heißt Quadratwurzel aus " +
+        A + ", geschrieben √" + A + " ≈ " + fmtFix(Math.sqrt(A), 4) +
+        ". Sie lässt sich weder als Bruch noch als abbrechende Dezimalzahl schreiben.";
+    return "Zwischenstand: " + fmt(S.lo) + " < s < " + fmt(S.hi) + ", Breite des Suchbereichs " + fmt(w, 8) + ".";
+  }
+
+  function tabelleAlsBild() {
+    var cols = [
+      { t: "Nr.", w: 90, a: "left" },
+      { t: "Seite s", w: 200, a: "right" },
+      { t: "s · s", w: 210, a: "right" },
+      { t: "Ziel A", w: 120, a: "right" },
+      { t: "Ergebnis", w: 200, a: "right" }
+    ];
+    var pad = 34, innerW = 0;
+    cols.forEach(function (c) { innerW += c.w; });
+    var W = innerW + pad * 2, rowH = 40, kopfH = 118;
+    var zeilen = alleZeilen();
+
+    var mess = document.createElement("canvas").getContext("2d");
+    mess.font = "16px 'Segoe UI', system-ui, sans-serif";
+    var fuss = umbrechen(mess, fussText(), innerW);
+    var H = kopfH + rowH * (zeilen.length + 1) + 26 + fuss.length * 24 + pad;
+
+    var cv = document.createElement("canvas"), sc = 2;
+    cv.width = W * sc; cv.height = H * sc;
+    var ctx = cv.getContext("2d");
+    ctx.scale(sc, sc);
+    ctx.textBaseline = "middle";
+
+    ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = "#1F2933";
+    ctx.font = "700 24px 'Segoe UI', system-ui, sans-serif";
+    ctx.fillText("Intervallschachtelung: Seitenlänge eines Quadrats", pad, 40);
+    ctx.fillStyle = "#5B6670";
+    ctx.font = "16px 'Segoe UI', system-ui, sans-serif";
+    ctx.fillText("Gesucht: die Seite s mit s · s = " + S.A + "   ·   " +
+      new Date().toLocaleDateString("de-DE"), pad, 68);
+
+    var y = kopfH, x = pad;
+    ctx.fillStyle = "#F2F5F6"; ctx.fillRect(pad, y - rowH / 2, innerW, rowH);
+    ctx.fillStyle = "#5B6670";
+    ctx.font = "700 15px 'Segoe UI', system-ui, sans-serif";
+    cols.forEach(function (c) {
+      if (c.a === "left") { ctx.textAlign = "left"; ctx.fillText(c.t, x + 12, y); }
+      else { ctx.textAlign = "right"; ctx.fillText(c.t, x + c.w - 12, y); }
+      x += c.w;
+    });
+
+    zeilen.forEach(function (r, i) {
+      y += rowH;
+      if (i % 2 === 1) { ctx.fillStyle = "#FAFBFB"; ctx.fillRect(pad, y - rowH / 2, innerW, rowH); }
+      ctx.strokeStyle = "#EDF0F2"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(pad, y - rowH / 2 + 0.5);
+      ctx.lineTo(pad + innerW, y - rowH / 2 + 0.5); ctx.stroke();
+
+      var seed = r.label === "Start";
+      var werte = [r.label, fmt(r.s), fmt(r.sq), String(S.A),
+        r.tooBig === null ? "genau" : r.tooBig ? "zu groß" : "zu klein"];
+      x = pad;
+      werte.forEach(function (wt, k) {
+        ctx.fillStyle = seed ? "#7B858E" : "#1F2933";
+        ctx.font = (k === 4 && !seed ? "700 " : "") + "16px 'Segoe UI', system-ui, sans-serif";
+        if (cols[k].a === "left") { ctx.textAlign = "left"; ctx.fillText(wt, x + 12, y); }
+        else { ctx.textAlign = "right"; ctx.fillText(wt, x + cols[k].w - 12, y); }
+        x += cols[k].w;
+      });
+    });
+
+    y += rowH / 2;
+    ctx.strokeStyle = "#D8DEE3";
+    ctx.beginPath(); ctx.moveTo(pad, y + 0.5); ctx.lineTo(pad + innerW, y + 0.5); ctx.stroke();
+    ctx.textAlign = "left"; ctx.fillStyle = "#1F2933";
+    ctx.font = "16px 'Segoe UI', system-ui, sans-serif";
+    var fy = y + 30;
+    fuss.forEach(function (zz) { ctx.fillText(zz, pad, fy); fy += 24; });
+
+    var url = cv.toDataURL("image/png");
+    var name = "intervallschachtelung_A" + S.A + ".png";
+    E.vorschauImg.src = url;
+    E.linkBild.href = url;
+    E.linkBild.setAttribute("download", name);
+    E.vorschau.classList.remove("versteckt");
+    try {
+      var a = document.createElement("a");
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+    } catch (e) { /* Vorschau bleibt als Rückfallebene */ }
+  }
+
+  /* ---------- Ereignisse ---------- */
+  E.btnPruefen.onclick = pruefen;
+  E.eingabe.addEventListener("keydown", function (ev) { if (ev.key === "Enter") pruefen(); });
+  E.btnMitte.onclick = function () {
+    E.eingabe.value = fmt((S.lo + S.hi) / 2, 6);
+    E.eingabe.focus();
+  };
+  E.btnZurueck.onclick = zurueck;
+  E.btnNeu.onclick = function () { waehleFlaeche(S.A); };
+  E.btnAnleitung.onclick = function () {
+    S.anleitung = !S.anleitung;
+    E.anleitungInhalt.classList.toggle("versteckt", !S.anleitung);
+    E.btnAnleitung.textContent = S.anleitung ? "Ausblenden" : "Anleitung zeigen";
+    E.btnAnleitung.setAttribute("aria-expanded", String(S.anleitung));
+  };
+  E.zoomRegler.addEventListener("input", function () {
+    S.zoom = Math.pow(MAXZ, Number(E.zoomRegler.value) / 100);
+    setzeZiele();
+  });
+  E.btnAuto.onclick = function () {
+    var g = grenzen(), U = 220 / g[1];
+    var px = Math.abs(letzter().s - Math.sqrt(S.A)) * U;
+    S.zoom = Math.min(MAXZ, Math.max(1, px > 1e-9 ? 40 / px : MAXZ));
+    E.zoomRegler.value = String(Math.round(100 * Math.log(S.zoom) / Math.log(MAXZ)));
+    setzeZiele();
+  };
+  E.btnGanz.onclick = function () {
+    S.zoom = 1; E.zoomRegler.value = "0"; setzeZiele();
+  };
+  E.btnBild.onclick = tabelleAlsBild;
+  E.btnVorschauZu.onclick = function () { E.vorschau.classList.add("versteckt"); };
+
+  /* ---------- Start ---------- */
+  waehleFlaeche(20);
+  for (var kk in targ) anim[kk] = targ[kk];
+  zeichne();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Großes Einmaleins – Stadion</title>
+<style>
+:root{
+  --navy-900:#071B3D;
+  --navy-800:#0B2A5B;
+  --navy-700:#12386F;
+  --blue-500:#1466C8;
+  --blue-300:#4FA3F0;
+  --cyan:#38D6FF;
+  --white:#FFFFFF;
+  --paper:#EEF3FA;
+  --ink:#0D1B33;
+  --ink-soft:#4A5C78;
+  --green:#12864B;
+  --green-soft:#E2F5EA;
+  --red:#C42F2F;
+  --red-soft:#FBE7E7;
+  --bronze:#C0783C;
+  --silver:#9FAEC0;
+  --gold:#E0A828;
+  --laurel:#F5D06A;
+  --shadow:0 10px 30px rgba(7,27,61,.18);
+  --shadow-lift:0 18px 44px rgba(7,27,61,.28);
+  --font-display:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --font-num:ui-monospace,"SF Mono","DejaVu Sans Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  min-height:100vh;
+  font-family:var(--font-display);
+  color:var(--ink);
+  background:
+    radial-gradient(900px 420px at 12% -8%, rgba(79,163,240,.38), transparent 62%),
+    radial-gradient(900px 420px at 88% -8%, rgba(56,214,255,.28), transparent 62%),
+    linear-gradient(178deg,var(--navy-800) 0%, var(--navy-900) 100%);
+  padding:clamp(12px,3vw,32px);
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+}
+.stage{width:100%;max-width:760px;}
+.hidden{display:none !important;}
+
+/* ---------- Anzeigetafel ---------- */
+.board{
+  background:linear-gradient(180deg,var(--navy-700),var(--navy-900));
+  border:1px solid rgba(56,214,255,.28);
+  border-radius:20px;
+  padding:clamp(14px,3vw,22px);
+  box-shadow:var(--shadow-lift), inset 0 1px 0 rgba(255,255,255,.12);
+  color:var(--white);
+}
+.board-top{
+  display:flex;flex-wrap:wrap;gap:16px;
+  align-items:center;justify-content:space-between;
+}
+.rank{display:flex;align-items:center;gap:14px;min-width:0;}
+.eyebrow{
+  font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--cyan);font-weight:700;margin:0 0 2px;
+}
+.rank-name{
+  margin:0;font-size:clamp(20px,4.6vw,30px);font-weight:800;
+  letter-spacing:-.01em;line-height:1.1;
+}
+.tiles{display:flex;gap:10px;}
+.tile{
+  background:rgba(4,14,32,.72);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:12px;
+  padding:8px 14px;
+  text-align:center;
+  min-width:74px;
+}
+.tile-label{
+  display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:#9FC0E6;font-weight:700;
+}
+.tile-value{
+  display:block;font-family:var(--font-num);font-size:24px;font-weight:700;
+  line-height:1.2;font-variant-numeric:tabular-nums;
+}
+.tile-value.is-right{color:#6FE6A6;}
+.tile-value.is-wrong{color:#FF9B9B;}
+
+/* Laufbahn statt Balken: 10 Segmente = 10 Treffer */
+.track{margin-top:18px;}
+.lanes{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;}
+.lane{
+  height:16px;border-radius:5px;
+  background:rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.10);
+  transition:background .25s ease, transform .25s ease;
+}
+.lane.filled{background:linear-gradient(180deg,var(--cyan),var(--blue-300));transform:scaleY(1.14);}
+.track-note{
+  margin:9px 0 0;font-size:13px;color:#B9D3F0;font-weight:600;
+}
+
+/* ---------- Karten ---------- */
+.card{
+  background:var(--white);
+  border-radius:20px;
+  box-shadow:var(--shadow);
+  padding:clamp(18px,4vw,32px);
+  margin-top:16px;
+}
+.card h1{
+  margin:0 0 6px;font-size:clamp(26px,6vw,38px);font-weight:800;letter-spacing:-.02em;
+}
+.card .lead{margin:0 0 24px;color:var(--ink-soft);font-size:16px;line-height:1.5;}
+.field-label{display:block;font-weight:700;font-size:15px;margin-bottom:8px;}
+.field-hint{color:var(--ink-soft);font-weight:500;}
+.fields{display:flex;flex-wrap:wrap;gap:22px 34px;}
+.field{flex:1 1 150px;}
+.max-input{
+  font-family:var(--font-num);font-size:34px;font-weight:700;
+  width:110px;padding:10px 14px;text-align:center;
+  border:2px solid #C8D6E8;border-radius:14px;background:var(--paper);color:var(--ink);
+}
+.max-input:focus-visible{outline:3px solid var(--blue-500);outline-offset:2px;border-color:var(--blue-500);}
+.error{color:var(--red);font-weight:700;margin:10px 0 0;font-size:15px;}
+
+.btn{
+  font-family:inherit;font-weight:800;letter-spacing:.02em;
+  border:0;border-radius:14px;cursor:pointer;
+  padding:16px 30px;font-size:18px;
+  background:linear-gradient(180deg,var(--blue-500),#0F4FA0);
+  color:var(--white);box-shadow:0 5px 0 #0A3874;
+  transition:transform .08s ease, box-shadow .08s ease;
+  min-height:52px;
+}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 #0A3874;}
+.btn:focus-visible{outline:3px solid var(--cyan);outline-offset:3px;}
+.btn-start{margin-top:24px;width:100%;font-size:22px;padding:20px;}
+.btn-ghost{
+  background:transparent;color:#BBD6F5;border:1px solid rgba(255,255,255,.28);
+  box-shadow:none;padding:11px 18px;font-size:14px;min-height:44px;
+}
+.btn-ghost:active{transform:none;box-shadow:none;}
+.btn-ghost:hover{background:rgba(255,255,255,.08);}
+
+/* ---------- Aufgabe ---------- */
+.task{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
+  gap:clamp(8px,2.2vw,16px);
+  font-family:var(--font-num);font-variant-numeric:tabular-nums;
+  font-size:clamp(34px,9vw,58px);font-weight:700;line-height:1;
+}
+.task span{color:var(--ink);}
+.task .op{color:var(--blue-500);}
+.slot{
+  font-family:var(--font-num);font-size:inherit;font-weight:700;
+  width:4.2ch;text-align:center;padding:6px 4px;
+  border:0;border-bottom:5px solid var(--blue-500);
+  background:#F2F7FD;border-radius:8px 8px 0 0;color:var(--ink);
+  -moz-appearance:textfield;
+}
+.slot::-webkit-outer-spin-button,.slot::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+.slot:focus-visible{outline:3px solid var(--cyan);outline-offset:2px;background:#E6F1FD;}
+.slot:disabled{background:#EDF1F6;color:var(--ink-soft);}
+
+.check-row{margin-top:26px;text-align:center;}
+.enter-hint{display:block;margin-top:10px;font-size:13px;color:var(--ink-soft);}
+
+.feedback{
+  margin-top:20px;border-radius:14px;padding:14px 18px;
+  font-size:clamp(17px,3.6vw,21px);font-weight:800;text-align:center;
+  min-height:56px;display:flex;align-items:center;justify-content:center;
+  flex-wrap:wrap;gap:.3em;
+}
+.feedback.empty{background:var(--paper);color:transparent;}
+.feedback.right{background:var(--green-soft);color:var(--green);}
+.feedback.wrong{background:var(--red-soft);color:var(--red);}
+.feedback .sol{font-family:var(--font-num);}
+.feedback .minus{flex-basis:100%;font-size:.78em;font-weight:700;opacity:.85;}
+.feedback .minus:empty{display:none;}
+
+.footer-row{
+  display:flex;justify-content:center;margin-top:18px;
+}
+
+/* ---------- Medaille + Aufstieg ---------- */
+.medal{width:46px;height:46px;flex:0 0 auto;}
+.levelup{
+  position:fixed;inset:0;background:rgba(7,27,61,.86);
+  display:flex;align-items:center;justify-content:center;padding:20px;z-index:20;
+}
+.levelup-inner{
+  background:var(--white);border-radius:24px;padding:36px 30px;text-align:center;
+  box-shadow:var(--shadow-lift);max-width:420px;width:100%;
+  animation:pop .32s ease-out;
+}
+.levelup-inner .medal{width:96px;height:96px;margin:0 auto 14px;}
+.levelup-kicker{
+  margin:0;font-size:12px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--blue-500);font-weight:800;
+}
+.levelup-name{margin:6px 0 4px;font-size:clamp(26px,6vw,34px);font-weight:800;}
+.levelup-sub{margin:0;color:var(--ink-soft);font-size:15px;}
+@keyframes pop{from{transform:scale(.86) translateY(10px);opacity:0;}to{transform:none;opacity:1;}}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms !important;transition-duration:.001ms !important;}
+  .lane.filled{transform:none;}
+}
+@media (max-width:430px){
+  .tile{min-width:0;flex:1;padding:8px 6px;}
+  .tiles{width:100%;}
+  .rank{width:100%;}
+}
+</style>
+</head>
+<body>
+<main class="stage">
+
+  <!-- START -->
+  <section id="screen-start" class="card">
+    <h1>Großes Einmaleins im Stadion</h1>
+    <p class="lead">Zehn Aufgaben pro Stufe, zehn Stufen bis zum Olympioniken. Zuerst legst du fest, wie groß die Zahlen werden sollen.</p>
+
+    <div class="fields">
+      <div class="field">
+        <label class="field-label" for="min-input">
+          Kleinster Faktor <span class="field-hint">(1 bis 20)</span>
+        </label>
+        <input id="min-input" class="max-input" type="number" inputmode="numeric" min="1" max="20" value="10">
+      </div>
+      <div class="field">
+        <label class="field-label" for="max-input">
+          Größter Faktor <span class="field-hint">(2 bis 20)</span>
+        </label>
+        <input id="max-input" class="max-input" type="number" inputmode="numeric" min="2" max="20" value="20">
+      </div>
+    </div>
+    <p id="max-error" class="error hidden"></p>
+
+    <button id="btn-start" class="btn btn-start">Anpfiff</button>
+  </section>
+
+  <!-- SPIEL -->
+  <div id="screen-game" class="hidden">
+    <section class="board">
+      <div class="board-top">
+        <div class="rank">
+          <span id="rank-medal"></span>
+          <div>
+            <p class="eyebrow">Deine Gewinnstufe</p>
+            <p id="rank-name" class="rank-name">Anfänger</p>
+          </div>
+        </div>
+        <div class="tiles">
+          <div class="tile">
+            <span class="tile-label">Richtig</span>
+            <span id="stat-right" class="tile-value is-right">0</span>
+          </div>
+          <div class="tile">
+            <span class="tile-label">Falsch</span>
+            <span id="stat-wrong" class="tile-value is-wrong">0</span>
+          </div>
+          <div class="tile">
+            <span class="tile-label">Stufe</span>
+            <span id="stat-level" class="tile-value">1</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="track">
+        <div id="lanes" class="lanes" aria-hidden="true"></div>
+        <p id="track-note" class="track-note">Noch 10 Treffer bis Freizeitsportler</p>
+      </div>
+
+      <div class="footer-row">
+        <button id="btn-reset" class="btn btn-ghost">Neues Spiel</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="task" id="task"></div>
+      <div class="check-row">
+        <button id="btn-check" class="btn">Prüfen</button>
+        <span class="enter-hint">Du kannst auch die Enter-Taste drücken.</span>
+      </div>
+      <p id="feedback" class="feedback empty" role="status" aria-live="polite">Platzhalter</p>
+    </section>
+  </div>
+</main>
+
+<script>
+(function(){
+  "use strict";
+
+  var LEVELS = [
+    {name:"Anfänger",         tier:"start"},
+    {name:"Freizeitsportler", tier:"start"},
+    {name:"Vereinsmitglied",  tier:"start"},
+    {name:"Kreismeister",     tier:"bronze"},
+    {name:"Bezirksmeister",   tier:"bronze"},
+    {name:"Landesmeister",    tier:"silver"},
+    {name:"Deutscher Meister",tier:"silver"},
+    {name:"Europameister",    tier:"gold"},
+    {name:"Weltmeister",      tier:"gold"},
+    {name:"Olympionike",      tier:"laurel"}
+  ];
+  var TIER_COLOR = {
+    start:"#4FA3F0", bronze:"#C0783C", silver:"#9FAEC0",
+    gold:"#E0A828", laurel:"#F5D06A"
+  };
+  var PER_LEVEL = 10;
+  var PRAISE = ["Treffer!","Punkt für dich!","Volltreffer!","Sauber gerechnet!","Ins Schwarze!","Stark!"];
+
+  var state = {
+    min: 10,
+    max: 20,
+    level: 0,
+    inLevel: 0,
+    right: 0,
+    wrong: 0,
+    a: 0, b: 0, missing: 0,
+    locked: false,
+    timer: null
+  };
+
+  var $ = function(id){ return document.getElementById(id); };
+  var screenStart = $("screen-start"), screenGame = $("screen-game");
+  var minInput = $("min-input"), maxInput = $("max-input"), maxError = $("max-error");
+  var taskEl = $("task"), feedbackEl = $("feedback");
+  var lanesEl = $("lanes"), trackNote = $("track-note");
+  var rankName = $("rank-name"), rankMedal = $("rank-medal");
+  var statRight = $("stat-right"), statWrong = $("stat-wrong"), statLevel = $("stat-level");
+
+  function medalSVG(tier, size){
+    var c = TIER_COLOR[tier];
+    return '<svg class="medal" viewBox="0 0 48 48" style="width:'+size+'px;height:'+size+'px" role="img" aria-hidden="true">'
+      + '<path d="M14 3 L20 3 L26 19 L18 21 Z" fill="#1466C8"/>'
+      + '<path d="M34 3 L28 3 L22 19 L30 21 Z" fill="#0F4FA0"/>'
+      + '<circle cx="24" cy="31" r="13" fill="'+c+'" stroke="rgba(0,0,0,.18)" stroke-width="1.5"/>'
+      + '<circle cx="24" cy="31" r="9" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.5"/>'
+      + '<path d="M24 25 l1.9 3.9 4.3.6-3.1 3 .7 4.3-3.8-2-3.8 2 .7-4.3-3.1-3 4.3-.6z" fill="#fff" opacity=".92"/>'
+      + '</svg>';
+  }
+
+  function buildLanes(){
+    lanesEl.innerHTML = "";
+    for (var i = 0; i < PER_LEVEL; i++){
+      var d = document.createElement("div");
+      d.className = "lane";
+      lanesEl.appendChild(d);
+    }
+  }
+
+  function randInt(lo, hi){ return Math.floor(Math.random() * (hi - lo + 1)) + lo; }
+
+  function newTask(){
+    state.a = randInt(state.min, state.max);
+    state.b = randInt(state.min, state.max);
+    state.missing = Math.floor(Math.random() * 3); // 0 = Ergebnis, 1 = 2. Faktor, 2 = 1. Faktor
+    renderTask();
+  }
+
+  function renderTask(){
+    var p = state.a * state.b;
+    var slot = '<input id="answer" class="slot" type="number" inputmode="numeric" '
+             + 'autocomplete="off" aria-label="Fehlende Zahl eintragen">';
+    var html;
+    if (state.missing === 0){
+      html = '<span>'+state.a+'</span><span class="op">·</span><span>'+state.b+'</span><span class="op">=</span>'+slot;
+    } else if (state.missing === 1){
+      html = '<span>'+state.a+'</span><span class="op">·</span>'+slot+'<span class="op">=</span><span>'+p+'</span>';
+    } else {
+      html = slot+'<span class="op">·</span><span>'+state.b+'</span><span class="op">=</span><span>'+p+'</span>';
+    }
+    taskEl.innerHTML = html;
+    var answer = $("answer");
+    answer.addEventListener("keydown", function(e){
+      if (e.key === "Enter"){ e.preventDefault(); check(); }
+    });
+    answer.focus();
+  }
+
+  function expected(){
+    if (state.missing === 0) return state.a * state.b;
+    if (state.missing === 1) return state.b;
+    return state.a;
+  }
+
+  function solutionText(){
+    return state.a + " · " + state.b + " = " + (state.a * state.b);
+  }
+
+  function check(){
+    if (state.locked) return;
+    var answer = $("answer");
+    var raw = answer.value.trim();
+    if (raw === "") { answer.focus(); return; }
+    var val = parseInt(raw, 10);
+    var ok = (val === expected());
+
+    state.locked = true;
+    answer.disabled = true;
+
+    if (ok){
+      state.right++;
+      feedbackEl.className = "feedback right";
+      feedbackEl.textContent = PRAISE[Math.floor(Math.random() * PRAISE.length)];
+      if (state.level < LEVELS.length - 1){
+        state.inLevel++;
+        if (state.inLevel >= PER_LEVEL){
+          state.inLevel = 0;
+          state.level++;
+          updateBoard();
+          state.timer = setTimeout(showLevelUp, 700);
+          return;
+        }
+      }
+    } else {
+      state.wrong++;
+      var lost = false;
+      if (state.level < LEVELS.length - 1 && state.inLevel > 0){
+        state.inLevel--;
+        lost = true;
+      }
+      feedbackEl.className = "feedback wrong";
+      feedbackEl.innerHTML = 'Daneben. Richtig ist:<span class="sol">' + solutionText() + '</span>'
+        + '<span class="minus">' + (lost ? "Ein Punkt zurück." : "") + '</span>';
+    }
+    updateBoard();
+    state.timer = setTimeout(nextTask, ok ? 900 : 2600);
+  }
+
+  function nextTask(){
+    state.locked = false;
+    feedbackEl.className = "feedback empty";
+    feedbackEl.textContent = "Platzhalter";
+    newTask();
+  }
+
+  function showLevelUp(){
+    var lvl = LEVELS[state.level];
+    var last = (state.level === LEVELS.length - 1);
+    var overlay = document.createElement("div");
+    overlay.className = "levelup";
+    overlay.innerHTML =
+      '<div class="levelup-inner">'
+      + medalSVG(lvl.tier, 96)
+      + '<p class="levelup-kicker">Aufstieg</p>'
+      + '<p class="levelup-name">Du bist jetzt ' + lvl.name + '</p>'
+      + '<p class="levelup-sub">' + (last
+          ? "Höchste Gewinnstufe erreicht. Du kannst weiterspielen und deine Treffer sammeln."
+          : "Zehn Treffer geschafft. Weiter geht es mit der nächsten Stufe.") + '</p>'
+      + '</div>';
+    document.body.appendChild(overlay);
+    var close = function(){
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+      nextTask();
+    };
+    overlay.addEventListener("click", close);
+    state.timer = setTimeout(close, 2200);
+  }
+
+  function updateBoard(){
+    var lvl = LEVELS[state.level];
+    var last = (state.level === LEVELS.length - 1);
+    rankName.textContent = lvl.name;
+    rankMedal.innerHTML = medalSVG(lvl.tier, 46);
+    statRight.textContent = state.right;
+    statWrong.textContent = state.wrong;
+    statLevel.textContent = (state.level + 1);
+
+    var lanes = lanesEl.children;
+    for (var i = 0; i < lanes.length; i++){
+      var on = last ? true : (i < state.inLevel);
+      lanes[i].className = on ? "lane filled" : "lane";
+    }
+    if (last){
+      trackNote.textContent = "Höchste Gewinnstufe – du spielst für die Bestleistung weiter.";
+    } else {
+      var left = PER_LEVEL - state.inLevel;
+      trackNote.textContent = "Noch " + left + (left === 1 ? " Treffer" : " Treffer")
+        + " bis " + LEVELS[state.level + 1].name;
+    }
+  }
+
+  function fail(msg, field){
+    maxError.textContent = msg;
+    maxError.classList.remove("hidden");
+    field.focus();
+    field.select();
+  }
+
+  function start(){
+    var lo = parseInt(minInput.value, 10);
+    var hi = parseInt(maxInput.value, 10);
+    if (isNaN(lo) || lo < 1 || lo > 20){
+      fail("Bitte für den kleinsten Faktor eine Zahl von 1 bis 20 eintragen.", minInput);
+      return;
+    }
+    if (isNaN(hi) || hi < 2 || hi > 20){
+      fail("Bitte für den größten Faktor eine Zahl von 2 bis 20 eintragen.", maxInput);
+      return;
+    }
+    if (lo >= hi){
+      fail("Der kleinste Faktor muss kleiner sein als der größte.", minInput);
+      return;
+    }
+    maxError.classList.add("hidden");
+    state.min = lo;
+    state.max = hi;
+    state.level = 0; state.inLevel = 0; state.right = 0; state.wrong = 0; state.locked = false;
+    screenStart.classList.add("hidden");
+    screenGame.classList.remove("hidden");
+    buildLanes();
+    updateBoard();
+    feedbackEl.className = "feedback empty";
+    feedbackEl.textContent = "Platzhalter";
+    newTask();
+  }
+
+  function reset(){
+    if (state.timer) clearTimeout(state.timer);
+    state.locked = false;
+    screenGame.classList.add("hidden");
+    screenStart.classList.remove("hidden");
+    minInput.focus();
+    minInput.select();
+  }
+
+  $("btn-start").addEventListener("click", start);
+  $("btn-check").addEventListener("click", check);
+  $("btn-reset").addEventListener("click", reset);
+  [minInput, maxInput].forEach(function(el){
+    el.addEventListener("keydown", function(e){
+      if (e.key === "Enter"){ e.preventDefault(); start(); }
+    });
+    el.addEventListener("input", function(){ maxError.classList.add("hidden"); });
+  });
+})();
+</script>
+</body>
+</html>

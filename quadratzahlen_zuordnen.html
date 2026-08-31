@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quadratzahlen zuordnen</title>
+<style>
+/* ===================================================================
+   FARBEN UND GRUNDMASSE
+   =================================================================== */
+:root{
+  --blau-900:#0e2a4f;
+  --blau-700:#1a4c8f;
+  --blau-500:#2f6fd0;
+  --blau-200:#c3d8f4;
+  --blau-100:#e2ecfb;
+  --blau-050:#eef3fb;
+
+  --gruen-text:#155e30;
+  --gruen-rand:#2e9e56;
+  --gruen-flaeche:#e4f5e9;
+
+  --rot-text:#9d241c;
+  --rot-rand:#d3453a;
+  --rot-flaeche:#fce7e5;
+
+  --karte:#ffffff;
+  --schatten:0 2px 10px rgba(14,42,79,.10);
+  --schatten-hoch:0 12px 26px rgba(14,42,79,.28);
+  --radius:14px;
+  --blockhoehe:52px;   /* kompakte Blockhöhe, Tap-Fläche > 44 px */
+}
+
+*{box-sizing:border-box;}
+
+html,body{margin:0;padding:0;}
+
+body{
+  background:var(--blau-050);
+  color:var(--blau-900);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  font-size:17px;
+  line-height:1.5;
+  padding:18px 14px 0;
+  -webkit-text-size-adjust:100%;
+}
+
+.blatt{
+  max-width:720px;
+  margin:0 auto;
+  background:var(--karte);
+  border-radius:var(--radius);
+  box-shadow:var(--schatten);
+  padding:22px 20px 0;
+}
+
+/* ===================================================================
+   KOPFBEREICH
+   =================================================================== */
+h1{
+  font-size:1.5rem;
+  line-height:1.2;
+  margin:0 0 10px;
+  color:var(--blau-900);
+}
+
+.ziel{
+  margin:0 0 14px;
+  padding:10px 14px;
+  background:var(--blau-100);
+  border-left:5px solid var(--blau-500);
+  border-radius:8px;
+  font-weight:600;
+}
+
+.auftrag{margin:0 0 6px;}
+.auftrag + .auftrag{margin-bottom:18px;color:#3c5a83;font-size:.95rem;}
+
+/* ===================================================================
+   SPALTENKÖPFE UND RASTER
+   =================================================================== */
+.spaltenkopf,
+.zeile{
+  display:grid;
+  grid-template-columns:1fr 46px 1fr;
+  gap:8px;
+  align-items:stretch;
+}
+
+.spaltenkopf{
+  margin-bottom:8px;
+  font-size:.9rem;
+  font-weight:600;
+  color:#3c5a83;
+}
+.spaltenkopf span:first-child{text-align:right;padding-right:6px;}
+.spaltenkopf span:last-child{padding-left:6px;}
+.spaltenkopf .mitte{text-align:center;}
+
+.raster{display:flex;flex-direction:column;gap:6px;}
+
+/* ===================================================================
+   BLÖCKE
+   =================================================================== */
+.block{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  width:100%;
+  min-height:var(--blockhoehe);
+  padding:6px 10px;
+  font-family:inherit;
+  font-size:1.15rem;
+  font-weight:600;
+  font-variant-numeric:tabular-nums;
+  color:var(--blau-900);
+  background:var(--karte);
+  border:2px solid var(--blau-200);
+  border-radius:10px;
+  box-shadow:var(--schatten);
+  cursor:pointer;
+  touch-action:manipulation;   /* Tippen ja, Scrollen bleibt möglich */
+  user-select:none;
+  -webkit-user-select:none;
+  transition:border-color .12s, background-color .12s, transform .12s;
+}
+
+.block .wert{flex:1;}
+.block[data-spalte="links"] .wert{text-align:right;}
+.block[data-spalte="rechts"] .wert{text-align:left;}
+
+/* Griff zum Ziehen: nur hier ist Scrollen abgeschaltet,
+   damit auf dem iPad die Seite überall sonst normal scrollt. */
+.griff{
+  flex:0 0 auto;
+  width:26px;
+  align-self:stretch;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--blau-500);
+  font-size:1.05rem;
+  letter-spacing:1px;
+  border-radius:6px;
+  background:var(--blau-050);
+  touch-action:none;           /* Ziehen mit dem Finger */
+  cursor:grab;
+}
+.block[data-spalte="links"] .griff{order:-1;}
+
+.block:focus-visible{outline:3px solid var(--blau-500);outline-offset:2px;}
+
+.block.gewaehlt{
+  border-color:var(--blau-500);
+  background:var(--blau-100);
+  transform:scale(1.015);
+}
+
+.block.ziel{
+  border-color:var(--blau-500);
+  border-style:dashed;
+  background:var(--blau-050);
+}
+
+.block.zieht-original{opacity:.35;}
+
+.block.richtig,
+.block.richtig[disabled]{
+  border-color:var(--gruen-rand);
+  background:var(--gruen-flaeche);
+  color:var(--gruen-text);
+  cursor:default;
+  opacity:1;
+}
+
+.block.falsch{
+  border-color:var(--rot-rand);
+  background:var(--rot-flaeche);
+  color:var(--rot-text);
+}
+
+.loesung{
+  display:block;
+  font-size:.8rem;
+  font-weight:600;
+  color:var(--rot-text);
+}
+
+/* Zeichen zwischen den Blöcken: Symbol zusätzlich zur Farbe */
+.mitte{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.3rem;
+  font-weight:700;
+  color:var(--blau-200);
+}
+.mitte.richtig{color:var(--gruen-rand);}
+.mitte.falsch{color:var(--rot-rand);}
+
+/* Der Block, der am Finger/an der Maus hängt */
+#schwebend{
+  position:fixed;
+  z-index:50;
+  pointer-events:none;
+  box-shadow:var(--schatten-hoch);
+  transform:scale(1.04);
+  border-color:var(--blau-500);
+  margin:0;
+}
+
+/* ===================================================================
+   STEUERUNG UND RÜCKMELDUNG
+   =================================================================== */
+.steuerung{
+  position:sticky;
+  bottom:0;
+  margin-top:16px;
+  padding:14px 0 14px;
+  background:var(--karte);
+  border-top:1px solid var(--blau-100);
+}
+.knopfreihe{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:12px;
+}
+
+button.aktion{
+  font-family:inherit;
+  font-size:1rem;
+  font-weight:600;
+  min-height:48px;
+  padding:0 22px;
+  border-radius:10px;
+  cursor:pointer;
+  border:2px solid var(--blau-700);
+}
+#pruefen{background:var(--blau-700);color:#fff;}
+#pruefen:hover:not([disabled]){background:var(--blau-500);border-color:var(--blau-500);}
+#pruefen[disabled]{background:#9fb4d1;border-color:#9fb4d1;cursor:default;}
+#neu{background:#fff;color:var(--blau-700);}
+#neu:hover{background:var(--blau-100);}
+button.aktion:focus-visible{outline:3px solid var(--blau-500);outline-offset:2px;}
+
+#versuche{font-weight:600;color:#3c5a83;}
+
+#rueckmeldung{
+  min-height:1.5em;
+  margin:10px 0 0;
+  font-weight:600;
+}
+#rueckmeldung.richtig{color:var(--gruen-text);}
+#rueckmeldung.falsch{color:var(--blau-900);}
+
+#abschluss{margin:0 0 18px;}
+#abschluss .kasten{
+  padding:12px 14px;
+  background:var(--blau-050);
+  border:1px solid var(--blau-200);
+  border-radius:10px;
+}
+#abschluss p{margin:0 0 10px;}
+.selbst{display:flex;flex-wrap:wrap;gap:8px;}
+.selbst button{
+  font-family:inherit;font-size:.95rem;font-weight:600;
+  min-height:44px;padding:0 14px;border-radius:8px;
+  border:2px solid var(--blau-200);background:#fff;color:var(--blau-900);cursor:pointer;
+}
+.selbst button:hover{border-color:var(--blau-500);}
+#selbstEcho{margin:10px 0 0;font-weight:600;color:var(--blau-700);}
+
+body.zieht{cursor:grabbing;}
+
+@media (max-width:520px){
+  body{font-size:16px;padding:10px 8px 0;}
+  .blatt{padding:16px 12px 0;}
+  .block{font-size:1rem;padding:6px 8px;}
+  .spaltenkopf,.zeile{grid-template-columns:1fr 34px 1fr;gap:6px;}
+  .griff{width:22px;}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{transition:none !important;}
+}
+</style>
+</head>
+<body>
+
+<main class="blatt">
+  <h1>Quadratzahlen zuordnen</h1>
+
+  <p class="ziel">Ich kann die Quadratzahlen von 1² bis 20² sicher zuordnen.</p>
+
+  <p class="auftrag">Ordne jeder Quadrataufgabe die passende Quadratzahl zu. In jeder Zeile müssen Aufgabe und Ergebnis zusammenpassen.</p>
+  <p class="auftrag">So verschiebst du einen Block: Tippe ihn an, tippe dann den Block an, mit dem er den Platz tauschen soll. Oder ziehe ihn am Griff an die neue Stelle. Getauscht wird immer innerhalb einer Spalte.</p>
+
+  <div class="spaltenkopf">
+    <span>Aufgabe</span>
+    <span class="mitte"></span>
+    <span>Quadratzahl</span>
+  </div>
+
+  <div class="raster" id="raster"></div>
+
+  <div class="steuerung">
+    <div class="knopfreihe">
+      <button type="button" class="aktion" id="pruefen">Prüfen</button>
+      <span id="versuche"></span>
+      <button type="button" class="aktion" id="neu">Neu starten</button>
+    </div>
+    <p id="rueckmeldung" role="status" aria-live="polite"></p>
+  </div>
+
+  <div id="abschluss"></div>
+</main>
+
+<script>
+/* ===================================================================
+   EINSTELLUNGEN – hier kannst du alles anpassen
+   =================================================================== */
+const VON            = 1;   // kleinste Zahl (1  ->  1²)
+const BIS            = 20;  // größte Zahl  (20 -> 20²)
+const MAX_VERSUCHE   = 3;   // Anzahl der Prüfversuche
+
+/* ===================================================================
+   DATEN
+   Ein Paar ist die Zahl n: links steht n², rechts steht n*n.
+   links[i] und rechts[i] sind die Zahlen, die in Zeile i liegen.
+   Die Zeile ist richtig, wenn links[i] === rechts[i].
+   =================================================================== */
+const zahlen = [];
+for (let n = VON; n <= BIS; n++) zahlen.push(n);
+
+let links, rechts, status, versuch, abgeschlossen, auswahl;
+
+const rasterEl      = document.getElementById('raster');
+const pruefenBtn    = document.getElementById('pruefen');
+const neuBtn        = document.getElementById('neu');
+const versucheEl    = document.getElementById('versuche');
+const rueckmeldungEl= document.getElementById('rueckmeldung');
+const abschlussEl   = document.getElementById('abschluss');
+
+/* Einfaches Mischen (Fisher-Yates) */
+function mischen(vorgabe){
+  const a = vorgabe.slice();
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* Mischen so, dass zu Beginn keine einzige Zeile schon richtig ist */
+function mischenOhneTreffer(vorgabe){
+  let a;
+  do { a = mischen(vorgabe); }
+  while (a.some((wert, i) => wert === vorgabe[i]));
+  return a;
+}
+
+function neuStarten(){
+  links  = mischen(zahlen);                // linke Spalte: zufällige Reihenfolge
+  rechts = mischenOhneTreffer(links);      // rechte Spalte: dazu passend gemischt
+  status = zahlen.map(() => 'offen');      // 'offen' | 'richtig' | 'falsch'
+  versuch = 0;
+  abgeschlossen = false;
+  auswahl = null;
+  rueckmeldungEl.textContent = '';
+  rueckmeldungEl.className = '';
+  abschlussEl.innerHTML = '';
+  pruefenBtn.disabled = false;
+  zeichnen();
+}
+
+/* ===================================================================
+   ANZEIGE
+   =================================================================== */
+function zeichnen(){
+  rasterEl.innerHTML = '';
+  const zeichen = {offen:'·', richtig:'✓', falsch:'✗'};
+
+  for (let i = 0; i < zahlen.length; i++){
+    const zeile = document.createElement('div');
+    zeile.className = 'zeile';
+
+    zeile.appendChild(baueBlock('links',  i, links[i]  + '²'));
+
+    const mitte = document.createElement('div');
+    mitte.className = 'mitte ' + status[i];
+    mitte.textContent = zeichen[status[i]];
+    mitte.setAttribute('aria-hidden', 'true');
+    zeile.appendChild(mitte);
+
+    zeile.appendChild(baueBlock('rechts', i, String(rechts[i] * rechts[i])));
+
+    rasterEl.appendChild(zeile);
+  }
+
+  versucheEl.textContent = abgeschlossen
+    ? 'Alle ' + MAX_VERSUCHE + ' Versuche verbraucht'
+    : 'Versuch ' + (versuch + 1) + ' von ' + MAX_VERSUCHE;
+}
+
+function baueBlock(spalte, i, text){
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'block ' + status[i];
+  btn.dataset.spalte = spalte;
+  btn.dataset.index  = i;
+
+  const griff = document.createElement('span');
+  griff.className = 'griff';
+  griff.textContent = '⣿';
+  griff.setAttribute('aria-hidden', 'true');
+  btn.appendChild(griff);
+
+  const wert = document.createElement('span');
+  wert.className = 'wert';
+  wert.textContent = text;
+
+  /* Nach dem letzten Versuch: richtige Quadratzahl direkt an der Aufgabe */
+  if (abgeschlossen && status[i] === 'falsch' && spalte === 'links'){
+    const l = document.createElement('span');
+    l.className = 'loesung';
+    l.textContent = '= ' + (links[i] * links[i]);
+    wert.appendChild(l);
+  }
+  btn.appendChild(wert);
+
+  if (status[i] === 'richtig' || abgeschlossen){
+    btn.disabled = true;
+  }
+  if (auswahl && auswahl.spalte === spalte && auswahl.index === i){
+    btn.classList.add('gewaehlt');
+    btn.setAttribute('aria-pressed', 'true');
+  } else {
+    btn.setAttribute('aria-pressed', 'false');
+  }
+
+  const lage = spalte === 'links' ? 'Aufgabe' : 'Quadratzahl';
+  btn.setAttribute('aria-label', lage + ' ' + text + ', Zeile ' + (i + 1) + ' von ' + zahlen.length);
+  return btn;
+}
+
+/* ===================================================================
+   TAUSCHEN
+   =================================================================== */
+function tausche(spalte, i, j){
+  if (i === j) return;
+  const feld = spalte === 'links' ? links : rechts;
+  [feld[i], feld[j]] = [feld[j], feld[i]];
+
+  /* Rote Markierung verschwindet, sobald ein Block bewegt wird */
+  if (status[i] !== 'richtig') status[i] = 'offen';
+  if (status[j] !== 'richtig') status[j] = 'offen';
+
+  auswahl = null;
+  rueckmeldungEl.textContent = '';
+  rueckmeldungEl.className = '';
+  zeichnen();
+}
+
+/* Antippen: erster Block wählt aus, zweiter Block tauscht */
+function anklicken(spalte, i){
+  if (abgeschlossen || status[i] === 'richtig') return;
+
+  if (!auswahl){
+    auswahl = {spalte: spalte, index: i};
+  } else if (auswahl.spalte === spalte && auswahl.index === i){
+    auswahl = null;                                  // Auswahl aufheben
+  } else if (auswahl.spalte === spalte){
+    tausche(spalte, auswahl.index, i);
+    return;
+  } else {
+    auswahl = {spalte: spalte, index: i};            // andere Spalte: neu auswählen
+  }
+  zeichnen();
+}
+
+/* ===================================================================
+   ZIEHEN UND ABLEGEN (Pointer Events, kein HTML5-Drag-and-Drop)
+   =================================================================== */
+let zug = null;
+
+rasterEl.addEventListener('pointerdown', function(e){
+  const btn = e.target.closest('.block');
+  if (!btn || btn.disabled || abgeschlossen) return;
+
+  /* Mit dem Finger nur am Griff ziehen, mit der Maus überall.
+     So bleibt das Scrollen auf dem iPad überall sonst erhalten. */
+  const amGriff = !!e.target.closest('.griff');
+  if (e.pointerType !== 'mouse' && !amGriff) return;
+
+  const rect = btn.getBoundingClientRect();
+  zug = {
+    btn:     btn,
+    spalte:  btn.dataset.spalte,
+    index:   +btn.dataset.index,
+    startX:  e.clientX,
+    startY:  e.clientY,
+    versatzX:e.clientX - rect.left,
+    versatzY:e.clientY - rect.top,
+    breite:  rect.width,
+    hoehe:   rect.height,
+    bewegt:  false,
+    schwebend:null,
+    ziel:    null
+  };
+  btn.setPointerCapture(e.pointerId);
+});
+
+document.addEventListener('pointermove', function(e){
+  if (!zug) return;
+  const dx = e.clientX - zug.startX;
+  const dy = e.clientY - zug.startY;
+  if (!zug.bewegt && Math.sqrt(dx*dx + dy*dy) < 8) return;
+
+  if (!zug.bewegt){
+    zug.bewegt = true;
+    document.body.classList.add('zieht');
+    zug.btn.classList.add('zieht-original');
+    const kopie = zug.btn.cloneNode(true);
+    kopie.id = 'schwebend';
+    kopie.style.width  = zug.breite + 'px';
+    kopie.style.height = zug.hoehe + 'px';
+    document.body.appendChild(kopie);
+    zug.schwebend = kopie;
+  }
+  e.preventDefault();
+
+  zug.schwebend.style.left = (e.clientX - zug.versatzX) + 'px';
+  zug.schwebend.style.top  = (e.clientY - zug.versatzY) + 'px';
+
+  /* nächstgelegenen freien Block derselben Spalte suchen */
+  const kandidaten = rasterEl.querySelectorAll('.block[data-spalte="' + zug.spalte + '"]');
+  let bester = null, kleinster = Infinity;
+  kandidaten.forEach(function(k){
+    if (k.disabled) return;
+    const r = k.getBoundingClientRect();
+    const abstand = Math.abs((r.top + r.bottom) / 2 - e.clientY);
+    if (abstand < kleinster){ kleinster = abstand; bester = k; }
+  });
+
+  if (zug.ziel && zug.ziel !== bester) zug.ziel.classList.remove('ziel');
+  zug.ziel = bester;
+  if (bester && bester !== zug.btn) bester.classList.add('ziel');
+}, {passive:false});
+
+let letzterZug = 0;
+
+function zugBeenden(e){
+  if (!zug) return;
+  const aktuell = zug;
+  zug = null;
+
+  document.body.classList.remove('zieht');
+  if (aktuell.schwebend) aktuell.schwebend.remove();
+  if (aktuell.ziel) aktuell.ziel.classList.remove('ziel');
+  aktuell.btn.classList.remove('zieht-original');
+
+  if (aktuell.bewegt){
+    if (aktuell.ziel && aktuell.ziel !== aktuell.btn){
+      tausche(aktuell.spalte, aktuell.index, +aktuell.ziel.dataset.index);
+    }
+    /* Nach dem Ziehen darf der folgende Klick nicht zusätzlich auswählen */
+    letzterZug = Date.now();
+  }
+}
+
+document.addEventListener('pointerup', zugBeenden);
+document.addEventListener('pointercancel', zugBeenden);
+
+/* Auswahl per Klick, Tippen oder Tastatur (Enter/Leertaste) */
+rasterEl.addEventListener('click', function(e){
+  const btn = e.target.closest('.block');
+  if (!btn || btn.disabled) return;
+  if (Date.now() - letzterZug < 250) return;
+  anklicken(btn.dataset.spalte, +btn.dataset.index);
+});
+
+/* ===================================================================
+   PRÜFEN
+   =================================================================== */
+pruefenBtn.addEventListener('click', function(){
+  if (abgeschlossen) return;
+  versuch++;
+  auswahl = null;
+
+  let richtige = 0;
+  for (let i = 0; i < zahlen.length; i++){
+    if (links[i] === rechts[i]){ status[i] = 'richtig'; richtige++; }
+    else { status[i] = 'falsch'; }
+  }
+
+  const alleRichtig = richtige === zahlen.length;
+  if (alleRichtig || versuch >= MAX_VERSUCHE) abgeschlossen = true;
+
+  zeichnen();
+
+  rueckmeldungEl.className = alleRichtig ? 'richtig' : 'falsch';
+  if (alleRichtig){
+    rueckmeldungEl.textContent = 'Alles richtig: ' + richtige + ' von ' + zahlen.length + '.';
+    zeigeAbschluss('Du hast alle Quadratzahlen richtig zugeordnet.');
+  } else if (!abgeschlossen){
+    const uebrig = MAX_VERSUCHE - versuch;
+    rueckmeldungEl.textContent = richtige + ' von ' + zahlen.length + ' richtig. '
+      + 'Die grünen Paare bleiben stehen. Sortiere die roten Blöcke neu – du hast noch '
+      + (uebrig === 1 ? 'einen Versuch.' : uebrig + ' Versuche.');
+  } else {
+    rueckmeldungEl.textContent = richtige + ' von ' + zahlen.length + ' richtig.';
+    zeigeAbschluss('Der letzte Versuch ist vorbei. Bei den roten Zeilen steht jetzt die richtige Quadratzahl unter der Aufgabe.');
+  }
+});
+
+function zeigeAbschluss(text){
+  abschlussEl.innerHTML =
+    '<div class="kasten">' +
+      '<p>' + text + '</p>' +
+      '<p>Wie sicher bist du bei den Quadratzahlen?</p>' +
+      '<div class="selbst">' +
+        '<button type="button" data-echo="Gut. Nimm dir beim nächsten Mal einen größeren Zahlenbereich vor.">Das kann ich schon</button>' +
+        '<button type="button" data-echo="Übe die Quadratzahlen ab 13² noch einmal gezielt und starte die Aufgabe danach neu.">Das übe ich noch</button>' +
+      '</div>' +
+      '<p id="selbstEcho"></p>' +
+    '</div>';
+
+  abschlussEl.querySelectorAll('.selbst button').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.getElementById('selbstEcho').textContent = b.dataset.echo;
+    });
+  });
+
+  abschlussEl.scrollIntoView({block:'nearest', behavior:'smooth'});
+}
+
+neuBtn.addEventListener('click', neuStarten);
+
+neuStarten();
+</script>
+</body>
+</html>

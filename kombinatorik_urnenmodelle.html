@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Kombinatorik – Die vier Urnenmodelle</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --blau-dunkel: #1a4a7a;
+  --blau-mittel: #2563a8;
+  --blau-hell:   #4a90d9;
+  --blau-sehr-hell: #dbeafe;
+  --blau-hauch:  #f0f6ff;
+  --weiss:       #ffffff;
+  --grau:        #e2e8f0;
+  --text-dunkel: #1e293b;
+  --text-mittel: #334155;
+  --gruen:       #16a34a;
+  --gruen-hell:  #dcfce7;
+  --rot:         #dc2626;
+  --rot-hell:    #fee2e2;
+  --orange:      #d97706;
+  --orange-hell: #fef3c7;
+  --lila:        #7c3aed;
+  --lila-hell:   #ede9fe;
+  --radius:      10px;
+  --schatten:    0 2px 10px rgba(37,99,168,0.12);
+  --schatten-stark: 0 4px 20px rgba(37,99,168,0.2);
+
+  /* Farben pro Fall */
+  --fall1-farbe: #2563a8;
+  --fall1-hell:  #dbeafe;
+  --fall2-farbe: #16a34a;
+  --fall2-hell:  #dcfce7;
+  --fall3-farbe: #d97706;
+  --fall3-hell:  #fef3c7;
+  --fall4-farbe: #7c3aed;
+  --fall4-hell:  #ede9fe;
+}
+body {
+  font-family: 'Segoe UI', Arial, Verdana, sans-serif;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text-dunkel);
+  background: linear-gradient(135deg, #e8f0fa 0%, #f0f6ff 100%);
+  min-height: 100vh;
+  padding: 16px;
+}
+.seite { max-width: 840px; margin: 0 auto; }
+
+/* HEADER */
+.header {
+  background: linear-gradient(135deg, var(--blau-dunkel), var(--blau-mittel));
+  color: var(--weiss);
+  border-radius: var(--radius);
+  padding: 22px 28px;
+  margin-bottom: 18px;
+  box-shadow: var(--schatten-stark);
+}
+.header h1 { font-size: 21px; font-weight: 700; margin-bottom: 6px; }
+.header .meta { font-size: 13px; opacity: 0.85; display: flex; gap: 16px; flex-wrap: wrap; }
+
+/* LERNZIEL */
+.lernziel {
+  background: var(--weiss);
+  border: 2px solid var(--blau-mittel);
+  border-left: 6px solid var(--blau-mittel);
+  border-radius: var(--radius);
+  padding: 14px 20px;
+  margin-bottom: 18px;
+  box-shadow: var(--schatten);
+}
+.lernziel .lernziel-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--blau-mittel); margin-bottom: 5px; }
+.lernziel p { font-size: 14px; color: var(--text-dunkel); font-weight: 600; }
+
+/* FORTSCHRITT */
+.fortschritt-wrapper {
+  background: var(--weiss); border: 2px solid var(--blau-hell);
+  border-radius: var(--radius); padding: 12px 18px; margin-bottom: 18px;
+  box-shadow: var(--schatten);
+}
+.fortschritt-label { font-size: 12px; color: var(--blau-mittel); font-weight: 600; margin-bottom: 8px; display: flex; justify-content: space-between; }
+.fortschritt-balken { background: var(--grau); border-radius: 20px; height: 10px; overflow: hidden; }
+.fortschritt-fill { background: linear-gradient(90deg, var(--blau-hell), var(--blau-dunkel)); height: 100%; border-radius: 20px; transition: width 0.5s ease; width: 0%; }
+
+/* ═══════════════ FALL-AUSWAHL (Startseite) ═══════════════ */
+#startseite { }
+.start-intro {
+  background: var(--weiss); border: 2px solid var(--blau-hell);
+  border-radius: var(--radius); padding: 20px 24px; margin-bottom: 20px;
+  box-shadow: var(--schatten); font-size: 14px; line-height: 1.7;
+}
+.start-intro h2 { font-size: 17px; color: var(--blau-dunkel); margin-bottom: 10px; }
+.start-intro p { margin-bottom: 10px; }
+.start-intro .hinweis { font-size: 13px; color: var(--text-mittel); font-style: italic; }
+
+.fall-auswahl-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;
+}
+.fall-karte {
+  background: var(--weiss); border: 2.5px solid var(--blau-hell);
+  border-radius: var(--radius); padding: 20px 18px;
+  cursor: pointer; transition: all 0.22s;
+  box-shadow: var(--schatten);
+  position: relative; overflow: hidden;
+}
+.fall-karte:hover { transform: translateY(-2px); box-shadow: var(--schatten-stark); }
+.fall-karte.erledigt-karte { opacity: 0.7; }
+.fall-karte.erledigt-karte::after {
+  content: '✓ Erledigt';
+  position: absolute; top: 10px; right: 12px;
+  background: var(--gruen); color: white;
+  font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 8px;
+}
+.fall-karte.aktuelle-karte { border-width: 3px; }
+
+.fall-karte[data-fall="1"] { border-color: var(--fall1-farbe); }
+.fall-karte[data-fall="1"]:hover { background: var(--fall1-hell); }
+.fall-karte[data-fall="2"] { border-color: var(--fall2-farbe); }
+.fall-karte[data-fall="2"]:hover { background: var(--fall2-hell); }
+.fall-karte[data-fall="3"] { border-color: var(--fall3-farbe); }
+.fall-karte[data-fall="3"]:hover { background: var(--fall3-hell); }
+.fall-karte[data-fall="4"] { border-color: var(--fall4-farbe); }
+.fall-karte[data-fall="4"]:hover { background: var(--fall4-hell); }
+
+.fall-nr {
+  width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 16px; color: var(--weiss); margin-bottom: 10px;
+}
+.fall-karte[data-fall="1"] .fall-nr { background: var(--fall1-farbe); }
+.fall-karte[data-fall="2"] .fall-nr { background: var(--fall2-farbe); }
+.fall-karte[data-fall="3"] .fall-nr { background: var(--fall3-farbe); }
+.fall-karte[data-fall="4"] .fall-nr { background: var(--fall4-farbe); }
+
+.fall-karte h3 { font-size: 15px; font-weight: 700; color: var(--text-dunkel); margin-bottom: 6px; }
+.fall-karte .fall-formel { font-size: 13px; color: var(--text-mittel); margin-bottom: 8px; min-height: 22px; }
+.fall-karte .fall-bsp { font-size: 12px; color: var(--text-mittel); font-style: italic; }
+.fall-karte[data-fall="4"] .vertiefung-badge {
+  background: var(--lila); color: white; font-size: 10px; font-weight: 700;
+  text-transform: uppercase; padding: 2px 7px; border-radius: 8px;
+  display: inline-block; margin-bottom: 6px;
+}
+
+/* ═══════════════ FALL-ARBEITSBEREICH ═══════════════ */
+#arbeitsbereich { display: none; }
+.fall-header {
+  border-radius: var(--radius); padding: 18px 24px; margin-bottom: 16px;
+  color: var(--weiss); box-shadow: var(--schatten-stark);
+  display: flex; align-items: center; gap: 14px;
+}
+.fall-header[data-fall="1"] { background: linear-gradient(135deg, #1a4a7a, #2563a8); }
+.fall-header[data-fall="2"] { background: linear-gradient(135deg, #14532d, #16a34a); }
+.fall-header[data-fall="3"] { background: linear-gradient(135deg, #78350f, #d97706); }
+.fall-header[data-fall="4"] { background: linear-gradient(135deg, #4c1d95, #7c3aed); }
+.fall-header-nr {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255,255,255,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 700; flex-shrink: 0;
+}
+.fall-header-info { flex: 1; }
+.fall-header-titel { font-size: 18px; font-weight: 700; }
+.fall-header-formel { font-size: 13px; opacity: 0.85; margin-top: 3px; }
+.fall-header-zurueck {
+  background: rgba(255,255,255,0.2); border: 1.5px solid rgba(255,255,255,0.4);
+  color: var(--weiss); border-radius: 8px; padding: 7px 14px;
+  font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s;
+  white-space: nowrap;
+}
+.fall-header-zurueck:hover { background: rgba(255,255,255,0.35); }
+
+/* ABSCHNITT-NAVIGATION (innerhalb eines Falls) */
+.abschnitt-nav {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px;
+}
+.nav-btn {
+  background: var(--weiss); border: 2px solid var(--blau-hell);
+  color: var(--blau-mittel); border-radius: 20px;
+  padding: 7px 14px; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+}
+.nav-btn:hover, .nav-btn.aktiv { background: var(--blau-mittel); color: var(--weiss); border-color: var(--blau-mittel); }
+.nav-btn.erledigt { border-color: var(--gruen); color: var(--gruen); }
+.nav-btn.erledigt:hover, .nav-btn.erledigt.aktiv { background: var(--gruen); color: var(--weiss); border-color: var(--gruen); }
+
+/* ABSCHNITT-BOX */
+.abschnitt-box {
+  background: var(--weiss); border: 2px solid var(--blau-hell);
+  border-radius: var(--radius); margin-bottom: 16px;
+  box-shadow: var(--schatten); overflow: hidden;
+  display: none;
+}
+.abschnitt-box.aktiv { display: block; }
+.abschnitt-kopf {
+  background: linear-gradient(90deg, var(--blau-dunkel), var(--blau-mittel));
+  color: var(--weiss); padding: 14px 20px;
+  display: flex; align-items: center; gap: 12px;
+}
+.abschnitt-badge { background: rgba(255,255,255,0.2); color: var(--weiss); border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+.abschnitt-titel { font-size: 15px; font-weight: 700; }
+.abschnitt-afb { margin-left: auto; font-size: 11px; opacity: 0.85; background: rgba(255,255,255,0.15); padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
+.abschnitt-body { padding: 20px; }
+
+/* AUFGABEN */
+.aufgabe {
+  background: var(--blau-hauch); border: 1.5px solid var(--blau-hell);
+  border-radius: var(--radius); padding: 16px 18px; margin-bottom: 16px;
+}
+.aufgabe:last-child { margin-bottom: 0; }
+.aufgabe-kopf { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+.aufgabe-nummer { background: var(--blau-mittel); color: var(--weiss); border-radius: 6px; padding: 3px 9px; font-size: 12px; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+.aufgabe-text { font-size: 14px; color: var(--text-dunkel); line-height: 1.6; }
+.aufgabe-operator { font-size: 11px; color: var(--blau-hell); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-left: auto; white-space: nowrap; flex-shrink: 0; background: var(--blau-sehr-hell); padding: 2px 8px; border-radius: 8px; }
+
+.var-def { background: var(--blau-sehr-hell); border-left: 3px solid var(--blau-hell); border-radius: 6px; padding: 7px 13px; margin-bottom: 10px; font-size: 13px; color: var(--blau-dunkel); }
+
+/* EINGABEN */
+.eingabe-gruppe { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.eingabe-label { font-size: 14px; color: var(--text-mittel); font-weight: 600; }
+input[type="text"], textarea {
+  border: 2px solid var(--blau-hell); border-radius: 8px; padding: 8px 12px;
+  font-size: 14px; font-family: inherit; color: var(--text-dunkel);
+  background: var(--weiss); outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+}
+input[type="text"]:focus, textarea:focus { border-color: var(--blau-mittel); box-shadow: 0 0 0 3px rgba(37,99,168,0.15); }
+input.korrekt { border-color: var(--gruen); background: var(--gruen-hell); }
+input.falsch  { border-color: var(--rot);   background: var(--rot-hell); }
+textarea { width: 100%; min-height: 80px; resize: vertical; }
+input.zahl-xs { width: 70px; text-align: center; font-weight: 700; }
+input.zahl-s  { width: 100px; text-align: center; }
+input.zahl-m  { width: 150px; }
+input.zahl-l  { width: 200px; }
+
+/* BUTTONS */
+.btn { display: inline-flex; align-items: center; gap: 5px; border: none; border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.2s; }
+.btn-pruefen { background: var(--blau-mittel); color: var(--weiss); }
+.btn-pruefen:hover { background: var(--blau-dunkel); }
+.btn-weiter  { background: var(--gruen); color: var(--weiss); }
+.btn-weiter:hover { background: #15803d; }
+.btn-reset   { background: var(--grau); color: var(--text-mittel); border: 1.5px solid var(--grau); }
+.btn-reset:hover { background: #cbd5e1; }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn:disabled, .btn[disabled] { opacity: 0.4; cursor: not-allowed; filter: grayscale(0.35); }
+.weiter-hinweis { font-size: 12px; color: var(--text-mittel); font-style: italic; text-align: right; width: 100%; margin-top: 6px; }
+
+/* FEEDBACK */
+.feedback { border-radius: 8px; padding: 9px 13px; margin-top: 9px; font-size: 13px; display: none; }
+.feedback.korrekt { background: var(--gruen-hell); border: 1.5px solid var(--gruen); color: #14532d; display: flex; align-items: flex-start; gap: 7px; }
+.feedback.falsch  { background: var(--rot-hell);   border: 1.5px solid var(--rot);   color: #7f1d1d; display: flex; align-items: flex-start; gap: 7px; }
+.feedback-icon { font-size: 16px; flex-shrink: 0; }
+
+/* HILFEN */
+.hilfen { margin-top: 12px; border-top: 1.5px dashed var(--blau-hell); padding-top: 10px; }
+.hilfe-label { font-size: 11px; color: var(--blau-mittel); font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 5px; }
+.hilfe-stufen { display: flex; gap: 6px; flex-wrap: wrap; }
+.hilfe-btn { background: var(--weiss); border: 1.5px solid var(--blau-hell); color: var(--blau-mittel); border-radius: 6px; padding: 4px 11px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.hilfe-btn:hover { background: var(--blau-sehr-hell); }
+.hilfe-btn.aktiv { background: var(--blau-mittel); color: var(--weiss); border-color: var(--blau-mittel); }
+.hilfe-inhalt { background: var(--orange-hell); border: 1.5px solid var(--orange); border-radius: 8px; padding: 10px 14px; margin-top: 8px; font-size: 13px; color: #451a03; display: none; line-height: 1.6; }
+.hilfe-inhalt.sichtbar { display: block; }
+.hilfe-inhalt.loesung { background: var(--blau-sehr-hell); border-color: var(--blau-hell); color: var(--blau-dunkel); }
+
+/* INFO / BOXEN */
+.info-box { background: var(--blau-sehr-hell); border: 1.5px solid var(--blau-hell); border-radius: var(--radius); padding: 13px 17px; margin-bottom: 14px; font-size: 14px; color: var(--blau-dunkel); line-height: 1.65; }
+.info-box h4 { color: var(--blau-dunkel); font-size: 14px; margin-bottom: 5px; }
+.achtung-box { background: var(--orange-hell); border: 1.5px solid var(--orange); border-radius: var(--radius); padding: 10px 15px; margin-bottom: 12px; font-size: 13px; color: #451a03; }
+.vertiefung-hinweis { background: var(--lila-hell); border: 2px solid var(--lila); border-radius: var(--radius); padding: 14px 18px; margin-bottom: 14px; }
+.vertiefung-hinweis .badge { background: var(--lila); color: white; font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 7px; border-radius: 8px; display: inline-block; margin-bottom: 6px; }
+
+/* KUGEL-VISUALISIERUNG */
+.urne-container { display: flex; gap: 14px; flex-wrap: wrap; margin: 14px 0; align-items: flex-end; justify-content: center; }
+.urne { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.urne-label { font-size: 12px; font-weight: 700; color: var(--blau-dunkel); }
+.urne-bild { width: 80px; height: 118px; background: linear-gradient(160deg, #e8f0fa, #c7daf5); border: 2.5px solid var(--blau-mittel); border-radius: 8px 8px 32px 32px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 10px; gap: 5px; }
+.kugel { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--weiss); box-shadow: inset -2px -2px 5px rgba(0,0,0,0.25); }
+.k1 { background: radial-gradient(circle at 35% 35%, #4a90d9, #1a4a7a); }
+.k2 { background: radial-gradient(circle at 35% 35%, #60d960, #16693a); }
+.k3 { background: radial-gradient(circle at 35% 35%, #f97316, #9a3412); }
+.k4 { background: radial-gradient(circle at 35% 35%, #a855f7, #5b21b6); }
+
+/* MODELL-AUSWAHL */
+.modell-auswahl { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+.modell-btn { background: var(--weiss); border: 2px solid var(--blau-hell); border-radius: 8px; padding: 9px 11px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--blau-mittel); text-align: left; transition: all 0.2s; line-height: 1.3; }
+.modell-btn:hover { background: var(--blau-sehr-hell); border-color: var(--blau-mittel); }
+.modell-btn.gewaehlt { background: var(--blau-mittel); color: var(--weiss); border-color: var(--blau-dunkel); }
+.modell-btn.korrekt-wahl { background: var(--gruen); color: var(--weiss); border-color: var(--gruen); }
+.modell-btn.falsch-wahl  { background: var(--rot-hell); color: var(--rot); border-color: var(--rot); }
+
+/* TABELLE (Systematisierung) */
+.formel-tabelle { width: 100%; border-collapse: collapse; margin: 12px 0; }
+.formel-tabelle th, .formel-tabelle td { border: 2px solid var(--blau-hell); padding: 10px 12px; text-align: center; vertical-align: middle; }
+.formel-tabelle th { background: var(--blau-mittel); color: var(--weiss); font-size: 13px; font-weight: 700; }
+.formel-tabelle td.zeilen-kopf { background: var(--blau-dunkel); color: var(--weiss); font-weight: 700; font-size: 13px; }
+.formel-tabelle td.formel-feld { background: var(--weiss); }
+.formel-tabelle td.formel-feld.markiert { background: #fffde7; outline: 3px solid var(--orange); }
+.tabelle-input { width: 100%; min-height: 44px; border: none; background: transparent; font-family: inherit; font-size: 13px; text-align: center; color: var(--text-dunkel); outline: none; resize: none; }
+
+/* ANWENDUNGS-KARTE */
+.kontext-karte { background: var(--weiss); border: 2px solid var(--blau-hell); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 14px; box-shadow: var(--schatten); }
+.kontext-karte h4 { font-size: 14px; color: var(--blau-dunkel); margin-bottom: 8px; display: flex; align-items: center; gap: 7px; }
+
+/* AMPEL */
+.ampel-check { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.ampel-btn { flex: 1; min-width: 90px; border: 2px solid; border-radius: 8px; padding: 10px 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-align: center; }
+.ampel-gruen { border-color: var(--gruen); color: var(--gruen); background: var(--weiss); }
+.ampel-gruen:hover, .ampel-gruen.aktiv { background: var(--gruen); color: var(--weiss); }
+.ampel-gelb { border-color: var(--orange); color: var(--orange); background: var(--weiss); }
+.ampel-gelb:hover, .ampel-gelb.aktiv { background: var(--orange); color: var(--weiss); }
+.ampel-rot { border-color: var(--rot); color: var(--rot); background: var(--weiss); }
+.ampel-rot:hover, .ampel-rot.aktiv { background: var(--rot); color: var(--weiss); }
+
+/* NAV UNTEN */
+.nav-unten { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; flex-wrap: wrap; gap: 10px; }
+
+/* ABSCHLUSS-KARTE */
+.abschluss-fall { background: linear-gradient(135deg, #15803d, #16a34a); color: white; border-radius: var(--radius); padding: 20px 24px; text-align: center; margin-bottom: 16px; box-shadow: var(--schatten-stark); display: none; }
+.abschluss-fall h2 { font-size: 18px; margin-bottom: 6px; }
+.abschluss-fall p { opacity: 0.9; font-size: 14px; }
+
+/* RESET */
+.reset-bereich { background: var(--weiss); border: 2px solid var(--grau); border-radius: var(--radius); padding: 14px 18px; margin-top: 18px; text-align: center; }
+.reset-bereich p { font-size: 13px; color: var(--text-mittel); margin-bottom: 8px; }
+.btn-danger { background: var(--rot-hell); color: var(--rot); border: 2px solid var(--rot); border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.btn-danger:hover { background: var(--rot); color: var(--weiss); }
+
+.h3-abschnitt { font-size: 14px; font-weight: 700; color: var(--blau-dunkel); margin-bottom: 10px; margin-top: 4px; }
+
+@media (max-width: 580px) {
+  body { padding: 10px; }
+  .fall-auswahl-grid { grid-template-columns: 1fr; }
+  .modell-auswahl { grid-template-columns: 1fr; }
+  .abschnitt-body { padding: 14px; }
+  .fall-header-titel { font-size: 15px; }
+}
+</style>
+</head>
+<body>
+<div class="seite">
+
+<!-- HEADER -->
+<div class="header">
+  <h1>📊 Kombinatorik – Die vier Urnenmodelle</h1>
+  <div class="meta">
+    <span>📚 Mathematik LK · Klasse 13 · Niedersachsen</span>
+    <span>⏱ ca. 45–60 Min.</span>
+  </div>
+</div>
+
+<!-- LERNZIEL -->
+<div class="lernziel">
+  <div class="lernziel-label">🎯 Ich kann …</div>
+  <p>die vier Grundmodelle der Kombinatorik (geordnet/ungeordnet × mit/ohne Zurücklegen) selbst erarbeiten, Formeln herleiten und entscheiden, welches Modell in einem neuen Kontext vorliegt.</p>
+</div>
+
+<!-- FORTSCHRITT -->
+<div class="fortschritt-wrapper">
+  <div class="fortschritt-label">
+    <span>📈 Bearbeitete Fälle</span>
+    <span id="fortschritt-text">0 von 4 Fällen</span>
+  </div>
+  <div class="fortschritt-balken"><div class="fortschritt-fill" id="fortschritt-fill"></div></div>
+</div>
+
+<!-- ══════════════════════════════
+     STARTSEITE – FALL-AUSWAHL
+══════════════════════════════ -->
+<div id="startseite">
+  <div class="start-intro">
+    <h2>🎲 Bearbeite die vier Fälle der Reihe nach</h2>
+    <p>In dieser Einheit erarbeitest du die vier Kombinatorik-Modelle selbst. Beginne mit Fall 1 und arbeite dich Schritt für Schritt bis Fall 4 vor. Durchlaufe in jedem Fall alle Schritte (Ausprobieren → Verallgemeinern → Systematisieren → Anwenden) und kehre danach hierher zurück.</p>
+    <p class="hinweis">💡 Die Fälle bauen aufeinander auf: Fall 2 nutzt Fall 1, Fall 3 nutzt Fall 2, und Fall 4 fasst alles zusammen.</p>
+  </div>
+
+  <div class="fall-auswahl-grid">
+    <!-- FALL 1 -->
+    <div class="fall-karte" data-fall="1" onclick="starteFall(1)">
+      <div class="fall-nr">1</div>
+      <h3>Geordnet · mit Zurücklegen</h3>
+      <div class="fall-bsp">z. B. PIN-Code, Würfelwurf</div>
+    </div>
+    <!-- FALL 2 -->
+    <div class="fall-karte" data-fall="2" onclick="starteFall(2)">
+      <div class="fall-nr">2</div>
+      <h3>Geordnet · ohne Zurücklegen</h3>
+      <div class="fall-bsp">z. B. Podiumsplatzierung, Startaufstellung</div>
+    </div>
+    <!-- FALL 3 -->
+    <div class="fall-karte" data-fall="3" onclick="starteFall(3)">
+      <div class="fall-nr">3</div>
+      <h3>Ungeordnet · ohne Zurücklegen</h3>
+      <div class="fall-bsp">z. B. Lotto, Komitee-Wahl</div>
+    </div>
+    <!-- FALL 4 -->
+    <div class="fall-karte" data-fall="4" onclick="starteFall(4)">
+      <div class="fall-nr">4</div>
+      <div class="vertiefung-badge">★ Vertiefung</div>
+      <h3>Ungeordnet · mit Zurücklegen</h3>
+      <div class="fall-bsp">z. B. Eiskugeln, Obstsorten</div>
+    </div>
+  </div>
+
+  <!-- GESAMT-ZUSAMMENFASSUNG (erscheint, wenn alle vier Fälle bearbeitet sind) -->
+  <div id="gesamt-zusammenfassung" style="display:none">
+    <div class="start-intro" style="border-color:var(--gruen)">
+      <h2>✅ Alle vier Fälle geschafft – die Gesamtübersicht</h2>
+      <p style="margin-bottom:0"><em>n</em> = Anzahl der Elemente in der Urne, <em>k</em> = Anzahl der Züge</p>
+    </div>
+    <div style="overflow-x:auto">
+    <table class="formel-tabelle">
+      <thead><tr>
+        <th style="width:22%"></th>
+        <th>Mit Zurücklegen<br><span style="font-weight:400;font-size:11px">Wiederholung erlaubt</span></th>
+        <th>Ohne Zurücklegen<br><span style="font-weight:400;font-size:11px">keine Wiederholung</span></th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="zeilen-kopf">Geordnet<br><span style="font-weight:400;font-size:11px">Reihenfolge zählt</span></td>
+          <td class="formel-feld">\( n^{k} \)<br><span style="font-size:12px;color:var(--text-mittel)">Fall 1 · z.&nbsp;B. PIN-Code</span></td>
+          <td class="formel-feld">\( \dfrac{n!}{(n-k)!} \)<br><span style="font-size:12px;color:var(--text-mittel)">Fall 2 · z.&nbsp;B. Handball-Aufstellung</span></td>
+        </tr>
+        <tr>
+          <td class="zeilen-kopf">Ungeordnet<br><span style="font-weight:400;font-size:11px">Reihenfolge egal</span></td>
+          <td class="formel-feld">\( \dbinom{n+k-1}{k} = \dfrac{(n+k-1)!}{k!\,(n-1)!} \)<br><span style="font-size:12px;color:var(--text-mittel)">Fall 4 · z.&nbsp;B. Eiskugeln</span></td>
+          <td class="formel-feld">\( \dbinom{n}{k} = \dfrac{n!}{k!\,(n-k)!} \)<br><span style="font-size:12px;color:var(--text-mittel)">Fall 3 · z.&nbsp;B. Lotto 6 aus 49</span></td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="achtung-box" style="margin-top:12px">🔑 <strong>Merksatz:</strong> Ist die Reihenfolge egal, teilst du die geordnete Anzahl zusätzlich durch <em>k</em>! – bei „ohne Zurücklegen" direkt, bei „mit Zurücklegen" über die Sterne-und-Striche-Idee (k Positionen aus n+k−1 auswählen).</div>
+  </div>
+</div><!-- /startseite -->
+
+<!-- ══════════════════════════════
+     FALL-ARBEITSBEREICH
+══════════════════════════════ -->
+<div id="arbeitsbereich">
+  <!-- Dynamischer Fall-Header -->
+  <div class="fall-header" id="fall-header">
+    <div class="fall-header-nr" id="fall-header-nr">1</div>
+    <div class="fall-header-info">
+      <div class="fall-header-titel" id="fall-header-titel">–</div>
+    </div>
+    <button class="fall-header-zurueck" onclick="zurueckZurAuswahl()">← Zurück zur Auswahl</button>
+  </div>
+
+  <!-- Abschnitt-Navigation (für den aktuellen Fall) -->
+  <div class="abschnitt-nav" id="fall-nav">
+    <button class="nav-btn aktiv" id="fnav1" onclick="zeigeAbschnitt(1)">① Ausprobieren</button>
+    <button class="nav-btn" id="fnav2" onclick="zeigeAbschnitt(2)">② Verallgemeinern</button>
+    <button class="nav-btn" id="fnav3" onclick="zeigeAbschnitt(3)">③ Systematisieren</button>
+    <button class="nav-btn" id="fnav4" onclick="zeigeAbschnitt(4)">④ Anwenden</button>
+  </div>
+
+  <!-- ── Abschnitt A: Ausprobieren ── -->
+  <div class="abschnitt-box aktiv" id="abs1">
+    <div class="abschnitt-kopf">
+      <div class="abschnitt-badge">1</div>
+      <div class="abschnitt-titel">Schritt 1 – Ausprobieren und Zählen</div>
+      <div class="abschnitt-afb">AFB I</div>
+    </div>
+    <div class="abschnitt-body" id="abs1-body"><!-- dynamisch --></div>
+  </div>
+
+  <!-- ── Abschnitt B: Verallgemeinern ── -->
+  <div class="abschnitt-box" id="abs2">
+    <div class="abschnitt-kopf">
+      <div class="abschnitt-badge">2</div>
+      <div class="abschnitt-titel">Schritt 2 – Verallgemeinern</div>
+      <div class="abschnitt-afb">AFB I–II</div>
+    </div>
+    <div class="abschnitt-body" id="abs2-body"><!-- dynamisch --></div>
+  </div>
+
+  <!-- ── Abschnitt C: Systematisieren ── -->
+  <div class="abschnitt-box" id="abs3">
+    <div class="abschnitt-kopf">
+      <div class="abschnitt-badge">3</div>
+      <div class="abschnitt-titel">Schritt 3 – Einordnen in die Übersicht</div>
+      <div class="abschnitt-afb">AFB II</div>
+    </div>
+    <div class="abschnitt-body" id="abs3-body"><!-- dynamisch --></div>
+  </div>
+
+  <!-- ── Abschnitt D: Anwenden ── -->
+  <div class="abschnitt-box" id="abs4">
+    <div class="abschnitt-kopf">
+      <div class="abschnitt-badge">4</div>
+      <div class="abschnitt-titel">Schritt 4 – Anwenden</div>
+      <div class="abschnitt-afb">AFB II</div>
+    </div>
+    <div class="abschnitt-body" id="abs4-body"><!-- dynamisch --></div>
+  </div>
+
+  <!-- Abschluss-Meldung pro Fall -->
+  <div class="abschluss-fall" id="fall-abschluss">
+    <div style="font-size:36px;margin-bottom:8px">🎉</div>
+    <h2 id="fall-abschluss-titel">Fall abgeschlossen!</h2>
+    <p id="fall-abschluss-text">Kehre zur Auswahl zurück und bearbeite den nächsten Fall.</p>
+    <button class="btn btn-weiter" style="margin-top:14px" onclick="zurueckZurAuswahl()">← Zurück zur Auswahl</button>
+  </div>
+</div><!-- /arbeitsbereich -->
+
+<!-- RESET -->
+<div class="reset-bereich">
+  <p>Alle Eingaben und Fortschritte löschen?</p>
+  <button class="btn-danger" onclick="resetAlles()">🗑 Alles zurücksetzen</button>
+</div>
+
+</div><!-- /seite -->
+
+<!-- ══════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════ -->
+<script>
+/* ── DATEN-DEFINITIONEN (pro Fall) ──────────────────── */
+const FAELLE = {
+  1: {
+    titel: 'Geordnet · mit Zurücklegen',
+    formelText: 'Formel: nᵏ',
+    formelKatex: 'n^k',
+    farbe: '1',
+    beispielZahl: 16,
+    anwendungModell: 'gmo',
+    anwendungN: 10, anwendungK: 4, anwendungErg: 10000,
+    anwendungKontext: `<h4><span style="font-size:18px">🔐</span> PIN-Code</h4>
+      <p style="font-size:14px;margin-bottom:10px">Ein 4-stelliger PIN-Code besteht aus den Ziffern 0–9. Wie viele verschiedene Codes gibt es, wenn Ziffern wiederholt werden dürfen? (Beispiel: 1234 und 4321 sind verschieden.)</p>`,
+    anwendungHinweis: 'Jede Stelle kann unabhängig eine beliebige Ziffer 0–9 sein → Reihenfolge zählt, Wiederholung erlaubt.',
+    anwendungLoesung: 'Geordnet, mit Zurücklegen: n<sup>k</sup> = 10<sup>4</sup> = <strong>10 000</strong> mögliche PIN-Codes.'
+  },
+  2: {
+    titel: 'Geordnet · ohne Zurücklegen',
+    formelText: 'Formel: n! / (n−k)!',
+    formelKatex: '\\tfrac{n!}{(n-k)!}',
+    farbe: '2',
+    beispielZahl: 12,
+    anwendungModell: 'goo',
+    anwendungN: 16, anwendungK: 7, anwendungErg: 57657600,
+    anwendungKontext: `<h4><span style="font-size:18px">🤾</span> Handball-Aufstellung</h4>
+      <p style="font-size:14px;margin-bottom:10px">Eine Handballmannschaft hat 16 Spieler im Kader. Auf dem Feld stehen 7 Spieler auf 7 verschiedenen Positionen (Torwart, Kreisläufer, Außen, …). Jeder Spieler steht auf höchstens einer Position. Wie viele verschiedene Aufstellungen gibt es?</p>`,
+    anwendungHinweis: 'Die 7 Positionen sind verschieden → Reihenfolge zählt. Kein Spieler doppelt → ohne Zurücklegen.',
+    anwendungLoesung: 'Geordnet, ohne Zurücklegen: n!/(n−k)! = 16!/9! = 16·15·14·13·12·11·10 = <strong>57 657 600</strong>.'
+  },
+  3: {
+    titel: 'Ungeordnet · ohne Zurücklegen',
+    formelText: 'Formel: C(n, k) = n! / (k!·(n−k)!)',
+    formelKatex: '\\binom{n}{k}=\\tfrac{n!}{k!\\cdot(n-k)!}',
+    farbe: '3',
+    beispielZahl: 6,
+    anwendungModell: 'uoo',
+    anwendungN: 49, anwendungK: 6, anwendungErg: 13983816,
+    anwendungKontext: `<h4><span style="font-size:18px">🎰</span> Lotto 6 aus 49</h4>
+      <p style="font-size:14px;margin-bottom:10px">Beim Lotto werden 6 Kugeln aus 49 gezogen (ohne Zurücklegen). Gewonnen hat, wer die richtigen 6 Zahlen hat – egal in welcher Reihenfolge. Wie viele Tipps gibt es?</p>`,
+    anwendungHinweis: 'Reihenfolge der Ziehung egal (du gewinnst egal ob zuerst die 7 oder die 23 kommt). Kein Zurücklegen.',
+    anwendungLoesung: 'Ungeordnet, ohne Zurücklegen: C(49,6) = 49!/(6!·43!) = <strong>13 983 816</strong>.'
+  },
+  4: {
+    titel: 'Ungeordnet · mit Zurücklegen ★',
+    formelText: 'Formel: C(n+k−1, k)',
+    formelKatex: '\\binom{n+k-1}{k}',
+    farbe: '4',
+    beispielZahl: 10,
+    anwendungModell: 'umo',
+    anwendungN: 8, anwendungK: 3, anwendungErg: 120,
+    anwendungKontext: `<h4><span style="font-size:18px">🍦</span> Eiskugeln</h4>
+      <p style="font-size:14px;margin-bottom:10px">Eine Eisdiele bietet 8 Sorten an. Du bestellst 3 Kugeln – die Reihenfolge ist egal, und du kannst dieselbe Sorte mehrfach wählen. Wie viele verschiedene Waffeln gibt es?</p>`,
+    anwendungHinweis: 'Reihenfolge egal (Schokolade oben oder unten ist dieselbe Waffel). Wiederholung erlaubt (dreimal Vanille geht). → Sterne-und-Striche-Methode.',
+    anwendungLoesung: 'Ungeordnet, mit Zurücklegen: C(n+k−1, k) = C(10,3) = <strong>120</strong>.'
+  }
+};
+
+const MODELL_LABEL = {
+  gmo: 'Geordnet, mit Zurücklegen',
+  goo: 'Geordnet, ohne Zurücklegen',
+  uoo: 'Ungeordnet, ohne Zurücklegen',
+  umo: 'Ungeordnet, mit Zurücklegen ★'
+};
+const MODELL_FORMEL = {
+  gmo: 'n<sup>k</sup>',
+  goo: 'n!/(n−k)!',
+  uoo: 'C(n,k) = n!/(k!·(n−k)!)',
+  umo: 'C(n+k−1, k) ★'
+};
+
+/* ── ZUSTAND ─────────────────────────────────────────── */
+let aktiverFall = null;
+let aktiverAbschnitt = 1;
+const LS_KEY = 'kombi_v2';
+
+/* ── LOCALSTORAGE ─────────────────────────────────────── */
+function ls(key, val) {
+  try { let d = JSON.parse(localStorage.getItem(LS_KEY)||'{}'); d[key]=val; localStorage.setItem(LS_KEY,JSON.stringify(d)); } catch(e){}
+}
+function lg(key) {
+  try { return (JSON.parse(localStorage.getItem(LS_KEY)||'{}'))[key]||''; } catch(e){return '';}
+}
+function lgBool(key) { return lg(key)==='1'; }
+
+/* ── NAVIGATION ──────────────────────────────────────── */
+function starteFall(nr) {
+  aktiverFall = nr;
+  aktiverAbschnitt = 1;
+  document.getElementById('startseite').style.display = 'none';
+  document.getElementById('arbeitsbereich').style.display = 'block';
+  const f = FAELLE[nr];
+  const hdr = document.getElementById('fall-header');
+  hdr.dataset.fall = nr;
+  document.getElementById('fall-header-nr').textContent = nr;
+  document.getElementById('fall-header-titel').textContent = f.titel;
+
+  // Abschnitt-Titel + Navigation je nach Fall
+  const labels = (nr===4)
+    ? ['① Ausprobieren','② Herleitung','③ Anwenden']
+    : ['① Ausprobieren','② Verallgemeinern','③ Systematisieren','④ Anwenden'];
+  setAbschnittTitel('abs2', nr===4 ? 'Schritt 2 – Herleitung' : 'Schritt 2 – Verallgemeinern');
+  setAbschnittTitel('abs3', nr===4 ? 'Schritt 3 – Anwenden' : 'Schritt 3 – Einordnen in die Übersicht');
+
+  // Alle Abschnitte bauen
+  baueAbschnitt1(nr);
+  if(nr===4){
+    baueHerleitung4();
+    baueAbschnitt4(nr, 3);
+    document.getElementById('abs4-body').innerHTML = '';
+  } else {
+    baueAbschnitt2(nr);
+    baueAbschnitt3(nr);
+    baueAbschnitt4(nr, 4);
+  }
+
+  // Gespeicherte Werte einfügen
+  ladeWerte(nr);
+
+  // Navigation
+  for(let i=1;i<=4;i++){
+    const b = document.getElementById('fnav'+i);
+    b.classList.remove('aktiv','erledigt');
+    if(labels[i-1]){ b.style.display = ''; b.textContent = labels[i-1]; }
+    else { b.style.display = 'none'; }
+    if(lgBool('fall'+nr+'_abs'+i+'_done')) b.classList.add('erledigt');
+  }
+  zeigeAbschnitt(1);
+  document.getElementById('fall-abschluss').style.display = 'none';
+  window.scrollTo({top:0,behavior:'smooth'});
+  setTimeout(renderKatex, 200);
+}
+
+function zurueckZurAuswahl() {
+  document.getElementById('arbeitsbereich').style.display = 'none';
+  document.getElementById('startseite').style.display = 'block';
+  aktiverFall = null;
+  aktualisiereStartseite();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function setAbschnittTitel(absId, txt) {
+  const el = document.querySelector('#'+absId+' .abschnitt-titel');
+  if(el) el.textContent = txt;
+}
+
+function anzahlAbschnitte(nr) { return nr===4 ? 3 : 4; }
+
+function zeigeAbschnitt(n) {
+  aktiverAbschnitt = n;
+  for(let i=1;i<=4;i++){
+    document.getElementById('abs'+i).classList.toggle('aktiv', i===n);
+    const b = document.getElementById('fnav'+i);
+    b.classList.toggle('aktiv', i===n);
+  }
+  aktualisiereWeiterButtons();
+}
+
+/* ── GATING: "Weiter" erst nach Bearbeitung ──────────── */
+function abschnittBearbeitet(n) {
+  const body = document.getElementById('abs'+n+'-body');
+  if(!body) return false;
+  const felder = body.querySelectorAll('input[type="text"], textarea');
+  if(felder.length === 0) return true;
+  return Array.from(felder).every(el => el.value.trim() !== '');
+}
+function aktualisiereWeiterButtons() {
+  for(let i=1;i<=4;i++){
+    const body = document.getElementById('abs'+i+'-body');
+    if(!body) continue;
+    const btn = body.querySelector('.btn-weiter');
+    if(!btn) continue;
+    const ok = abschnittBearbeitet(i);
+    btn.disabled = !ok;
+    let hinweis = btn.parentElement.querySelector('.weiter-hinweis');
+    if(!ok && !hinweis) {
+      hinweis = document.createElement('div');
+      hinweis.className = 'weiter-hinweis';
+      hinweis.textContent = 'Bearbeite zuerst alle Aufgaben auf dieser Seite.';
+      btn.parentElement.appendChild(hinweis);
+    } else if(ok && hinweis) {
+      hinweis.remove();
+    }
+  }
+}
+
+function markiereAbschnittErledigt(n) {
+  const f = aktiverFall;
+  ls('fall'+f+'_abs'+n+'_done','1');
+  document.getElementById('fnav'+n).classList.add('erledigt');
+}
+
+function pruefeObFallErledigt() {
+  const f = aktiverFall;
+  const anz = anzahlAbschnitte(f);
+  const alle = Array.from({length:anz},(_,i)=>i+1).every(i => lgBool('fall'+f+'_abs'+i+'_done'));
+  if(alle && !lgBool('fall'+f+'_komplett')) {
+    ls('fall'+f+'_komplett','1');
+    aktualisiereForstschritt();
+  }
+  aktualisiereForstschritt();
+  if(alle) {
+    document.getElementById('fall-abschluss').style.display='block';
+    document.getElementById('fall-abschluss-titel').textContent = 'Fall '+f+' abgeschlossen! 🎉';
+    document.getElementById('fall-abschluss-text').textContent = 'Kehre zur Auswahl zurück und bearbeite den nächsten Fall.';
+    document.getElementById('fall-abschluss').scrollIntoView({behavior:'smooth'});
+  }
+}
+
+function aktualisiereStartseite() {
+  let done = 0;
+  for(let i=1;i<=4;i++){
+    const k = document.querySelector(`.fall-karte[data-fall="${i}"]`);
+    if(lgBool('fall'+i+'_komplett')){ k.classList.add('erledigt-karte'); done++; }
+    else k.classList.remove('erledigt-karte');
+  }
+  document.getElementById('fortschritt-fill').style.width=(done/4*100)+'%';
+  document.getElementById('fortschritt-text').textContent=done+' von 4 Fällen';
+
+  const zus = document.getElementById('gesamt-zusammenfassung');
+  if(zus){
+    zus.style.display = (done===4) ? 'block' : 'none';
+    if(done===4 && !zus.dataset.gerendert && window.renderMathInElement){
+      renderMathInElement(zus, {
+        delimiters: [{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],
+        throwOnError: false
+      });
+      zus.dataset.gerendert = '1';
+    }
+  }
+}
+
+function aktualisiereForstschritt() {
+  let done = 0;
+  for(let i=1;i<=4;i++){ if(lgBool('fall'+i+'_komplett')) done++; }
+  document.getElementById('fortschritt-fill').style.width=(done/4*100)+'%';
+  document.getElementById('fortschritt-text').textContent=done+' von 4 Fällen';
+}
+
+/* ── ABSCHNITT 1: AUSPROBIEREN ───────────────────────── */
+function baueAbschnitt1(nr) {
+  const f = FAELLE[nr];
+  const urnenVis = `<div class="urne-container">
+    <div class="urne">
+      <div class="urne-bild"><div class="kugel k1">1</div><div class="kugel k2">2</div><div class="kugel k3">3</div><div class="kugel k4">4</div></div>
+      <div class="urne-label">Urne {1,2,3,4}</div>
+    </div>
+    <div style="font-size:26px;padding-bottom:18px;color:var(--blau-mittel)">→</div>
+    <div class="urne"><div class="urne-bild" style="width:84px;height:82px"><div class="kugel k1" style="border:2px dashed #dc2626">1.</div><div class="kugel k2" style="border:2px dashed #dc2626">2.</div></div><div class="urne-label">2 Züge</div></div>
+  </div>`;
+
+  let modus = '';
+  if(nr===1) modus = 'Reihenfolge zählt, Kugel wird nach jedem Zug <strong>zurückgelegt</strong> (Wiederholungen möglich, z.&nbsp;B. (2,2)).';
+  if(nr===2) modus = 'Reihenfolge zählt, Kugel wird <strong>nicht zurückgelegt</strong> (jede Kugel max. einmal).';
+  if(nr===3) modus = 'Reihenfolge <strong>egal</strong> – {1,2} und {2,1} zählen als ein Ergebnis. Keine Kugel zweimal.';
+  if(nr===4) modus = 'Reihenfolge <strong>egal</strong>, aber Kugeln dürfen <strong>wiederholt</strong> gezogen werden (z.&nbsp;B. {1,1}).';
+
+  let listenbsp = '';
+  if(nr===1) listenbsp = '(1,1), (1,2), (1,3), …';
+  if(nr===2) listenbsp = '(1,2), (1,3), (1,4), (2,1), …';
+  if(nr===3) listenbsp = '{1,2}, {1,3}, {1,4}, {2,3}, …';
+  if(nr===4) listenbsp = '{1,1}, {1,2}, {1,3}, …';
+
+  document.getElementById('abs1-body').innerHTML = `
+    <div class="info-box">
+      <strong>Die Situation:</strong> Urne mit 4 nummerierten Kugeln (1, 2, 3, 4), es werden 2 Kugeln gezogen.<br>
+      <strong>Dein Fall:</strong> ${modus}
+    </div>
+    ${urnenVis}
+    <div class="aufgabe">
+      <div class="aufgabe-kopf">
+        <div class="aufgabe-nummer">1a</div>
+        <div class="aufgabe-text">Liste alle möglichen Ergebnisse systematisch auf. Nutze das Eingabefeld.</div>
+        <div class="aufgabe-operator">Beschreiben</div>
+      </div>
+      <div class="var-def"><em>n</em> = 4 (Kugeln), <em>k</em> = 2 (Züge)</div>
+      <textarea id="f${nr}_liste" placeholder="?" oninput="ls('f${nr}_liste',this.value)"></textarea>
+      <div class="eingabe-gruppe">
+        <div class="eingabe-label">Anzahl der Möglichkeiten:</div>
+        <input type="text" class="zahl-xs" id="f${nr}_anz" placeholder="?" oninput="ls('f${nr}_anz',this.value)">
+        <button class="btn btn-pruefen btn-sm" onclick="pruefeZahl('f${nr}_anz',${f.beispielZahl},'f${nr}_anz_fb',false)">✓ Prüfen</button>
+      </div>
+      <div class="feedback" id="f${nr}_anz_fb"></div>
+      <div class="hilfen">
+        <div class="hilfe-label">💡 Gestufte Hilfen</div>
+        <div class="hilfe-stufen">
+          <button class="hilfe-btn" onclick="toggleHilfe('f${nr}_h1a',this)">Tipp 1</button>
+          <button class="hilfe-btn" onclick="toggleHilfe('f${nr}_h1b',this)">Tipp 2</button>
+          <button class="hilfe-btn" onclick="toggleHilfe('f${nr}_h1c',this)">Lösung</button>
+        </div>
+        ${hilfe1Inhalt(nr)}
+      </div>
+    </div>
+    <div class="nav-unten">
+      <div></div>
+      <button class="btn btn-weiter btn-sm" onclick="markiereAbschnittErledigt(1);zeigeAbschnitt(2)">Weiter →</button>
+    </div>`;
+}
+
+function hilfe1Inhalt(nr) {
+  const tips = {
+    1: ['Wie viele Möglichkeiten hast du beim 1.&nbsp;Zug? Und beim 2.&nbsp;Zug, wenn die Kugel zurückgelegt wurde?',
+        '1.&nbsp;Zug: 4 Möglichkeiten. Da zurückgelegt: ebenfalls 4 beim 2.&nbsp;Zug. Reihenfolge zählt → (1,2)&nbsp;≠&nbsp;(2,1).',
+        'Alle Paare (x,y) mit x,y∈{1,2,3,4}: (1,1)(1,2)(1,3)(1,4) | (2,1)(2,2)(2,3)(2,4) | … → <strong>4·4 = 16</strong>'],
+    2: ['1.&nbsp;Zug: 4 Mögl. Wenn nicht zurückgelegt: wie viele bleiben für den 2.&nbsp;Zug?',
+        '1.&nbsp;Zug: 4, 2.&nbsp;Zug: 3 (gezogene Kugel fehlt). Paare wie (1,1) sind ausgeschlossen.',
+        'Alle geordneten Paare ohne Wiederholung: (1,2)(1,3)(1,4) | (2,1)(2,3)(2,4) | … → <strong>4·3 = 12</strong>'],
+    3: ['Nimm zunächst alle geordneten Paare (wie bei Fall 2). Welche davon beschreiben dasselbe ungeordnete Ergebnis?',
+        'Z.&nbsp;B. (1,2) und (2,1) → dasselbe Paar {1,2}. Jedes Paar taucht genau zweimal auf.',
+        'Alle Teilmengen: {1,2}{1,3}{1,4}{2,3}{2,4}{3,4} → <strong>6 Möglichkeiten</strong> = 12 ÷ 2'],
+    4: ['Welche Möglichkeiten gibt es zusätzlich zu Fall 3, wenn Kugeln mehrfach gezogen werden dürfen?',
+        'Zu den 6 Paaren aus Fall 3 kommen: {1,1}{2,2}{3,3}{4,4} (Doppelpaare).',
+        '{1,1}{1,2}{1,3}{1,4}{2,2}{2,3}{2,4}{3,3}{3,4}{4,4} → <strong>10 Möglichkeiten</strong>']
+  };
+  const t = tips[nr];
+  return `<div class="hilfe-inhalt" id="f${nr}_h1a">${t[0]}</div>
+          <div class="hilfe-inhalt" id="f${nr}_h1b">${t[1]}</div>
+          <div class="hilfe-inhalt loesung" id="f${nr}_h1c">${t[2]}</div>`;
+}
+
+/* ── ABSCHNITT 2: VERALLGEMEINERN ────────────────────── */
+function baueAbschnitt2(nr) {
+  let html = '';
+
+  if(nr===1) {
+    html = `<div class="info-box">Du hast für n=4, k=2 das Ergebnis 16 ermittelt. Jetzt geht es darum, <strong>warum</strong> diese Zahl entsteht.<br><strong>Variablen:</strong> <em>n</em> = Kugeln in der Urne, <em>k</em> = Anzahl der Züge</div>
+    <div class="aufgabe">
+      <div class="aufgabe-kopf"><div class="aufgabe-nummer">2a</div><div class="aufgabe-text">Erkläre, warum du beim 1.&nbsp;Zug 4 Möglichkeiten und beim 2.&nbsp;Zug ebenfalls 4 hast. Schreibe das Ergebnis als Rechenausdruck.</div><div class="aufgabe-operator">Erklären</div></div>
+      <div class="eingabe-gruppe"><div class="eingabe-label">Gesamtanzahl =</div>
+        <input type="text" class="zahl-s" id="f1_v1" placeholder="?" oninput="ls('f1_v1',this.value)">
+        <button class="btn btn-pruefen btn-sm" onclick="pruefeAusdruck('f1_v1',['4·4','4*4','44'],'f1_v1_fb')">✓</button>
+      </div>
+      <div class="feedback" id="f1_v1_fb"></div>
+    </div>
+    <div class="aufgabe">
+      <div class="aufgabe-kopf"><div class="aufgabe-nummer">2b</div><div class="aufgabe-text">Jetzt n=5, k=2 – wie viele Möglichkeiten?</div><div class="aufgabe-operator">Berechnen</div></div>
+      <div class="var-def"><em>n</em> = 5, <em>k</em> = 2</div>
+      <div class="eingabe-gruppe"><input type="text" class="zahl-xs" id="f1_v2" placeholder="?" oninput="ls('f1_v2',this.value)">
+        <button class="btn btn-pruefen btn-sm" onclick="pruefeZahl('f1_v2',25,'f1_v2_fb')">✓</button>
+      </div><div class="feedback" id="f1_v2_fb"></div>
+    </div>
+    <div class="aufgabe">
+      <div class="aufgabe-kopf"><div class="aufgabe-nummer">2c</div><div class="aufgabe-text">Formuliere die allgemeine Formel für beliebiges n und k (Potenzschreibweise).</div><div class="aufgabe-operator">Entwickeln</div></div>
+      <div class="eingabe-gruppe"><div class="eingabe-label">Formel:</div>
+        <input type="text" class="zahl-m" id="f1_v3" placeholder="?" oninput="ls('f1_v3',this.value)">
+        <button class="btn btn-pruefen btn-sm" onclick="pruefeAusdruck('f1_v3',['n^k','nk','n**k','n hoch k'],'f1_v3_fb')">✓</button>
+      </div><div class="feedback" id="f1_v3_fb"></div>
+      <div class="hilfen"><div class="hilfe-label">💡 Hilfe</div><div class="hilfe-stufen">
+        <button class="hilfe-btn" onclick="toggleHilfe('f1_vh1',this)">Tipp</button>
+        <button class="hilfe-btn" onclick="toggleHilfe('f1_vh2',this)">Lösung</button>
+      </div>
+      <div class="hilfe-inhalt" id="f1_vh1">Du ziehst k-mal, jedes Mal n Möglichkeiten. Wie kombinierst du das?</div>
+      <div class="hilfe-inhalt loesung" id="f1_vh2">Jeder Zug: n Mögl. (Zurücklegen!). k Züge → n·n·…·n (k-mal) = \\(n^k\\)</div>
+      </div>
+    </div>`;
+  }
+
+  if(nr===2) {
+    html = `<div class="info-box">Du hast 12 Möglichkeiten für n=4, k=2 ermittelt. Warum genau 12?<br><strong>Variablen:</strong> <em>n</em> = Kugeln, <em>k</em> = Züge</div>
+    <div class="aufgabe">
+      <div class="aufgabe-kopf"><div class="aufgabe-nummer">2a</div><div class="aufgabe-text">Für n=5, k=3 (drei Züge ohne Zurücklegen, geordnet): Wie viele Möglichkeiten? Notiere das Produkt.</div><div class="aufgabe-operator">Berechnen</div></div>
+      <div class="var-def"><em>n</em> = 5, <em>k</em> = 3</div>
+      <div class="eingabe-gruppe"><div class="eingabe-label">Anzahl =</div>
+        <input type="text" class="zahl-s" id="f2_v1" placeholder="?" oninput="ls('f2_v1',this.value)">
+        <button class="btn btn-pruefen btn-sm" onclick="pruefeZahl('f2_v1',60,'f2_v1_fb')">✓</button>
+      </div><div class="feedback" id="f2_v1_fb"></div>
+      <div class="hilfen"><div class="hilfe-label">💡</div><div class="hilfe-stufen"><button class="hilfe-btn" onclick="toggleHilfe('f2_vh1',this)">Tipp</button></div>
+      <div class="hilfe-inhalt" id="f2_vh1">1.&nbsp;Zug: 5, 2.&nbsp;Zug: 4, 3.&nbsp;Zug: 3 → Produkt?</div></div>
+    </div>
+    <div class="aufgabe">
+      <div class="aufgabe-kopf"><div class="aufgabe-nummer">2b</div><div class="aufgabe-text">Das Produkt n·(n−1)·…·(n−k+1) lässt sich als Bruch mit Fakultäten schreiben. Formuliere ihn.</div><div class="aufgabe-operator">Umformen</div></div>
+      <div class="eingabe-gruppe"><div class="eingabe-label">Formel:</div>
+        <input type="text" class="zahl-m" id="f2_v2" placeholder="?" oninput="ls('f2_v2',this.value)">
+        <button class="btn btn-pruefen btn-sm" onclick="pruefeAusdruck('f2_v2',['n!/(n-k)!','n!/(nk)!','n!:(n-k)!'],'f2_v2_fb')">✓</button>
+      </div><div class="feedback" id="f2_v2_fb"></div>
+      <div class="hilfen"><div class="hilfe-label">💡 Hilfen</div><div class="hilfe-stufen">
+        <button class="hilfe-btn" onclick="toggleHilfe('f2_vh2a',this)">Tipp 1</button>
+        <button class="hilfe-btn" onclick="toggleHilfe('f2_vh2b',this)">Tipp 2</button>
+        <button class="hilfe-btn" onclick="toggleHilfe('f2_vh2c',this)">Lösung</button>
+      </div>
+      <div class="hilfe-inhalt" id="f2_vh2a">In Aufgabe 2a hast du das Produkt <strong>5 · 4 · 3</strong> gerechnet. Schreibe 5! als 5 · 4 · 3 · 2 · 1 und überlege: Durch welchen Term musst du 5! teilen, damit genau 5 · 4 · 3 übrig bleibt?</div>
+      <div class="hilfe-inhalt" id="f2_vh2b">Es bleiben nur die ersten k Faktoren von n! stehen; hinten „fehlen" die letzten (n−k) Faktoren – also (n−k)!. Bei n=5, k=3: teilen durch 2 · 1 = 2!. Als Bruch geschrieben kürzt sich (n−k)! weg.</div>
+      <div class="hilfe-inhalt loesung" id="f2_vh2c">\\[\\frac{n!}{(n-k)!} = \\frac{n\\cdot(n-1)\\cdots(n-k+1)\\cdot\\cancel{(n-k)!}}{\\cancel{(n-k)!}}\\] Probe mit 2a: n=5, k=3: 5!/2! = 120/2 = 60 ✓</div>
+      </div>
+    </div>`;
+  }
+
+  if(nr===3) {
+    html = `<div class="info-box">Du hast 6 Möglichkeiten für n=4, k=2 ermittelt. Die Verbindung zu Fall 2 (12 Möglichkeiten) ist der Schlüssel zur Formel.<br><strong>Variablen:</strong> <em>n</em> = Kugeln, <em>k</em> = Züge</div>
+    <div class="aufgabe">
+      <div class="aufgabe-kopf"><div class="aufgabe-nummer">2a</div><div class="aufgabe-text">Jede ungeordnete Gruppe von k Elementen enthält wie viele geordnete Anordnungen derselben Elemente?</div><div class="aufgabe-operator">Begründen</div></div>
+      <div class="var-def">Für k=2: {1,2} → (1,2) und (2,1) → 2 = 2! Anordnungen. Allgemein?</div>
+      <div class="eingabe-gruppe"><div class="eingabe-label">Jede Teilmenge hat</div>
+        <input type="text" class="zahl-s" id="f3_v1" placeholder="?" oninput="ls('f3_v1',this.value)">
+        <span class="eingabe-label">Anordnungen.</span>
+        <button class="btn btn-pruefen btn-sm" onclick="pruefeAusdruck('f3_v1',['k!','k!'],'f3_v1_fb')">✓</button>
+      </div><div class="feedback" id="f3_v1_fb"></div>
+    </div>
+    <div class="aufgabe">
+      <div class="aufgabe-kopf"><div class="aufgabe-nummer">2b</div><div class="aufgabe-text">Die geordnete Formel (Fall 2) dividiert durch k! ergibt die ungeordnete Formel. Schreibe sie als Bruch. Wie heißt diese Formel?</div><div class="aufgabe-operator">Entwickeln</div></div>
+      <div class="eingabe-gruppe"><div class="eingabe-label">Formel:</div>
+        <input type="text" class="zahl-l" id="f3_v2" placeholder="?" oninput="ls('f3_v2',this.value)">
+        <button class="btn btn-pruefen btn-sm" onclick="pruefeAusdruck('f3_v2',['n!/(k!*(n-k)!)','n!/(k!(n-k)!)','n!/((n-k)!*k!)','n!/((n-k)!k!)','c(n,k)','binomialkoeffizient'],'f3_v2_fb')">✓</button>
+      </div><div class="feedback" id="f3_v2_fb"></div>
+      <div class="hilfen"><div class="hilfe-label">💡 Hilfen</div><div class="hilfe-stufen">
+        <button class="hilfe-btn" onclick="toggleHilfe('f3_vh1',this)">Tipp</button>
+        <button class="hilfe-btn" onclick="toggleHilfe('f3_vh2',this)">Lösung</button>
+      </div>
+      <div class="hilfe-inhalt" id="f3_vh1">Geordnet ohne Zurücklegen: n!/(n−k)!. Jede ungeordnete Gruppe wird k!-mal gezählt → durch k! dividieren.</div>
+      <div class="hilfe-inhalt loesung" id="f3_vh2">\\[\\binom{n}{k}=\\frac{n!}{k!\\cdot(n-k)!}\\] Das ist der <strong>Binomialkoeffizient</strong> „n über k". Probe: 4!/(2!·2!)=24/4=6 ✓</div>
+      </div>
+    </div>`;
+  }
+
+  html += `<div class="nav-unten">
+    <button class="btn btn-reset btn-sm" onclick="zeigeAbschnitt(1)">← Zurück</button>
+    <button class="btn btn-weiter btn-sm" onclick="markiereAbschnittErledigt(2);zeigeAbschnitt(3)">Weiter →</button>
+  </div>`;
+  document.getElementById('abs2-body').innerHTML = html;
+}
+
+/* ── ABSCHNITT 3: SYSTEMATISIEREN ────────────────────── */
+function baueAbschnitt3(nr) {
+  const beschriftung = {
+    1: { zeile:'Geordnet', spalte:'Mit Zurücklegen', katex:'n^k', schluessel:'gmo' },
+    2: { zeile:'Geordnet', spalte:'Ohne Zurücklegen', katex:'\\tfrac{n!}{(n-k)!}', schluessel:'goo' },
+    3: { zeile:'Ungeordnet', spalte:'Ohne Zurücklegen', katex:'\\binom{n}{k}=\\tfrac{n!}{k!\\cdot(n-k)!}', schluessel:'uoo' },
+    4: { zeile:'Ungeordnet', spalte:'Mit Zurücklegen', katex:'\\binom{n+k-1}{k}', schluessel:'umo' }
+  };
+  const b = beschriftung[nr];
+  const istMitZ = (nr===1||nr===4);
+
+  // Zelle für aktuellen Fall hervorheben
+  const zelleMZ_g = (nr===1) ? 'markiert' : '';
+  const zelleOZ_g = (nr===2) ? 'markiert' : '';
+  const zelleMZ_u = (nr===4) ? 'markiert' : '';
+  const zelleOZ_u = (nr===3) ? 'markiert' : '';
+
+  const html = `
+    <div class="info-box">Trage deine erarbeitete Formel in die Übersichtstabelle ein. Die Zelle deines aktuellen Falls ist hervorgehoben. Die anderen Felder kannst du freilassen oder mit Fragezeichen markieren – sie werden gefüllt, wenn du die anderen Fälle bearbeitest.<br><strong>Variablen:</strong> <em>n</em> = Kugeln, <em>k</em> = Züge</div>
+    <div style="overflow-x:auto">
+    <table class="formel-tabelle">
+      <thead><tr>
+        <th style="width:30%"></th>
+        <th style="width:35%">Mit Zurücklegen</th>
+        <th style="width:35%">Ohne Zurücklegen</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="zeilen-kopf">Geordnet</td>
+          <td class="formel-feld ${zelleMZ_g}" id="f${nr}_tab_gmo">
+            ${nr===1 ? tabEingabe(nr,'gmo',b.katex) : tabPlatzhalter(nr,'gmo')}
+          </td>
+          <td class="formel-feld ${zelleOZ_g}" id="f${nr}_tab_goo">
+            ${nr===2 ? tabEingabe(nr,'goo',b.katex) : tabPlatzhalter(nr,'goo')}
+          </td>
+        </tr>
+        <tr>
+          <td class="zeilen-kopf">Ungeordnet</td>
+          <td class="formel-feld ${zelleMZ_u}" id="f${nr}_tab_umo">
+            ${nr===4 ? tabEingabe(nr,'umo',b.katex) : tabPlatzhalter(nr,'umo')}
+          </td>
+          <td class="formel-feld ${zelleOZ_u}" id="f${nr}_tab_uoo">
+            ${nr===3 ? tabEingabe(nr,'uoo',b.katex) : tabPlatzhalter(nr,'uoo')}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="achtung-box" style="margin-top:12px">🔑 <strong>Merkhilfe:</strong> Wenn die Reihenfolge <em>egal</em> ist, dividierst du zusätzlich durch k!, weil du k!-fache Überzählungen rausnimmst.</div>
+    <div class="nav-unten">
+      <button class="btn btn-reset btn-sm" onclick="zeigeAbschnitt(2)">← Zurück</button>
+      <button class="btn btn-weiter btn-sm" onclick="markiereAbschnittErledigt(3);zeigeAbschnitt(4)">Weiter →</button>
+    </div>`;
+  document.getElementById('abs3-body').innerHTML = html;
+}
+
+function tabEingabe(nr, modell, katex) {
+  return `<textarea class="tabelle-input" id="f${nr}_tab_inp_${modell}" placeholder="?" oninput="ls('f${nr}_tab_${modell}',this.value)" rows="2"></textarea>
+    <div style="display:flex;gap:6px;justify-content:center;margin-top:5px">
+      <button class="btn btn-pruefen btn-sm" onclick="pruefeTabelle('f${nr}_tab_inp_${modell}','f${nr}_tab_fb_${modell}','${modell}')">Prüfen</button>
+    </div>
+    <div class="feedback" id="f${nr}_tab_fb_${modell}" style="margin-top:5px"></div>`;
+}
+
+function tabPlatzhalter(nr, modell) {
+  return `<div style="color:var(--text-mittel);font-size:13px;padding:8px;font-style:italic">
+    Wird in Fall ${{'gmo':1,'goo':2,'uoo':3,'umo':4}[modell]} erarbeitet
+  </div>`;
+}
+
+/* ── ABSCHNITT 4: ANWENDEN ───────────────────────────── */
+function baueAbschnitt4(nr, absNr) {
+  absNr = absNr || 4;
+  const f = FAELLE[nr];
+  const html = `
+    <div class="kontext-karte">
+      ${f.anwendungKontext}
+      <div class="eingabe-gruppe" style="margin-top:12px">
+        <div class="eingabe-label">Ergebnis:</div>
+        <input type="text" class="zahl-m" id="f${nr}_erg" placeholder="?" oninput="ls('f${nr}_erg',this.value)">
+        <button class="btn btn-pruefen btn-sm" onclick="pruefeZahl('f${nr}_erg',${f.anwendungErg},'f${nr}_erg_fb',true)">✓ Prüfen</button>
+      </div>
+      <div class="feedback" id="f${nr}_erg_fb"></div>
+      <div class="hilfen"><div class="hilfe-label">💡 Gestufte Hilfen</div><div class="hilfe-stufen">
+        <button class="hilfe-btn" onclick="toggleHilfe('f${nr}_ah0',this)">Tipp 1</button>
+        <button class="hilfe-btn" onclick="toggleHilfe('f${nr}_ah1',this)">Tipp 2</button>
+        <button class="hilfe-btn" onclick="toggleHilfe('f${nr}_ah2',this)">Lösung</button>
+      </div>
+      <div class="hilfe-inhalt" id="f${nr}_ah0">Bestimme zuerst <em>n</em> und <em>k</em> aus dem Aufgabentext. Setze beide Werte in die zuvor hergeleitete Formel ein und berechne das Ergebnis.</div>
+      <div class="hilfe-inhalt" id="f${nr}_ah1">${f.anwendungHinweis}</div>
+      <div class="hilfe-inhalt loesung" id="f${nr}_ah2">${f.anwendungLoesung}</div>
+      </div>
+    </div>
+    <div class="nav-unten">
+      <button class="btn btn-reset btn-sm" onclick="zeigeAbschnitt(${absNr-1})">← Zurück</button>
+      <button class="btn btn-weiter btn-sm" onclick="schliesseAbschnitt4(${nr},${absNr})">Fall abschließen ✓</button>
+    </div>`;
+  document.getElementById('abs'+absNr+'-body').innerHTML = html;
+}
+
+function schliesseAbschnitt4(nr, absNr) {
+  markiereAbschnittErledigt(absNr || 4);
+  pruefeObFallErledigt();
+}
+
+/* ── FALL 4: HERLEITUNG (Verallgemeinern + Systematisieren zusammengefasst) ── */
+function baueHerleitung4() {
+  const html = `
+    <div class="vertiefung-hinweis"><div class="badge">★ Vertiefung</div>
+      <p style="font-size:14px;margin-top:4px">Für diesen Fall leiten wir die Formel Schritt für Schritt gemeinsam her – mit der <strong>Sterne-und-Striche-Methode</strong>.</p></div>
+    <div class="info-box">Aus Schritt 1 weißt du: Für <em>n</em> = 4 Sorten und <em>k</em> = 2 Kugeln gibt es <strong>10</strong> Möglichkeiten. Jetzt klären wir, woher diese Zahl kommt.<br><strong>Variablen:</strong> <em>n</em> = Anzahl der Sorten in der Urne, <em>k</em> = Anzahl der Züge</div>
+
+    <div class="aufgabe">
+      <div class="aufgabe-kopf"><div class="aufgabe-nummer">Schritt 1</div><div class="aufgabe-text">Ein Ergebnis festhalten: Es zählt nur, <strong>wie oft</strong> jede Sorte gezogen wird.</div></div>
+      <p style="font-size:14px;margin:0">Beispiele für n=4, k=2:</p>
+      <ul style="font-size:14px;margin:6px 0 0 18px">
+        <li>{1,1}: zweimal Sorte 1</li>
+        <li>{2,4}: einmal Sorte 2, einmal Sorte 4</li>
+      </ul>
+    </div>
+
+    <div class="aufgabe">
+      <div class="aufgabe-kopf"><div class="aufgabe-nummer">Schritt 2</div><div class="aufgabe-text">Das Ergebnis als Bild aus Sternen und Strichen schreiben.</div></div>
+      <p style="font-size:14px;margin:0 0 8px">Schreibe <strong>k Sterne ★</strong> für die gezogenen Kugeln und <strong>n−1 Striche |</strong> als Trennwände zwischen den n Sorten. Der Platz vor dem 1.&nbsp;Strich gehört zu Sorte 1, dann Sorte 2 usw.</p>
+      <div style="font-family:monospace;font-size:15px;background:var(--weiss);border:1.5px solid var(--blau-hell);border-radius:8px;padding:10px 14px;line-height:2.1">
+        {1,1} &nbsp;→&nbsp; ★ ★ | &nbsp; | &nbsp; |<br>
+        {1,2} &nbsp;→&nbsp; ★ | ★ | &nbsp; | <br>
+        {2,2} &nbsp;→&nbsp; | ★ ★ | &nbsp; |<br>
+        {3,4} &nbsp;→&nbsp; | &nbsp; | ★ | ★
+      </div>
+      <p style="font-size:14px;margin:8px 0 0">Jede Anordnung von Sternen und Strichen gehört zu genau einem Ergebnis – und jedes Ergebnis zu genau einer Anordnung.</p>
+    </div>
+
+    <div class="aufgabe">
+      <div class="aufgabe-kopf"><div class="aufgabe-nummer">Schritt 3</div><div class="aufgabe-text">Die Positionen in der Reihe zählen.</div></div>
+      <p style="font-size:14px;margin:0">In der Reihe stehen <strong>k</strong> Sterne und <strong>n−1</strong> Striche, zusammen also <strong>k + (n−1) = n + k − 1</strong> Positionen. Für n=4, k=2: 2 + 3 = 5 Positionen.</p>
+    </div>
+
+    <div class="aufgabe">
+      <div class="aufgabe-kopf"><div class="aufgabe-nummer">Schritt 4</div><div class="aufgabe-text">Auf ein bekanntes Modell zurückführen.</div></div>
+      <p style="font-size:14px;margin:0">Ein Ergebnis steht fest, sobald du weißt, <strong>welche k der (n+k−1) Positionen Sterne sind</strong>. Du wählst also k Positionen aus (n+k−1) aus – Reihenfolge egal, keine Position doppelt. Das ist genau <strong>Fall&nbsp;3</strong> (ungeordnet, ohne Zurücklegen): der Binomialkoeffizient.</p>
+    </div>
+
+    <div class="aufgabe">
+      <div class="aufgabe-kopf"><div class="aufgabe-nummer">Schritt 5</div><div class="aufgabe-text">Die Formel aufschreiben.</div></div>
+      <p style="font-size:14px;margin:0 0 8px">Setze in \\(\\binom{\\text{oben}}{\\text{unten}}\\) oben (n+k−1) und unten k ein:</p>
+      <div class="eingabe-gruppe">
+        <div class="eingabe-label">Formel:</div>
+        <input type="text" class="zahl-l" id="f4_h2" placeholder="?" oninput="ls('f4_h2',this.value)">
+        <button class="btn btn-pruefen btn-sm" onclick="pruefeAusdruck('f4_h2',['c(n+k-1,k)','binom(n+k-1,k)','(n+k-1)!/(k!*(n-1)!)','(n+k-1)!/(k!(n-1)!)','(n+k-1)!/((n-1)!*k!)'],'f4_h2_fb')">✓</button>
+      </div>
+      <div class="feedback" id="f4_h2_fb"></div>
+      <div class="hilfen"><div class="hilfe-label">💡 Hilfen</div><div class="hilfe-stufen">
+        <button class="hilfe-btn" onclick="toggleHilfe('f4_hh1',this)">Tipp</button>
+        <button class="hilfe-btn" onclick="toggleHilfe('f4_hh2',this)">Lösung</button>
+      </div>
+      <div class="hilfe-inhalt" id="f4_hh1">Der Binomialkoeffizient „a über b" ist \\(\\binom{a}{b}=\\frac{a!}{b!\\cdot(a-b)!}\\). Hier ist a = n+k−1 und b = k, also a−b = n−1.</div>
+      <div class="hilfe-inhalt loesung" id="f4_hh2">\\[\\binom{n+k-1}{k}=\\frac{(n+k-1)!}{k!\\cdot(n-1)!}\\] Probe für n=4, k=2: \\(\\binom{5}{2}=\\frac{5!}{2!\\cdot 3!}=10\\) ✓ – genau dein Ergebnis aus Schritt 1.</div>
+      </div>
+    </div>
+
+    <div class="achtung-box" style="margin-top:12px">🔑 <strong>Merksatz:</strong> „Ungeordnet mit Zurücklegen" wird mit Sternen &amp; Strichen zu „k Positionen aus (n+k−1) auswählen".</div>
+
+    <div class="nav-unten">
+      <button class="btn btn-reset btn-sm" onclick="zeigeAbschnitt(1)">← Zurück</button>
+      <button class="btn btn-weiter btn-sm" onclick="markiereAbschnittErledigt(2);zeigeAbschnitt(3)">Weiter →</button>
+    </div>`;
+  document.getElementById('abs2-body').innerHTML = html;
+}
+
+/* ── WERTE LADEN ─────────────────────────────────────── */
+function ladeWerte(nr) {
+  // Textarea / Input-Felder befüllen
+  setTimeout(() => {
+    document.querySelectorAll('input[id^="f'+nr+'_"], textarea[id^="f'+nr+'_"]').forEach(el => {
+      const v = lg(el.id);
+      if(v) el.value = v;
+    });
+    aktualisiereWeiterButtons();
+  }, 50);
+}
+
+/* ── PRÜF-FUNKTIONEN ─────────────────────────────────── */
+function normalisiere(s) {
+  return s.toLowerCase().replace(/\s+/g,'').replace(/,/g,'.').replace(/×/g,'*').replace(/·/g,'*');
+}
+function pruefeZahl(inputId, erwartet, fbId, gross) {
+  const inp = document.getElementById(inputId);
+  if(!inp) return;
+  const fb = document.getElementById(fbId);
+  const v = inp.value.trim().replace(/\./g,'').replace(/,/g,'').replace(/\s/g,'');
+  const num = parseFloat(v);
+  const ok = Math.abs(num - erwartet) < (gross ? 1 : 0.001);
+  zeigeFeedback(fb, inp, ok,
+    ok ? '✓ Richtig! ' + erwartet.toLocaleString('de') : '✗ Noch nicht ganz – überprüfe n, k und die Formel.');
+}
+function pruefeAusdruck(inputId, liste, fbId) {
+  const inp = document.getElementById(inputId);
+  if(!inp) return;
+  const fb = document.getElementById(fbId);
+  const v = normalisiere(inp.value);
+  const ok = liste.some(e => v === normalisiere(e) || v.includes(normalisiere(e)));
+  zeigeFeedback(fb, inp, ok, ok ? '✓ Richtig!' : '✗ Nicht ganz – schau dir die Hinweise an.');
+}
+function pruefeMehrfach(liste, fbId) {
+  const fb = document.getElementById(fbId);
+  let all = true, msg = '';
+  liste.forEach(([id,erw]) => {
+    const v = parseFloat((document.getElementById(id)||{value:''}).value.replace(/\./g,'').replace(/,/g,''));
+    if(Math.abs(v-erw) > 0.001){ all=false; msg += `Sollte ${erw} sein. `; }
+  });
+  zeigeFeedback(fb, null, all, all ? '✓ Beide Werte stimmen!' : '✗ '+msg);
+}
+function pruefeTabelle(inputId, fbId, modell) {
+  const inp = document.getElementById(inputId);
+  if(!inp) return;
+  const fb = document.getElementById(fbId);
+  const v = normalisiere(inp.value);
+  const listen = {
+    gmo: ['nk','n^k','n**k','nhochk'],
+    goo: ['n!/(n-k)!','n!/(nk)!'],
+    uoo: ['n!/(k!*(n-k)!)','n!/(k!(n-k)!)','n!/((n-k)!*k!)','n!/((n-k)!k!)','c(n,k)','binomialkoeffizient'],
+    umo: ['(n+k-1)!/(k!*(n-1)!)','(n+k-1)!/((n-1)!*k!)','c(n+k-1,k)','binom(n+k-1,k)']
+  };
+  const ok = (listen[modell]||[]).some(e => v.includes(normalisiere(e)));
+  zeigeFeedback(fb, null, ok, ok ? '✓ Richtig eingetragen!' : '✗ Schau nochmal in Schritt 2.');
+}
+
+const KORREKTE_MODELLE = { 1:'gmo', 2:'goo', 3:'uoo', 4:'umo' };
+function waehleModell(gruppeId, btn, modell, fbId, fallNr) {
+  const g = document.getElementById(gruppeId);
+  if(!g) return;
+  g.querySelectorAll('.modell-btn').forEach(b => b.classList.remove('gewaehlt','korrekt-wahl','falsch-wahl'));
+  btn.classList.add('gewaehlt');
+  const richtig = KORREKTE_MODELLE[fallNr];
+  const ok = modell === richtig;
+  btn.classList.remove('gewaehlt');
+  btn.classList.add(ok ? 'korrekt-wahl' : 'falsch-wahl');
+  const fb = document.getElementById(fbId);
+  if(ok) {
+    zeigeFeedback(fb, null, true, '✅ Richtig – das ist ' + MODELL_LABEL[modell] + '. Formel: ' + MODELL_FORMEL[modell]);
+  } else {
+    zeigeFeedback(fb, null, false, '❌ Nicht ganz. Frage: Ist die Reihenfolge wichtig? Darf ein Element mehrfach vorkommen?');
+  }
+  ls(gruppeId+'_wahl', modell);
+}
+
+function zeigeFeedback(fb, inp, ok, msg) {
+  if(!fb) return;
+  fb.className = 'feedback ' + (ok ? 'korrekt' : 'falsch');
+  fb.style.display = 'flex';
+  fb.innerHTML = `<span class="feedback-icon">${ok?'✅':'❌'}</span><div>${msg}</div>`;
+  if(inp){ inp.classList.remove('korrekt','falsch'); inp.classList.add(ok?'korrekt':'falsch'); }
+}
+
+/* ── HILFEN ──────────────────────────────────────────── */
+function toggleHilfe(id, btn) {
+  const el = document.getElementById(id); if(!el) return;
+  const sichtbar = el.classList.contains('sichtbar');
+  const box = btn.closest('.hilfen') || btn.closest('.formel-feld') || btn.closest('.abschnitt-body');
+  if(box) { box.querySelectorAll('.hilfe-btn').forEach(b=>b.classList.remove('aktiv')); box.querySelectorAll('.hilfe-inhalt').forEach(h=>h.classList.remove('sichtbar')); }
+  if(!sichtbar){ el.classList.add('sichtbar'); btn.classList.add('aktiv'); }
+}
+
+/* ── KATEX ───────────────────────────────────────────── */
+function renderKatex() {
+  if(window.renderMathInElement) {
+    renderMathInElement(document.getElementById('arbeitsbereich')||document.body, {
+      delimiters: [{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],
+      throwOnError: false
+    });
+  }
+}
+
+/* ── RESET ───────────────────────────────────────────── */
+function resetAlles() {
+  if(!confirm('Wirklich alle Eingaben und Fortschritte löschen?')) return;
+  try { localStorage.removeItem(LS_KEY); } catch(e){}
+  location.reload();
+}
+
+/* ── INIT ────────────────────────────────────────────── */
+window.addEventListener('DOMContentLoaded', () => {
+  aktualisiereStartseite();
+  document.getElementById('arbeitsbereich').addEventListener('input', aktualisiereWeiterButtons);
+  if(window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],
+      throwOnError: false
+    });
+  }
+});
+</script>
+</body>
+</html>

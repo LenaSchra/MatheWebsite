@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Die Schatzkammer des Pythagoras</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&amp;family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&amp;display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   DIE SCHATZKAMMER DES PYTHAGORAS – Einzeldatei-Version
+   Design: nächtliches, fackelbeleuchtetes Kroton.
+   ========================================================= */
+
+:root{
+  --ink-night: #131F2B;
+  --ink-night-2: #1C2E3D;
+  --ink-night-3: #24384A;
+  --marble: #F1E9D8;
+  --marble-dim: #cfc6ae;
+  --bronze: #CDA046;
+  --bronze-deep: #9C7530;
+  --terracotta: #C05B3C;
+  --terracotta-deep: #8F3F29;
+  --olive: #8CA06B;
+  --olive-deep: #5E6E44;
+  --stone-line: #3A4E5F;
+  --shadow: rgba(6, 12, 18, 0.55);
+
+  --font-display: "Cinzel", Georgia, "Times New Roman", serif;
+  --font-body: "Crimson Pro", Georgia, "Times New Roman", serif;
+
+  --radius-md: 14px;
+  --radius-lg: 22px;
+}
+
+*, *::before, *::after{ box-sizing: border-box; }
+
+html, body{
+  margin:0;
+  padding:0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(205,160,70,0.10), transparent 45%),
+    radial-gradient(circle at 85% 15%, rgba(192,91,60,0.10), transparent 40%),
+    linear-gradient(180deg, var(--ink-night) 0%, #0D161F 100%);
+  background-attachment: fixed;
+  color: var(--marble);
+  font-family: var(--font-body);
+  font-size: 18px;
+  line-height: 1.5;
+  -webkit-tap-highlight-color: transparent;
+}
+
+h1, h2, h3{
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+  color: var(--marble);
+  margin: 0 0 0.4em 0;
+}
+
+a{ color: inherit; }
+
+button{
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+button:focus-visible, input:focus-visible, a:focus-visible{
+  outline: 3px solid var(--bronze);
+  outline-offset: 2px;
+}
+
+/* ============ SEITEN (Ansichten) ============ */
+
+.view[hidden]{ display:none; }
+
+.page{
+  min-height: 100vh;
+  width: 100%;
+  padding: 1.5rem clamp(1rem, 4vw, 3rem) 3rem;
+  animation: fadeSlideIn 0.45s ease;
+}
+
+@keyframes fadeSlideIn{
+  from{ opacity:0; transform: translateY(10px); }
+  to{ opacity:1; transform: translateY(0); }
+}
+
+.screen-title{
+  text-align:center;
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  margin-bottom: 0.3rem;
+}
+.screen-sub{
+  text-align:center;
+  color: var(--marble-dim);
+  margin-top:0;
+  margin-bottom: 1.8rem;
+}
+
+/* ============ HEADER (Fortschritts-Rolle) ============ */
+
+.app-header{
+  position: sticky;
+  top:0;
+  z-index: 20;
+  display:flex;
+  align-items:center;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 0.7rem clamp(1rem, 3vw, 2.5rem);
+  background: linear-gradient(180deg, rgba(19,31,43,0.97), rgba(19,31,43,0.9));
+  border-bottom: 1px solid var(--stone-line);
+  backdrop-filter: blur(4px);
+}
+.app-header[hidden]{ display:none; }
+
+.header-title{
+  display:flex;
+  align-items:center;
+  gap:0.5rem;
+  font-family: var(--font-display);
+  color: var(--bronze);
+  font-size: 1rem;
+  white-space: nowrap;
+}
+.header-emblem{ font-size:1.3rem; }
+
+.seal-scroll{
+  display:flex;
+  gap: 0.5rem;
+  background: var(--ink-night-2);
+  border: 1px solid var(--stone-line);
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+}
+
+.seal-slot{
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: rgba(255,255,255,0.04);
+  border: 1.5px dashed var(--stone-line);
+  font-size: 0.95rem;
+  filter: grayscale(1) opacity(0.45);
+  transition: transform 0.3s ease, filter 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+}
+.seal-slot.is-filled{
+  filter: none;
+  border: 1.5px solid var(--bronze);
+  background: radial-gradient(circle at 35% 30%, #e7c579, var(--bronze-deep));
+  box-shadow: 0 0 10px rgba(205,160,70,0.6);
+}
+
+.btn-help{
+  background: transparent;
+  border: 1px solid var(--stone-line);
+  color: var(--marble);
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.btn-help:hover{ border-color: var(--bronze); color: var(--bronze); }
+
+/* ============ INTRO ============ */
+
+.page-intro{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.intro-card{
+  max-width: 720px;
+  background: linear-gradient(180deg, var(--ink-night-2), var(--ink-night-3));
+  border: 1px solid var(--stone-line);
+  border-radius: var(--radius-lg);
+  padding: clamp(1.5rem, 4vw, 3rem);
+  box-shadow: 0 30px 60px var(--shadow);
+  text-align:center;
+}
+.intro-eyebrow{
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 0.8rem;
+  color: var(--bronze);
+  margin-bottom: 0.8rem;
+}
+.intro-card h1{
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
+  line-height:1.15;
+  margin-bottom: 1.4rem;
+}
+.intro-story p{
+  text-align:left;
+  color: var(--marble-dim);
+  font-size: 1.08rem;
+}
+.intro-story strong{ color: var(--marble); }
+
+.btn-primary, .btn-start{
+  display:inline-block;
+  text-decoration:none;
+  margin-top: 1.6rem;
+  background: linear-gradient(180deg, var(--bronze), var(--bronze-deep));
+  color: #221708;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  border: none;
+  border-radius: 999px;
+  padding: 0.9rem 2rem;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.btn-primary:hover, .btn-start:hover{ transform: translateY(-2px); box-shadow: 0 12px 24px rgba(0,0,0,0.4); }
+.btn-primary:active, .btn-start:active{ transform: translateY(0); }
+
+/* ============ KARTE VON KROTON ============ */
+
+.map-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1.2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.tablet-card{
+  position:relative;
+  background: linear-gradient(160deg, var(--ink-night-2), var(--ink-night-3));
+  border: 1px solid var(--stone-line);
+  border-radius: var(--radius-md);
+  padding: 1.4rem 1.2rem;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap: 0.5rem;
+  min-height: 150px;
+  color: var(--marble);
+  text-align:left;
+  text-decoration:none;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.tablet-card::before{
+  content:"";
+  position:absolute;
+  inset:6px;
+  border: 1px dashed rgba(241,233,216,0.12);
+  border-radius: calc(var(--radius-md) - 4px);
+  pointer-events:none;
+}
+.tablet-card:hover{ transform: translateY(-4px); border-color: var(--bronze); box-shadow: 0 16px 28px rgba(0,0,0,0.35); }
+.tablet-icon{ font-size: 2rem; }
+.tablet-name{ font-family: var(--font-display); font-size: 1.05rem; line-height:1.3; }
+.tablet-diff{ font-size: 0.8rem; color: var(--bronze); letter-spacing: 0.03em; }
+.tablet-status{ font-size: 0.85rem; color: var(--marble-dim); margin-top:auto; }
+
+.tablet-card.is-solved{ border-color: var(--olive); }
+.tablet-card.is-solved .tablet-status{ color: var(--olive); font-weight:600; }
+
+.tablet-card--control{ border-color: var(--bronze-deep); }
+.tablet-card--control .tablet-name em{ font-style: normal; color: var(--bronze); font-size: 0.85em; }
+
+.tablet-card--bonus{ border-style: dashed; border-color: var(--terracotta); }
+.tablet-card--bonus .tablet-diff{ color: var(--terracotta); }
+
+.btn-treasure{
+  display:block;
+  text-decoration:none;
+  text-align:center;
+  margin: 2.4rem auto 0;
+  max-width: 320px;
+  background: transparent;
+  border: 2px solid var(--bronze);
+  color: var(--bronze);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  padding: 0.9rem 2.2rem;
+  border-radius: 999px;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.btn-treasure:hover{ background: var(--bronze); color: #221708; }
+
+.reset-row{
+  text-align:center;
+  margin-top: 2rem;
+}
+.btn-reset-link{
+  background:none;
+  border:none;
+  color: var(--marble-dim);
+  font-size: 0.85rem;
+  text-decoration: underline;
+  padding: 0.4rem;
+}
+.btn-reset-link:hover{ color: var(--terracotta); }
+
+/* ============ STATIONEN ============ */
+
+.station-inner{ max-width: 1000px; margin: 0 auto; }
+
+.btn-back{
+  display:inline-block;
+  background: none;
+  border: none;
+  color: var(--marble-dim);
+  font-size: 0.95rem;
+  text-decoration:none;
+  margin-bottom: 1rem;
+  padding: 0.4rem 0;
+}
+.btn-back:hover{ color: var(--bronze); }
+
+.station-header{
+  display:flex;
+  align-items:center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--stone-line);
+}
+.station-icon{ font-size: 2.6rem; }
+.station-header h2{ margin-bottom: 0.2rem; font-size: clamp(1.3rem, 3vw, 1.7rem); }
+.difficulty-tag{ font-size: 0.85rem; color: var(--bronze); }
+
+.station-body{
+  display:grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 2.2rem;
+}
+@media (max-width: 820px){
+  .station-body{ grid-template-columns: 1fr; }
+}
+
+.station-story p{ color: var(--marble-dim); }
+.station-story strong{ color: var(--marble); }
+.hint-inline{
+  background: rgba(205,160,70,0.1);
+  border-left: 3px solid var(--bronze);
+  padding: 0.6rem 0.9rem;
+  border-radius: 0 8px 8px 0;
+  font-size: 0.95rem;
+  color: var(--marble);
+}
+
+.diagram{
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  margin-top: 0.8rem;
+  display:block;
+}
+.diagram-triangle{ fill: rgba(205,160,70,0.12); stroke: var(--bronze); stroke-width:2.5; }
+.diagram-rightangle{ fill:none; stroke: var(--marble); stroke-width:2; }
+.diagram-hyp{ stroke: var(--terracotta); stroke-width:2.5; }
+.diagram-thick{ stroke-width: 3.5; }
+.diagram-edge{ stroke: var(--marble-dim); stroke-width: 1.6; fill:none; }
+.diagram-dashed{ stroke-dasharray: 5 5; }
+.diagram-invisible{ fill:none; stroke:none; }
+.diagram-label{ fill: var(--marble); font-family: var(--font-body); font-size: 12px; }
+.diagram-label--unknown{ fill: var(--terracotta); font-weight:700; font-size: 13px; }
+
+.task-question{ font-size: 1.05rem; margin-bottom: 1rem; }
+
+.answer-row{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap: 0.7rem;
+  margin-bottom: 0.6rem;
+}
+.answer-row label{ color: var(--marble-dim); font-size: 0.95rem; }
+.answer-row input{
+  width: 110px;
+  padding: 0.6rem 0.8rem;
+  font-size: 1.1rem;
+  border-radius: 10px;
+  border: 1.5px solid var(--stone-line);
+  background: var(--ink-night-2);
+  color: var(--marble);
+  text-align:center;
+}
+.answer-row input:focus{ border-color: var(--bronze); }
+
+.btn-check{
+  background: var(--olive-deep);
+  color: var(--marble);
+  border: none;
+  padding: 0.65rem 1.3rem;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight:600;
+  transition: background 0.15s ease;
+}
+.btn-check:hover{ background: var(--olive); }
+
+.feedback{ min-height: 1.4em; font-size: 0.95rem; }
+.feedback.is-correct{ color: var(--olive); font-weight:600; }
+.feedback.is-wrong{ color: var(--terracotta); font-weight:600; }
+
+.solved-panel{
+  background: linear-gradient(160deg, rgba(140,160,107,0.16), rgba(140,160,107,0.05));
+  border: 1px solid var(--olive);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.2rem;
+  margin: 0.8rem 0 1.2rem;
+}
+.solved-panel[hidden], .sum-step[hidden], .hint-text[hidden], .treasure-success[hidden]{ display:none; }
+.solved-panel p{ margin: 0.3em 0; }
+.code-digit-display{
+  display:inline-block;
+  font-size: 1.3rem;
+  color: var(--bronze);
+  background: var(--ink-night-2);
+  padding: 0.05em 0.5em;
+  border-radius: 6px;
+}
+.fun-fact{ font-size:0.95rem; color: var(--marble-dim); }
+.treasure-titel{ font-family: var(--font-display); color: var(--bronze); }
+
+.hints{ margin-top: 1.2rem; }
+.hints-label{ font-size: 0.9rem; color: var(--marble-dim); margin-bottom:0.5rem; }
+.hint-buttons{ display:flex; flex-wrap:wrap; gap: 0.6rem; margin-bottom: 0.6rem; }
+.hint-buttons button{
+  background: transparent;
+  border: 1px solid var(--bronze-deep);
+  color: var(--bronze);
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.88rem;
+}
+.hint-buttons button:hover:not(:disabled){ background: var(--bronze); color: #221708; }
+.hint-buttons button:disabled{ opacity: 0.35; cursor: not-allowed; border-color: var(--stone-line); color: var(--marble-dim); }
+
+.hint-text{
+  background: var(--ink-night-2);
+  border-left: 3px solid var(--bronze);
+  padding: 0.7rem 1rem;
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+  color: var(--marble-dim);
+}
+
+/* ============ STATION 3: SCHILDE ============ */
+
+.shield-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+  gap: 0.9rem;
+  margin-bottom: 1rem;
+}
+.shield-card{
+  border: 1.5px solid var(--stone-line);
+  border-radius: var(--radius-md);
+  padding: 0.9rem 1rem;
+  background: var(--ink-night-2);
+  transition: border-color 0.2s ease;
+}
+.shield-emblem{ display:block; font-family: var(--font-display); margin-bottom: 0.3rem; }
+.shield-number{ color: var(--bronze); font-size: 0.85em; }
+.shield-sides{ display:block; color: var(--marble-dim); font-size: 0.9rem; margin-bottom: 0.7rem; }
+.shield-buttons{ display:flex; gap: 0.5rem; flex-wrap:wrap; }
+.shield-buttons button{
+  flex:1;
+  min-width: 100px;
+  background: transparent;
+  border: 1px solid var(--stone-line);
+  color: var(--marble);
+  padding: 0.5rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+.shield-buttons button.is-picked{
+  background: var(--bronze-deep);
+  border-color: var(--bronze);
+  color: var(--marble);
+}
+.shield-card.is-right{ border-color: var(--olive); }
+.shield-card.is-wrong{ border-color: var(--terracotta); }
+
+.sum-step{
+  background: rgba(205,160,70,0.08);
+  border: 1px solid var(--bronze-deep);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.1rem;
+  margin: 1rem 0;
+}
+
+/* ============ SCHATZTRUHE ============ */
+
+.treasure-inner{ max-width: 780px; margin: 0 auto; text-align:center; }
+.treasure-inner .btn-back{ display:block; text-align:left; }
+
+.riddle-box{
+  background: linear-gradient(160deg, var(--ink-night-2), var(--ink-night-3));
+  border: 1px solid var(--bronze-deep);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem 1.8rem;
+  margin-bottom: 1.6rem;
+  text-align:left;
+}
+.riddle-quote{
+  font-style: italic;
+  color: var(--marble-dim);
+  border-left: 3px solid var(--bronze);
+  padding-left: 1rem;
+}
+
+.seal-legend{
+  display:flex;
+  justify-content:center;
+  gap: 1.4rem;
+  flex-wrap:wrap;
+  margin-bottom: 2rem;
+}
+.seal-legend-item{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap: 0.3rem;
+  font-size: 1.6rem;
+}
+.seal-legend-item small{ font-size: 0.75rem; color: var(--marble-dim); line-height:1.2; }
+
+.code-input-row{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap: 0.7rem;
+  flex-wrap:wrap;
+  margin-bottom: 0.8rem;
+}
+.code-digit{
+  width: 58px;
+  height: 64px;
+  font-size: 1.8rem;
+  text-align:center;
+  border-radius: 12px;
+  border: 2px solid var(--stone-line);
+  background: var(--ink-night-2);
+  color: var(--marble);
+}
+.code-digit:focus{ border-color: var(--bronze); }
+.code-input-row .btn-primary{ margin-top: 0; }
+
+.treasure-success{
+  margin-top: 2rem;
+  animation: fadeSlideIn 0.6s ease;
+}
+.chest-anim{
+  position:relative;
+  width: 160px;
+  height: 120px;
+  margin: 0 auto 1.5rem;
+}
+.chest-base{
+  position:absolute;
+  bottom:0; left:0; right:0;
+  height: 70px;
+  background: linear-gradient(180deg, var(--terracotta), var(--terracotta-deep));
+  border-radius: 8px;
+  border: 3px solid var(--bronze-deep);
+}
+.chest-lid{
+  position:absolute;
+  top:0; left:0; right:0;
+  height: 55px;
+  background: linear-gradient(180deg, var(--bronze), var(--bronze-deep));
+  border-radius: 12px 12px 4px 4px;
+  border: 3px solid var(--bronze-deep);
+  transform-origin: bottom center;
+  animation: chestOpen 1s ease forwards 0.2s;
+}
+@keyframes chestOpen{
+  from{ transform: rotateX(0deg); }
+  to{ transform: rotateX(-110deg) translateY(-10px); }
+}
+.chest-glow{
+  position:absolute;
+  top: 30px; left:50%;
+  transform: translateX(-50%);
+  width: 90px; height:90px;
+  background: radial-gradient(circle, rgba(255,230,150,0.9), transparent 70%);
+  opacity:0;
+  animation: glowIn 1s ease forwards 0.6s;
+}
+@keyframes glowIn{ to{ opacity:1; } }
+
+/* ============ MODAL ============ */
+
+.modal-overlay{
+  position: fixed;
+  inset:0;
+  background: rgba(6,12,18,0.7);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index: 50;
+  padding: 1rem;
+}
+.modal-overlay[hidden]{ display:none; }
+.modal-box{
+  position:relative;
+  max-width: 520px;
+  width:100%;
+  max-height: 85vh;
+  overflow-y:auto;
+  background: linear-gradient(160deg, var(--ink-night-2), var(--ink-night-3));
+  border: 1px solid var(--bronze-deep);
+  border-radius: var(--radius-lg);
+  padding: 1.6rem 1.8rem;
+  box-shadow: 0 30px 60px var(--shadow);
+}
+.modal-box ul{ color: var(--marble-dim); padding-left: 1.2rem; }
+.modal-box hr{ border: none; border-top: 1px solid var(--stone-line); margin: 1rem 0; }
+.modal-close{
+  position:absolute;
+  top: 0.8rem; right: 0.8rem;
+  background:none; border:none;
+  color: var(--marble-dim);
+  font-size: 1.2rem;
+}
+.modal-close:hover{ color: var(--terracotta); }
+
+/* ============ REDUCED MOTION ============ */
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
+/* ============ SMALL SCREENS ============ */
+@media (max-width: 480px){
+  body{ font-size: 16px; }
+  .code-digit{ width: 48px; height: 56px; font-size: 1.5rem; }
+  .app-header{ flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+
+<!-- Gemeinsamer Kopfbereich (auf der Startseite ausgeblendet) -->
+<header class="app-header" id="app-header" hidden>
+  <div class="header-title">
+    <span class="header-emblem">𐤔</span>
+    <span>Kroton, 530 v. Chr.</span>
+  </div>
+  <div class="seal-scroll" aria-label="Fortschritt: gefundene Siegel">
+    <div class="seal-slot" data-seal="1"><span class="seal-icon">🏛</span></div>
+    <div class="seal-slot" data-seal="2"><span class="seal-icon">🗼</span></div>
+    <div class="seal-slot" data-seal="3"><span class="seal-icon">🛡</span></div>
+    <div class="seal-slot" data-seal="4"><span class="seal-icon">🔺</span></div>
+    <div class="seal-slot" data-seal="5"><span class="seal-icon">📜</span></div>
+  </div>
+  <button class="btn-help" data-action="open-help" aria-haspopup="dialog">❔ Hilfe &amp; Formeln</button>
+</header>
+
+<!-- ===================== START ===================== -->
+<main class="page page-intro view" id="view-index">
+  <div class="intro-card">
+    <p class="intro-eyebrow">Ein mathematisches Abenteuer im antiken Griechenland</p>
+    <h1>Die Schatzkammer<br>des Pythagoras</h1>
+    <div class="intro-story">
+      <p><strong>Kroton, Süditalien, um 530 v. Chr.</strong> Ihr seid Schülerinnen und Schüler in der berühmten Bruderschaft des Pythagoras. Bevor der Meister auf eine lange Reise ging, verschloss er sein wertvollstes Wissen – die Gesetze der rechtwinkligen Dreiecke – in einer bronzenen Schatztruhe in der Bibliothek von Kroton.</p>
+      <p>Nur wer beweist, dass er die Beziehung zwischen Kathete und Hypotenuse beherrscht, darf die Truhe öffnen. An fünf Orten der Stadt hat der Meister Prüfungen hinterlassen. Jede gelöste Prüfung liefert euch eine <strong>Zahl der Weisheit</strong>.</p>
+      <p>Sammelt alle fünf Zahlen, entschlüsselt mit Logik den vierstelligen Code – und öffnet die Schatztruhe, bevor die neidischen Nachbarn aus Sybaris dem Meister sein Wissen stehlen. Die Zeit drängt: Ihr habt <strong>60 Minuten</strong>!</p>
+    </div>
+    <a class="btn-primary btn-start" href="#karte">Das Abenteuer beginnen →</a>
+  </div>
+</main>
+
+<!-- ===================== KARTE ===================== -->
+<main class="page view" id="view-karte" hidden>
+  <h2 class="screen-title">🗺 Die Karte von Kroton</h2>
+  <p class="screen-sub">Wählt eine Station in beliebiger Reihenfolge. Jede Prüfung liefert eine Zahl der Weisheit.</p>
+
+  <div class="map-grid">
+    <a class="tablet-card" href="#station1">
+      <span class="tablet-icon">🏛</span>
+      <span class="tablet-name">Der Tempel des Poseidon</span>
+      <span class="tablet-diff">Schwierigkeit ●○○○○</span>
+      <span class="tablet-status" data-status-for="1">○ ungelöst</span>
+    </a>
+
+    <a class="tablet-card" href="#station2">
+      <span class="tablet-icon">🗼</span>
+      <span class="tablet-name">Die Leiter am Wachturm</span>
+      <span class="tablet-diff">Schwierigkeit ●●○○○</span>
+      <span class="tablet-status" data-status-for="2">○ ungelöst</span>
+    </a>
+
+    <a class="tablet-card" href="#station3">
+      <span class="tablet-icon">🛡</span>
+      <span class="tablet-name">Die Schmiede der Schilde</span>
+      <span class="tablet-diff">Schwierigkeit ●●●○○</span>
+      <span class="tablet-status" data-status-for="3">○ ungelöst</span>
+    </a>
+
+    <a class="tablet-card" href="#station4">
+      <span class="tablet-icon">🔺</span>
+      <span class="tablet-name">Der Giebel des großen Tempels</span>
+      <span class="tablet-diff">Schwierigkeit ●●●●○</span>
+      <span class="tablet-status" data-status-for="4">○ ungelöst</span>
+    </a>
+
+    <a class="tablet-card tablet-card--control" href="#station5">
+      <span class="tablet-icon">📜</span>
+      <span class="tablet-name">Die Bibliothek <em>(Prüfsiegel)</em></span>
+      <span class="tablet-diff">Schwierigkeit ●●●●●</span>
+      <span class="tablet-status" data-status-for="5">○ ungelöst</span>
+    </a>
+
+    <a class="tablet-card tablet-card--bonus" href="#bonus">
+      <span class="tablet-icon">⭐</span>
+      <span class="tablet-name">Die Akropolis-Herausforderung</span>
+      <span class="tablet-diff">Zusatzaufgabe für Schnelle</span>
+      <span class="tablet-status" data-status-for="bonus">○ ungelöst</span>
+    </a>
+  </div>
+
+  <a class="btn-treasure" href="#schatztruhe">🏆 Zur Schatztruhe</a>
+
+  <div class="reset-row">
+    <button class="btn-reset-link" data-action="reset-progress">🔄 Fortschritt auf diesem Gerät zurücksetzen (neue Gruppe)</button>
+  </div>
+</main>
+
+<!-- ===================== STATION 1 ===================== -->
+<main class="page station view" id="view-station1" hidden>
+  <div class="station-inner">
+    <a class="btn-back" href="#karte">← Zur Karte</a>
+    <div class="station-header">
+      <span class="station-icon">🏛</span>
+      <div>
+        <h2>Der Tempel des Poseidon</h2>
+        <span class="difficulty-tag">Schwierigkeit ●○○○○</span>
+      </div>
+    </div>
+
+    <div class="station-body">
+      <div class="station-story">
+        <p>Am Tempel des Poseidon errichten Handwerker ein neues Dach. Die waagerechte Balkenlänge beträgt <strong>9 Ellen</strong>, die Höhe des Dreiecksgiebels <strong>12 Ellen</strong>.</p>
+        <svg viewBox="0 0 260 180" class="diagram" role="img" aria-label="Rechtwinkliges Dreieck mit den Seiten 9 und 12 Ellen und einer gesuchten Seite">
+          <polygon points="30,150 230,150 230,30" class="diagram-triangle"/>
+          <path d="M215,150 L215,135 L230,135" class="diagram-rightangle"/>
+          <text x="120" y="172" class="diagram-label">9 Ellen</text>
+          <text x="240" y="95" class="diagram-label" transform="rotate(90 240,95)">12 Ellen</text>
+          <text x="115" y="80" class="diagram-label diagram-label--unknown">?</text>
+        </svg>
+      </div>
+
+      <div class="station-task">
+        <p class="task-question"><strong>Deine Aufgabe:</strong> Berechne die Länge der schrägen Dachbalken in Ellen.</p>
+        <div class="answer-row">
+          <label for="input-1">Ergebnis:</label>
+          <input type="text" inputmode="decimal" id="input-1" placeholder="?">
+          <button class="btn-check" data-action="check" data-station="1">Prüfen</button>
+        </div>
+        <p class="feedback" id="feedback-1" aria-live="polite"></p>
+
+        <div class="solved-panel" id="solved-1" hidden>
+          <p>🎉 Gelöst! Die Zahl der Weisheit lautet <strong>15</strong>.</p>
+          <p>Code-Ziffer (Einerziffer): <strong class="code-digit-display">5</strong> — gehört zu Siegel-Position 1 (🏛 Tempel).</p>
+        </div>
+
+        <div class="hints">
+          <p class="hints-label">🦉 Frag das Orakel von Delphi:</p>
+          <div class="hint-buttons">
+            <button data-action="hint" data-station="1" data-level="1">Tipp 1</button>
+            <button data-action="hint" data-station="1" data-level="2" disabled>Tipp 2</button>
+          </div>
+          <div class="hint-text" id="hint-1-1" hidden>Erinnere dich an den Satz des Pythagoras: a² + b² = c². Welche der drei Seiten des Dreiecks kennst du schon, welche nicht?</div>
+          <div class="hint-text" id="hint-1-2" hidden>Setze deine beiden bekannten Seiten in die Formel ein und berechne zunächst ihre Quadrate einzeln, bevor du sie addierst oder subtrahierst.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ===================== STATION 2 ===================== -->
+<main class="page station view" id="view-station2" hidden>
+  <div class="station-inner">
+    <a class="btn-back" href="#karte">← Zur Karte</a>
+    <div class="station-header">
+      <span class="station-icon">🗼</span>
+      <div>
+        <h2>Die Leiter am Wachturm</h2>
+        <span class="difficulty-tag">Schwierigkeit ●●○○○</span>
+      </div>
+    </div>
+
+    <div class="station-body">
+      <div class="station-story">
+        <p>Ein Wächter muss eine Fackel am Wachturm entzünden. Seine Leiter ist <strong>13 Ellen</strong> lang, ihr Fußpunkt steht <strong>5 Ellen</strong> von der Turmmauer entfernt.</p>
+        <svg viewBox="0 0 260 200" class="diagram" role="img" aria-label="Rechtwinkliges Dreieck mit den Seiten 5 und 13 Ellen und einer gesuchten Seite">
+          <polygon points="40,170 220,170 220,20" class="diagram-triangle"/>
+          <path d="M205,170 L205,155 L220,155" class="diagram-rightangle"/>
+          <line x1="40" y1="170" x2="220" y2="20" class="diagram-hyp"/>
+          <text x="120" y="192" class="diagram-label">5 Ellen</text>
+          <text x="100" y="90" class="diagram-label">13 Ellen (Leiter)</text>
+          <text x="235" y="100" class="diagram-label diagram-label--unknown" transform="rotate(90 235,100)">?</text>
+        </svg>
+      </div>
+
+      <div class="station-task">
+        <p class="task-question"><strong>Deine Aufgabe:</strong> Wie hoch reicht die Leiter an der Mauer hinauf?</p>
+        <div class="answer-row">
+          <label for="input-2">Ergebnis:</label>
+          <input type="text" inputmode="decimal" id="input-2" placeholder="?">
+          <button class="btn-check" data-action="check" data-station="2">Prüfen</button>
+        </div>
+        <p class="feedback" id="feedback-2" aria-live="polite"></p>
+
+        <div class="solved-panel" id="solved-2" hidden>
+          <p>🎉 Gelöst! Die Zahl der Weisheit lautet <strong>12</strong>.</p>
+          <p>Code-Ziffer (Einerziffer): <strong class="code-digit-display">2</strong> — gehört zu Siegel-Position 2 (🗼 Turm).</p>
+        </div>
+
+        <div class="hints">
+          <p class="hints-label">🦉 Frag das Orakel von Delphi:</p>
+          <div class="hint-buttons">
+            <button data-action="hint" data-station="2" data-level="1">Tipp 1</button>
+            <button data-action="hint" data-station="2" data-level="2" disabled>Tipp 2</button>
+          </div>
+          <div class="hint-text" id="hint-2-1" hidden>Schau dir an, welche der drei Seiten des Dreiecks du bereits kennst (die Leiter und den Abstand zur Mauer) und welche nicht. Wie musst du a² + b² = c² dafür umstellen?</div>
+          <div class="hint-text" id="hint-2-2" hidden>Stelle die Formel nach der gesuchten Seite um und setze die beiden bekannten Längen ein, bevor du quadrierst.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ===================== STATION 3 ===================== -->
+<main class="page station view" id="view-station3" hidden>
+  <div class="station-inner">
+    <a class="btn-back" href="#karte">← Zur Karte</a>
+    <div class="station-header">
+      <span class="station-icon">🛡</span>
+      <div>
+        <h2>Die Schmiede der Schilde</h2>
+        <span class="difficulty-tag">Schwierigkeit ●●●○○</span>
+      </div>
+    </div>
+
+    <div class="station-body">
+      <div class="station-story">
+        <p>Der Schildmacher Theron hat vier Dreiecksschilde geschmiedet. Nur Schilde mit einem <strong>rechten Winkel</strong> gelten als „heilige Schilde" und tragen eine Geheimzahl.</p>
+      </div>
+
+      <div class="station-task">
+        <div class="shield-grid" id="shield-grid">
+          <div class="shield-card" data-shield="A" data-correct="true">
+            <span class="shield-emblem">🛡 A <span class="shield-number">(Zahl 4)</span></span>
+            <span class="shield-sides">Seiten: 8 · 15 · 17</span>
+            <div class="shield-buttons">
+              <button data-action="shield-pick" data-shield="A" data-pick="rw">rechtwinklig</button>
+              <button data-action="shield-pick" data-shield="A" data-pick="nrw">nicht rechtwinklig</button>
+            </div>
+          </div>
+          <div class="shield-card" data-shield="B" data-correct="false">
+            <span class="shield-emblem">🛡 B <span class="shield-number">(Zahl 7)</span></span>
+            <span class="shield-sides">Seiten: 7 · 10 · 13</span>
+            <div class="shield-buttons">
+              <button data-action="shield-pick" data-shield="B" data-pick="rw">rechtwinklig</button>
+              <button data-action="shield-pick" data-shield="B" data-pick="nrw">nicht rechtwinklig</button>
+            </div>
+          </div>
+          <div class="shield-card" data-shield="C" data-correct="true">
+            <span class="shield-emblem">🛡 C <span class="shield-number">(Zahl 2)</span></span>
+            <span class="shield-sides">Seiten: 9 · 12 · 15</span>
+            <div class="shield-buttons">
+              <button data-action="shield-pick" data-shield="C" data-pick="rw">rechtwinklig</button>
+              <button data-action="shield-pick" data-shield="C" data-pick="nrw">nicht rechtwinklig</button>
+            </div>
+          </div>
+          <div class="shield-card" data-shield="D" data-correct="false">
+            <span class="shield-emblem">🛡 D <span class="shield-number">(Zahl 9)</span></span>
+            <span class="shield-sides">Seiten: 6 · 7 · 9</span>
+            <div class="shield-buttons">
+              <button data-action="shield-pick" data-shield="D" data-pick="rw">rechtwinklig</button>
+              <button data-action="shield-pick" data-shield="D" data-pick="nrw">nicht rechtwinklig</button>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-check" data-action="check-shields">Zuordnung prüfen</button>
+        <p class="feedback" id="feedback-shields" aria-live="polite"></p>
+
+        <div class="sum-step" id="sum-step" hidden>
+          <p class="task-question"><strong>Weiter:</strong> Addiere die Zahlen der <em>rechtwinkligen</em> Schilde. Das Ergebnis ist deine Code-Zahl.</p>
+          <div class="answer-row">
+            <label for="input-3">Summe:</label>
+            <input type="text" inputmode="decimal" id="input-3" placeholder="?">
+            <button class="btn-check" data-action="check" data-station="3">Prüfen</button>
+          </div>
+          <p class="feedback" id="feedback-3" aria-live="polite"></p>
+        </div>
+
+        <div class="solved-panel" id="solved-3" hidden>
+          <p>🎉 Gelöst! Die rechtwinkligen Schilde tragen zwei Geheimzahlen. Zahl der Weisheit: <strong>6</strong>.</p>
+          <p>Code-Ziffer: <strong class="code-digit-display">6</strong> — gehört zu Siegel-Position 3 (🛡 Schmiede).</p>
+        </div>
+
+        <div class="hints">
+          <p class="hints-label">🦉 Frag das Orakel von Delphi:</p>
+          <div class="hint-buttons">
+            <button data-action="hint" data-station="3" data-level="1">Tipp 1</button>
+            <button data-action="hint" data-station="3" data-level="2" disabled>Tipp 2</button>
+          </div>
+          <div class="hint-text" id="hint-3-1" hidden>Finde bei jedem Schild zuerst die längste Seite – sie wäre die Hypotenuse c, falls das Dreieck rechtwinklig ist.</div>
+          <div class="hint-text" id="hint-3-2" hidden>Berechne bei jedem Schild a² + b² (die beiden kürzeren Seiten) und vergleiche das Ergebnis mit c² (längste Seite). Sind sie gleich, ist der Winkel rechtwinklig.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ===================== STATION 4 ===================== -->
+<main class="page station view" id="view-station4" hidden>
+  <div class="station-inner">
+    <a class="btn-back" href="#karte">← Zur Karte</a>
+    <div class="station-header">
+      <span class="station-icon">🔺</span>
+      <div>
+        <h2>Der Giebel des großen Tempels</h2>
+        <span class="difficulty-tag">Schwierigkeit ●●●●○</span>
+      </div>
+    </div>
+
+    <div class="station-body">
+      <div class="station-story">
+        <p>Ein prächtiger Tempel bekommt einen neuen dreieckigen Giebel. Die Grundseite ist <strong>30 Ellen</strong> breit, die beiden schrägen Dachbalken sind je <strong>17 Ellen</strong> lang. Der Giebel ist gleichschenklig.</p>
+        <svg viewBox="0 0 280 170" class="diagram" role="img" aria-label="Gleichschenkliges Dreieck mit Grundseite 30 Ellen und zwei Schenkeln von je 17 Ellen">
+          <polygon points="20,150 260,150 140,30" class="diagram-triangle"/>
+          <text x="140" y="168" class="diagram-label" text-anchor="middle">30 Ellen</text>
+          <text x="30" y="95" class="diagram-label">17 Ellen</text>
+          <text x="208" y="95" class="diagram-label">17 Ellen</text>
+        </svg>
+      </div>
+
+      <div class="station-task">
+        <p class="task-question"><strong>Deine Aufgabe:</strong> Wie hoch wird der Giebel in der Mitte?</p>
+        <div class="answer-row">
+          <label for="input-4">Ergebnis:</label>
+          <input type="text" inputmode="decimal" id="input-4" placeholder="?">
+          <button class="btn-check" data-action="check" data-station="4">Prüfen</button>
+        </div>
+        <p class="feedback" id="feedback-4" aria-live="polite"></p>
+
+        <div class="solved-panel" id="solved-4" hidden>
+          <p>🎉 Gelöst! Die Zahl der Weisheit lautet <strong>8</strong>.</p>
+          <p>Code-Ziffer: <strong class="code-digit-display">8</strong> — gehört zu Siegel-Position 4 (🔺 Giebel).</p>
+        </div>
+
+        <div class="hints">
+          <p class="hints-label">🦉 Frag das Orakel von Delphi:</p>
+          <div class="hint-buttons">
+            <button data-action="hint" data-station="4" data-level="1">Tipp 1</button>
+            <button data-action="hint" data-station="4" data-level="2" disabled>Tipp 2</button>
+          </div>
+          <div class="hint-text" id="hint-4-1" hidden>Der Satz des Pythagoras gilt nur für rechtwinklige Dreiecke. Der Giebel ist aber gleichschenklig, nicht rechtwinklig. Wie könntest du ihn trotzdem nutzen?</div>
+          <div class="hint-text" id="hint-4-2" hidden>Teile das gleichschenklige Dreieck durch eine Mittelsenkrechte in zwei rechtwinklige Dreiecke. Die Grundseite wird dabei halbiert, ein Dachbalken bleibt als schräge Seite erhalten.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ===================== STATION 5 ===================== -->
+<main class="page station view" id="view-station5" hidden>
+  <div class="station-inner">
+    <a class="btn-back" href="#karte">← Zur Karte</a>
+    <div class="station-header">
+      <span class="station-icon">📜</span>
+      <div>
+        <h2>Die Bibliothek des Pythagoras</h2>
+        <span class="difficulty-tag">Schwierigkeit ●●●●● · Prüfsiegel</span>
+      </div>
+    </div>
+
+    <div class="station-body">
+      <div class="station-story">
+        <p>In der Bibliothek steht die Schatztruhe selbst. Ihr Boden ist ein Rechteck von <strong>4 Ellen × 3 Ellen</strong>, die Truhe ist <strong>12 Ellen</strong> hoch. Berechne die <strong>Raumdiagonale</strong> – von einer unteren Ecke bis zur gegenüberliegenden oberen Ecke – in <strong>zwei Schritten</strong>.</p>
+        <svg viewBox="0 0 260 190" class="diagram" role="img" aria-label="Quader mit Bodendiagonale und Raumdiagonale">
+          <polygon points="40,150 160,150 190,110 70,110" class="diagram-triangle"/>
+          <line x1="40" y1="150" x2="40" y2="40" class="diagram-edge"/>
+          <line x1="160" y1="150" x2="160" y2="40" class="diagram-edge"/>
+          <line x1="40" y1="40" x2="160" y2="40" class="diagram-edge"/>
+          <line x1="160" y1="40" x2="190" y2="0" class="diagram-edge diagram-dashed"/>
+          <line x1="40" y1="40" x2="70" y2="0" class="diagram-edge diagram-dashed"/>
+          <line x1="70" y1="0" x2="190" y2="0" class="diagram-edge diagram-dashed"/>
+          <line x1="190" y1="0" x2="190" y2="110" class="diagram-edge"/>
+          <line x1="40" y1="150" x2="190" y2="110" class="diagram-hyp"/>
+          <line x1="40" y1="150" x2="190" y2="0" class="diagram-hyp diagram-thick"/>
+          <text x="90" y="168" class="diagram-label">4 Ellen</text>
+          <text x="10" y="100" class="diagram-label">3 Ellen</text>
+          <text x="205" y="80" class="diagram-label">12 Ellen (Höhe)</text>
+          <text x="95" y="55" class="diagram-label diagram-label--unknown">Raumdiagonale = ?</text>
+        </svg>
+      </div>
+
+      <div class="station-task">
+        <p class="task-question"><strong>Schritt 1:</strong> Berechne zuerst die Bodendiagonale des Rechtecks (4 × 3 Ellen).</p>
+        <div class="answer-row">
+          <label for="input-5a">Bodendiagonale:</label>
+          <input type="text" inputmode="decimal" id="input-5a" placeholder="?">
+          <button class="btn-check" data-action="check-5a">Prüfen</button>
+        </div>
+        <p class="feedback" id="feedback-5a" aria-live="polite"></p>
+
+        <div class="sum-step" id="step-5b" hidden>
+          <p class="task-question"><strong>Schritt 2:</strong> Berechne nun mithilfe deines Zwischenergebnisses und der Höhe die Raumdiagonale der Truhe.</p>
+          <div class="answer-row">
+            <label for="input-5">Raumdiagonale:</label>
+            <input type="text" inputmode="decimal" id="input-5" placeholder="?">
+            <button class="btn-check" data-action="check" data-station="5">Prüfen</button>
+          </div>
+          <p class="feedback" id="feedback-5" aria-live="polite"></p>
+        </div>
+
+        <div class="solved-panel" id="solved-5" hidden>
+          <p>🎉 Gelöst! Die Zahl der Weisheit lautet <strong>13</strong>.</p>
+          <p>Code-Ziffer: <strong class="code-digit-display">3</strong> — das ist die <strong>Prüfziffer</strong> zur Kontrolle des Endcodes!</p>
+        </div>
+
+        <div class="hints">
+          <p class="hints-label">🦉 Frag das Orakel von Delphi:</p>
+          <div class="hint-buttons">
+            <button data-action="hint" data-station="5" data-level="1">Tipp 1</button>
+            <button data-action="hint" data-station="5" data-level="2" disabled>Tipp 2</button>
+          </div>
+          <div class="hint-text" id="hint-5-1" hidden>Diese Aufgabe braucht zwei Schritte. Der Boden der Truhe ist ein Rechteck – wie berechnest du dessen Diagonale?</div>
+          <div class="hint-text" id="hint-5-2" hidden>Schritt 1: Bodendiagonale = √(4² + 3²). Nutze dieses Ergebnis anschließend zusammen mit der Höhe in einer zweiten Anwendung des Satzes des Pythagoras.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ===================== BONUS ===================== -->
+<main class="page station station--bonus view" id="view-bonus" hidden>
+  <div class="station-inner">
+    <a class="btn-back" href="#karte">← Zur Karte</a>
+    <div class="station-header">
+      <span class="station-icon">⭐</span>
+      <div>
+        <h2>Die Akropolis-Herausforderung</h2>
+        <span class="difficulty-tag">Zusatzaufgabe für Fortgeschrittene</span>
+      </div>
+    </div>
+
+    <div class="station-body">
+      <div class="station-story">
+        <p>Auf der Akropolis steht ein Tempel mit einem <strong>gleichseitigen</strong> Dreiecksgiebel – alle drei Seiten sind <strong>10 Ellen</strong> lang. Berechne die Höhe dieses Giebels.</p>
+        <p class="hint-inline">⚠ Achtung: Das Ergebnis ist diesmal <strong>keine ganze Zahl</strong>. Runde auf zwei Nachkommastellen.</p>
+        <svg viewBox="0 0 240 170" class="diagram" role="img" aria-label="Gleichseitiges Dreieck mit drei Seiten von je 10 Ellen">
+          <polygon points="20,150 220,150 120,20" class="diagram-triangle"/>
+        </svg>
+      </div>
+
+      <div class="station-task">
+        <p class="task-question"><strong>Deine Aufgabe:</strong> Berechne die Höhe des gleichseitigen Giebels (in Ellen, gerundet).</p>
+        <div class="answer-row">
+          <label for="input-bonus">Ergebnis:</label>
+          <input type="text" inputmode="decimal" id="input-bonus" placeholder="?">
+          <button class="btn-check" data-action="check-bonus">Prüfen</button>
+        </div>
+        <p class="feedback" id="feedback-bonus" aria-live="polite"></p>
+
+        <div class="solved-panel" id="solved-bonus" hidden>
+          <p>🏅 Hervorragend! h = √(10² − 5²) = √75 ≈ <strong>8,66 Ellen</strong>. Du trägst ab jetzt den Ehrentitel <strong>„Meister der Wurzeln"</strong>!</p>
+          <p class="fun-fact">📖 <strong>Wusstest du schon?</strong> Der Legende nach entdeckten Schüler des Pythagoras, dass manche Wurzeln – wie √2 oder √75 – sich nicht als einfacher Bruch schreiben lassen. Diese „irrationalen Zahlen" sollen die Bruderschaft damals zutiefst erschüttert haben, da sie ihrem Weltbild widersprachen, nach dem sich alles durch ganze Zahlen ausdrücken lässt.</p>
+          <p>Nutze die Zeit, um einer anderen Gruppe zu helfen, oder kehrt zur Karte zurück.</p>
+        </div>
+
+        <div class="hints">
+          <p class="hints-label">🦉 Frag das Orakel von Delphi:</p>
+          <div class="hint-buttons">
+            <button data-action="hint" data-station="bonus" data-level="1">Tipp 1</button>
+            <button data-action="hint" data-station="bonus" data-level="2" disabled>Tipp 2</button>
+          </div>
+          <div class="hint-text" id="hint-bonus-1" hidden>Auch ein gleichseitiges Dreieck lässt sich durch seine Höhe in zwei rechtwinklige Dreiecke teilen.</div>
+          <div class="hint-text" id="hint-bonus-2" hidden>Die Höhe trifft die Grundseite genau in deren Mitte. Nutze eine Hälfte der Grundseite und eine Seite des Dreiecks als bekannte Größen im Satz des Pythagoras.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ===================== SCHATZTRUHE ===================== -->
+<main class="page view" id="view-schatztruhe" hidden>
+  <div class="treasure-inner">
+    <a class="btn-back" href="#karte">← Zur Karte</a>
+    <h2 class="screen-title">🏆 Die Schatztruhe</h2>
+
+    <div class="riddle-box">
+      <p>Auf der Truhe steht in alten Lettern geschrieben:</p>
+      <p class="riddle-quote">„Vier Siegel öffnen mich – in der Reihenfolge, wie die Weisen sie fanden: <strong>Tempel, Turm, Schmiede, Giebel</strong>. Doch prüft eure Weisheit, bevor ihr es wagt: Bildet die Quersumme eurer vier Ziffern. Bildet davon erneut die Quersumme, bis nur eine einzige Ziffer bleibt. Sie muss der Zahl der Bibliothek entsprechen – sonst habt ihr euch verrechnet!"</p>
+    </div>
+
+    <div class="seal-legend">
+      <div class="seal-legend-item"><span>🏛</span><small>Position 1<br>Tempel</small></div>
+      <div class="seal-legend-item"><span>🗼</span><small>Position 2<br>Turm</small></div>
+      <div class="seal-legend-item"><span>🛡</span><small>Position 3<br>Schmiede</small></div>
+      <div class="seal-legend-item"><span>🔺</span><small>Position 4<br>Giebel</small></div>
+    </div>
+
+    <div class="code-input-row">
+      <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" class="code-digit" data-index="0" aria-label="Erste Ziffer">
+      <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" class="code-digit" data-index="1" aria-label="Zweite Ziffer">
+      <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" class="code-digit" data-index="2" aria-label="Dritte Ziffer">
+      <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" class="code-digit" data-index="3" aria-label="Vierte Ziffer">
+      <button class="btn-primary" data-action="open-treasure">Truhe öffnen 🔓</button>
+    </div>
+    <p class="feedback" id="feedback-treasure" aria-live="polite"></p>
+
+    <div class="treasure-success" id="treasure-success" hidden>
+      <div class="chest-anim" aria-hidden="true">
+        <div class="chest-lid"></div>
+        <div class="chest-base"></div>
+        <div class="chest-glow"></div>
+      </div>
+      <h3>Ihr habt die Schatzkammer geöffnet!</h3>
+      <p>In der Truhe liegt eine vergilbte Schriftrolle. Darauf steht: „Wer die Beziehung von Kathete und Hypotenuse versteht, besitzt den Schlüssel zu unzähligen Rätseln der Welt – von der Baukunst bis zur Navigation." Pythagoras selbst hätte euren Beweis für würdig befunden.</p>
+      <p class="treasure-titel">🏆 Titel verliehen: <strong>Hüter der Tetraktys</strong></p>
+    </div>
+  </div>
+</main>
+
+<!-- ===================== HILFE-MODAL (gemeinsam) ===================== -->
+<div class="modal-overlay" id="modal-help" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-help-title">
+    <button class="modal-close" data-action="close-help" aria-label="Schließen">✕</button>
+    <h3 id="modal-help-title">📐 Formelsammlung &amp; Hilfe</h3>
+    <p><strong>Satz des Pythagoras:</strong> In jedem rechtwinkligen Dreieck gilt a² + b² = c².</p>
+    <ul>
+      <li><strong>c</strong> = Hypotenuse (liegt gegenüber dem rechten Winkel, ist immer die längste Seite)</li>
+      <li><strong>a, b</strong> = Katheten (die beiden Seiten, die den rechten Winkel bilden)</li>
+    </ul>
+    <p><strong>Hypotenuse gesucht:</strong> c = √(a² + b²)</p>
+    <p><strong>Kathete gesucht:</strong> a = √(c² − b²) bzw. b = √(c² − a²)</p>
+    <p><strong>Rechtwinklig prüfen (Umkehrung):</strong> Gilt für die längste Seite a² + b² = c², ist das Dreieck rechtwinklig.</p>
+    <hr>
+    <p>🙋 Kommt ihr trotz der Tipps nicht weiter? Meldet euch bei eurer Lehrkraft!</p>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   DIE SCHATZKAMMER DES PYTHAGORAS – LOGIK (Einzeldatei)
+   Alle Ansichten liegen in dieser Datei und werden über den
+   URL-Anker (#karte, #station1 …) umgeschaltet. Der Fortschritt
+   wird in localStorage gespeichert (falls verfügbar).
+   ========================================================= */
+
+const STORAGE_PREFIX = 'pyth_kroton_';
+
+// ---- Lösungen ----
+const ANSWERS = { 1: 15, 2: 12, 4: 8, 5: 13 };
+const SHIELD_SUM = 6;
+const BONUS_ANSWER = 8.66;
+const TREASURE_CODE = '5268';
+
+const HINT_LEVELS = { 1: 2, 2: 2, 3: 2, 4: 2, 5: 2, bonus: 2 };
+
+const SHIELD_CORRECT = { A: true, B: false, C: true, D: false };
+const shieldPicks = {};
+
+let treasureAttempts = 0;
+
+// ---- Hilfsfunktionen ----
+function parseNum(value){
+  if (value == null) return NaN;
+  return parseFloat(String(value).trim().replace(',', '.'));
+}
+function isClose(a, b, tol = 0.01){
+  return Math.abs(a - b) <= tol;
+}
+function setFeedback(el, message, ok){
+  el.textContent = message;
+  el.className = 'feedback ' + (ok ? 'is-correct' : 'is-wrong');
+}
+
+// ---- Fortschritt (localStorage mit Fallback im Speicher) ----
+const memoryStore = {};
+function storeGet(key){
+  try { return localStorage.getItem(key); } catch (e) { return memoryStore[key] || null; }
+}
+function storeSet(key, val){
+  try { localStorage.setItem(key, val); } catch (e) { memoryStore[key] = val; }
+}
+function storeRemove(key){
+  try { localStorage.removeItem(key); } catch (e) { delete memoryStore[key]; }
+}
+
+function isSolved(id){
+  return storeGet(STORAGE_PREFIX + id) === '1';
+}
+function setSolved(id){
+  storeSet(STORAGE_PREFIX + id, '1');
+  updateHeaderSeals();
+  updateMapStatuses();
+}
+function updateHeaderSeals(){
+  [1, 2, 3, 4, 5].forEach(id => {
+    const seal = document.querySelector(`.seal-slot[data-seal="${id}"]`);
+    if (!seal) return;
+    seal.classList.toggle('is-filled', isSolved(id));
+  });
+}
+function updateMapStatuses(){
+  document.querySelectorAll('[data-status-for]').forEach(statusEl => {
+    const id = statusEl.dataset.statusFor;
+    const solved = isSolved(id);
+    statusEl.textContent = solved ? '✓ gelöst' : '○ ungelöst';
+    const card = statusEl.closest('.tablet-card');
+    if (card) card.classList.toggle('is-solved', solved);
+  });
+}
+function markStationSolvedUI(stationId){
+  const panel = document.getElementById('solved-' + stationId);
+  if (panel) panel.hidden = false;
+  setSolved(stationId);
+}
+function restoreSolvedPanels(){
+  [1, 2, 3, 4, 5, 'bonus'].forEach(id => {
+    if (isSolved(id)){
+      const panel = document.getElementById('solved-' + id);
+      if (panel) panel.hidden = false;
+      if (id === 3){
+        const s = document.getElementById('sum-step');
+        if (s) s.hidden = false;
+      }
+      if (id === 5){
+        const s = document.getElementById('step-5b');
+        if (s) s.hidden = false;
+      }
+    }
+  });
+}
+function resetProgress(){
+  const ok = window.confirm('Fortschritt auf diesem Gerät wirklich zurücksetzen? Das ist sinnvoll, wenn eine neue Gruppe startet.');
+  if (!ok) return;
+  ['1', '2', '3', '4', '5', 'bonus'].forEach(id => storeRemove(STORAGE_PREFIX + id));
+  resetAllInputs();
+  updateHeaderSeals();
+  updateMapStatuses();
+}
+
+// Alle Eingaben, Hinweise und Zwischenzustände zurücksetzen (neue Gruppe)
+function resetAllInputs(){
+  document.querySelectorAll('.answer-row input, .code-digit').forEach(i => { i.value = ''; });
+  document.querySelectorAll('.feedback').forEach(f => { f.textContent = ''; f.className = 'feedback'; });
+  document.querySelectorAll('.solved-panel, .hint-text, .sum-step, .treasure-success').forEach(el => { el.hidden = true; });
+  document.querySelectorAll('.hint-buttons').forEach(group => {
+    group.querySelectorAll('button').forEach((b, idx) => { b.disabled = idx > 0; });
+  });
+  document.querySelectorAll('.shield-card').forEach(c => c.classList.remove('is-right', 'is-wrong'));
+  document.querySelectorAll('.shield-buttons button').forEach(b => b.classList.remove('is-picked'));
+  Object.keys(shieldPicks).forEach(k => delete shieldPicks[k]);
+  treasureAttempts = 0;
+}
+
+// ---- Rechenstationen prüfen (1, 2, 3, 4, 5) ----
+function handleCheck(stationId){
+  const input = document.getElementById('input-' + stationId);
+  const feedback = document.getElementById('feedback-' + stationId);
+  const val = parseNum(input.value);
+  const expected = stationId === '3' ? SHIELD_SUM : ANSWERS[stationId];
+
+  if (isNaN(val)){
+    setFeedback(feedback, 'Bitte gebt eine Zahl ein.', false);
+    return;
+  }
+  if (isClose(val, expected)){
+    setFeedback(feedback, '✓ Richtig!', true);
+    markStationSolvedUI(stationId);
+  } else {
+    setFeedback(feedback, 'Noch nicht ganz richtig. Nutzt bei Bedarf das Orakel von Delphi.', false);
+  }
+}
+
+// ---- Station 5, Schritt 1 (Bodendiagonale) ----
+function handleCheck5a(){
+  const input = document.getElementById('input-5a');
+  const feedback = document.getElementById('feedback-5a');
+  const val = parseNum(input.value);
+  if (isNaN(val)){
+    setFeedback(feedback, 'Bitte gebt eine Zahl ein.', false);
+    return;
+  }
+  if (isClose(val, 5)){
+    setFeedback(feedback, '✓ Richtig! Weiter zu Schritt 2.', true);
+    document.getElementById('step-5b').hidden = false;
+  } else {
+    setFeedback(feedback, 'Noch nicht ganz richtig.', false);
+  }
+}
+
+// ---- Bonusaufgabe ----
+function handleCheckBonus(){
+  const input = document.getElementById('input-bonus');
+  const feedback = document.getElementById('feedback-bonus');
+  const val = parseNum(input.value);
+  if (isNaN(val)){
+    setFeedback(feedback, 'Bitte gebt eine Zahl ein.', false);
+    return;
+  }
+  if (isClose(val, BONUS_ANSWER, 0.0)){
+    setFeedback(feedback, '✓ Richtig!', true);
+    document.getElementById('solved-bonus').hidden = false;
+    setSolved('bonus');
+  } else {
+    setFeedback(feedback, 'Noch nicht ganz richtig. Nutzt bei Bedarf einen Tipp.', false);
+  }
+}
+
+// ---- Station 3: Schild-Zuordnung ----
+function handleShieldPick(btn){
+  const shield = btn.dataset.shield;
+  const pick = btn.dataset.pick;
+  shieldPicks[shield] = pick;
+
+  const card = btn.closest('.shield-card');
+  card.querySelectorAll('.shield-buttons button').forEach(b => b.classList.remove('is-picked'));
+  btn.classList.add('is-picked');
+  card.classList.remove('is-right', 'is-wrong');
+}
+
+function handleCheckShields(){
+  const feedback = document.getElementById('feedback-shields');
+  const ids = Object.keys(SHIELD_CORRECT);
+  let correctCount = 0;
+  let allAnswered = true;
+
+  ids.forEach(id => {
+    const pick = shieldPicks[id];
+    if (!pick){ allAnswered = false; return; }
+    const card = document.querySelector(`.shield-card[data-shield="${id}"]`);
+    const isRight = (pick === 'rw') === SHIELD_CORRECT[id];
+    card.classList.toggle('is-right', isRight);
+    card.classList.toggle('is-wrong', !isRight);
+    if (isRight) correctCount++;
+  });
+
+  if (!allAnswered){
+    setFeedback(feedback, 'Bitte ordnet zuerst alle vier Schilde zu.', false);
+    return;
+  }
+  if (correctCount === 4){
+    setFeedback(feedback, '✓ Alle richtig zugeordnet! Weiter mit der Summe.', true);
+    document.getElementById('sum-step').hidden = false;
+  } else {
+    setFeedback(feedback, `${correctCount} von 4 richtig zugeordnet. Prüft die rot markierten Schilde noch einmal.`, false);
+  }
+}
+
+// ---- Orakel-Hinweise (max. 2 Stufen, kein vollständiger Lösungsweg) ----
+function handleHint(stationId, level){
+  level = parseInt(level, 10);
+  const textEl = document.getElementById(`hint-${stationId}-${level}`);
+  if (textEl) textEl.hidden = false;
+
+  const currentBtn = document.querySelector(`[data-action="hint"][data-station="${stationId}"][data-level="${level}"]`);
+  if (currentBtn) currentBtn.disabled = true;
+
+  const nextLevel = level + 1;
+  const maxLevel = HINT_LEVELS[stationId] || 2;
+  if (nextLevel <= maxLevel){
+    const nextBtn = document.querySelector(`[data-action="hint"][data-station="${stationId}"][data-level="${nextLevel}"]`);
+    if (nextBtn) nextBtn.disabled = false;
+  }
+}
+
+// ---- Schatztruhe ----
+function handleOpenTreasure(){
+  const inputs = Array.from(document.querySelectorAll('.code-digit'));
+  const feedback = document.getElementById('feedback-treasure');
+  const digits = inputs.map(i => i.value);
+
+  if (digits.some(d => d === '')){
+    setFeedback(feedback, 'Bitte tragt alle vier Ziffern ein.', false);
+    return;
+  }
+
+  const code = digits.join('');
+  if (code === TREASURE_CODE){
+    feedback.textContent = '';
+    feedback.className = 'feedback';
+    document.getElementById('treasure-success').hidden = false;
+  } else {
+    treasureAttempts++;
+    if (treasureAttempts >= 3){
+      setFeedback(feedback, 'Die Truhe bleibt verschlossen. Tipp: Bildet die Quersumme eurer vier Ziffern – und davon erneut die Quersumme, bis eine einzige Ziffer bleibt. Sie muss der Zahl der Bibliothek entsprechen!', false);
+    } else {
+      setFeedback(feedback, 'Die Truhe bleibt verschlossen. Prüft eure vier Zahlen noch einmal.', false);
+    }
+  }
+}
+
+function setupCodeInputs(){
+  const inputs = Array.from(document.querySelectorAll('.code-digit'));
+  inputs.forEach((input, idx) => {
+    input.addEventListener('input', () => {
+      input.value = input.value.replace(/[^0-9]/g, '').slice(0, 1);
+      if (input.value && idx < inputs.length - 1){
+        inputs[idx + 1].focus();
+      }
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !input.value && idx > 0){
+        inputs[idx - 1].focus();
+      }
+    });
+  });
+}
+
+// ---- Hilfe-Modal ----
+function openModal(){ const m = document.getElementById('modal-help'); if (m) m.hidden = false; }
+function closeModal(){ const m = document.getElementById('modal-help'); if (m) m.hidden = true; }
+
+// ---- Enter-Taste löst "Prüfen" aus; Escape schließt Modal ----
+function setupKeyboardShortcuts(){
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter'){
+      const input = e.target;
+      if (input.matches && input.matches('.answer-row input')){
+        const row = input.closest('.answer-row');
+        const btn = row && row.querySelector('.btn-check');
+        if (btn) btn.click();
+      }
+    }
+    if (e.key === 'Escape') closeModal();
+  });
+}
+
+// ---- Klick-Delegation ----
+function setupClickDelegation(){
+  document.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-action]');
+    if (t){
+      switch (t.dataset.action){
+        case 'open-help': openModal(); break;
+        case 'close-help': closeModal(); break;
+        case 'check': handleCheck(t.dataset.station); break;
+        case 'check-5a': handleCheck5a(); break;
+        case 'check-bonus': handleCheckBonus(); break;
+        case 'check-shields': handleCheckShields(); break;
+        case 'shield-pick': handleShieldPick(t); break;
+        case 'hint': handleHint(t.dataset.station, t.dataset.level); break;
+        case 'open-treasure': handleOpenTreasure(); break;
+        case 'reset-progress': resetProgress(); break;
+      }
+      return;
+    }
+    if (e.target.id === 'modal-help') closeModal();
+  });
+}
+
+// ---- Seitenwechsel über URL-Anker ----
+const VALID_VIEWS = ['index', 'karte', 'station1', 'station2', 'station3', 'station4', 'station5', 'bonus', 'schatztruhe'];
+
+function route(){
+  let id = (location.hash || '#index').slice(1);
+  if (!VALID_VIEWS.includes(id)) id = 'index';
+
+  document.querySelectorAll('.view').forEach(v => { v.hidden = (v.id !== 'view-' + id); });
+  document.getElementById('app-header').hidden = (id === 'index');
+  closeModal();
+  updateHeaderSeals();
+  updateMapStatuses();
+  window.scrollTo(0, 0);
+}
+
+// ---- Initialisierung ----
+setupCodeInputs();
+setupClickDelegation();
+setupKeyboardShortcuts();
+restoreSolvedPanels();
+window.addEventListener('hashchange', route);
+route();
+</script>
+</body>
+</html>

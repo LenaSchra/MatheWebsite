@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Abgestufte Hilfe: Reaktion von Propen mit Brom</title>
+<style>
+  :root{
+    --text:#061C63;
+    --rahmen:#4A5F9E;
+    --hell:#EEF1F9;
+    --gesperrt:#9aa5c6;
+  }
+  *{box-sizing:border-box}
+  body{
+    font-family:Verdana, Geneva, sans-serif;
+    color:var(--text);
+    background:#fff;
+    margin:0;
+    padding:24px 16px 60px;
+    line-height:1.55;
+  }
+  main{max-width:820px;margin:0 auto}
+  header{
+    border:2px solid var(--rahmen);
+    padding:14px 18px;
+    text-align:center;
+    font-weight:bold;
+    font-size:1.25rem;
+    margin-bottom:10px;
+  }
+  .intro{font-size:.9rem;margin:0 0 22px;text-align:center}
+  .stufe{margin-bottom:12px}
+  .btn{
+    display:block;width:100%;
+    text-align:left;
+    font:inherit;font-weight:bold;
+    color:var(--text);
+    background:var(--hell);
+    border:2px solid var(--text);
+    padding:12px 16px;
+    cursor:pointer;
+    transition:background .15s;
+  }
+  .btn:hover:not(:disabled){background:#dde3f4}
+  .btn:focus-visible{outline:3px solid var(--rahmen);outline-offset:2px}
+  .btn .pfeil{float:right}
+  .btn:disabled{
+    color:var(--gesperrt);
+    border-color:var(--gesperrt);
+    background:#fafbfe;
+    cursor:not-allowed;
+  }
+  .btn.loesung{
+    margin-left:28px;width:calc(100% - 28px);
+    border-style:dashed;
+  }
+  .inhalt{
+    border:2px solid var(--rahmen);
+    border-top:none;
+    padding:14px 18px;
+    background:#fff;
+  }
+  .inhalt.loesung{margin-left:28px}
+  .inhalt[hidden]{display:none}
+  .inhalt p{margin:.3em 0}
+  .tipp{font-size:.92rem;font-style:italic}
+  svg{display:block;max-width:100%;height:auto;margin:8px auto}
+  svg text{font-family:Verdana, Geneva, sans-serif;fill:#061C63}
+  .reset{
+    margin-top:18px;
+    font:inherit;
+    color:var(--text);
+    background:#fff;
+    border:2px solid var(--rahmen);
+    padding:8px 14px;
+    cursor:pointer;
+  }
+  .reset:hover{background:var(--hell)}
+</style>
+</head>
+<body>
+<main>
+  <header>Die abgestufte Hilfe zur Reaktion von Propen mit Brom</header>
+  <p class="intro">Öffne zuerst die Hilfe und überlege selbst. Erst danach kannst du die Lösung dazu aufklappen.</p>
+
+  <div id="stufen"></div>
+
+  <button class="reset" id="reset" type="button">Alles wieder zuklappen</button>
+</main>
+
+<script>
+/* ---------- Zeichen-Helfer (SVG) ---------- */
+const FARBE = '#061C63';
+
+/* Beschriftung "Br" mit freien Elektronenpaaren (Striche): p = Zeichenfolge aus t, b, l, r */
+function br(x, y, p){
+  let s = `<text x="${x}" y="${y}" text-anchor="middle" font-size="14">Br</text>`;
+  const l = (x1,y1,x2,y2) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${FARBE}" stroke-width="1.6"/>`;
+  if (p.includes('t')) s += l(x-5, y-19, x+5, y-19);
+  if (p.includes('b')) s += l(x-5, y+9,  x+5, y+9);
+  if (p.includes('l')) s += l(x-15, y-10, x-15, y);
+  if (p.includes('r')) s += l(x+15, y-10, x+15, y);
+  return s;
+}
+/* Ladung im Kreis */
+function ladung(cx, cy, zeichen){
+  return `<circle cx="${cx}" cy="${cy}" r="6" fill="#fff" stroke="${FARBE}" stroke-width="1.2"/>
+          <text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="11">${zeichen}</text>`;
+}
+/* Pfeilspitze */
+function defs(id){
+  return `<defs><marker id="${id}" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+            <path d="M0,0 L10,5 L0,10 z" fill="${FARBE}"/></marker></defs>`;
+}
+const bogen = (d, id) => `<path d="${d}" fill="none" stroke="${FARBE}" stroke-width="1.8" marker-end="url(#${id})"/>`;
+const strich = (x1,y1,x2,y2,w=1.6) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${FARBE}" stroke-width="${w}"/>`;
+const C = (x,y) => `<text x="${x}" y="${y+5}" text-anchor="middle" font-size="14" stroke="#fff" stroke-width="6" paint-order="stroke">C</text>`;
+const CH3 = (x,y) => `<text x="${x}" y="${y}" text-anchor="middle" font-size="14">CH<tspan font-size="10" dy="3">3</tspan></text>`;
+const H = (x,y) => `<text x="${x}" y="${y}" text-anchor="middle" font-size="14">H</text>`;
+
+/* Propen + polarisiertes Brommolekül.
+   mitPolarisierung: Elektronenpfeil im Brommolekül; mitAngriff: Pfeil von der Doppelbindung zum Brom */
+function propenBrom(x0, id, mitAngriff){
+  return `<g transform="translate(${x0},0)">
+    ${strich(110,76,190,76,2)}${strich(110,84,190,84,2)}
+    ${C(110,80)}${C(190,80)}
+    ${strich(100,72,76,48)}${H(70,42)}
+    ${strich(200,72,224,48)}${CH3(244,42)}
+    ${strich(100,90,76,114)}${H(70,126)}
+    ${strich(200,90,224,114)}${H(230,126)}
+    <!-- Brommolekül: Keil zwischen den Bromatomen -->
+    ${br(150,150,'tlr')}
+    <polygon points="150,158 143,198 157,198" fill="${FARBE}"/>
+    ${br(150,215,'blr')}
+    <text x="126" y="142" text-anchor="end" font-size="11">δ+</text>
+    <text x="126" y="224" text-anchor="end" font-size="11">δ–</text>
+    <!-- runder Pfeil: Bindungselektronen wandern zum hinteren Bromatom -->
+    ${bogen('M 154 178 C 204 170 206 208 176 210', id)}
+    ${mitAngriff ? bogen('M 140 88 C 108 100 108 124 143 133', id) : ''}
+  </g>`;
+}
+
+/* ---------- Grafiken ---------- */
+const svgLoesung1 = `
+<svg viewBox="0 0 330 245" width="330" role="img"
+     aria-label="Propenmolekül mit polarisiertem Brommolekül unterhalb der Doppelbindung; ein runder Pfeil zeigt die Verschiebung der Bindungselektronen zum hinteren Bromatom">
+  ${defs('sp1')}
+  ${propenBrom(10, 'sp1', false)}
+</svg>`;
+
+const svgLoesung2 = `
+<svg viewBox="0 0 640 245" width="640" role="img"
+     aria-label="Reaktionsschritt: Aus Propen und dem polarisierten Brommolekül entstehen ein Bromonium-Ion und ein Bromid-Ion">
+  ${defs('sp2')}
+  ${propenBrom(0, 'sp2', true)}
+  ${strich(268,80,332,80,2)}
+  <polygon points="332,74 344,80 332,86" fill="${FARBE}"/>
+  <g transform="translate(350,0)">
+    ${strich(110,80,190,80,2)}
+    ${C(110,80)}${C(190,80)}
+    ${strich(100,72,76,48)}${H(70,42)}
+    ${strich(200,72,224,48)}${CH3(244,42)}
+    ${strich(100,90,76,114)}${H(70,126)}
+    ${strich(200,90,224,114)}${H(230,126)}
+    ${strich(108,92,143,134)}${strich(192,92,157,134)}
+    ${br(150,150,'lr')}
+    ${ladung(176,132,'+')}
+    <text x="150" y="184" text-anchor="middle" font-size="13">+</text>
+    ${br(150,218,'tblr')}
+    ${ladung(178,207,'–')}
+  </g>
+</svg>`;
+
+const svgLoesung5 = `
+<svg viewBox="0 0 640 300" width="640" role="img"
+     aria-label="Letzter Reaktionsschritt: Rückseitenangriff des Bromid-Ions auf das Bromonium-Ion ergibt 1,2-Dibrompropan">
+  ${defs('sp5')}
+  <g transform="translate(20,60)">
+    ${strich(60,80,140,80,2)}
+    ${C(60,80)}${C(140,80)}
+    ${strich(50,72,28,50)}${H(22,44)}
+    ${strich(150,72,172,50)}${CH3(192,44)}
+    ${strich(50,90,28,112)}${H(22,124)}
+    ${strich(150,90,172,112)}${H(180,124)}
+    ${strich(58,92,93,128)}${strich(142,92,107,128)}
+    ${br(100,146,'lr')}
+    ${ladung(124,130,'+')}
+    <text x="100" y="180" text-anchor="middle" font-size="13">+</text>
+    ${br(100,208,'tblr')}
+    ${ladung(124,192,'–')}
+    <!-- Rückseitenangriff: freies Elektronenpaar des Bromid-Ions -> Kohlenstoffatom (von hinten) -->
+    ${bogen('M 121 205 C 320 225 320 -100 66 66', 'sp5')}
+    <!-- Elektronen der Kohlenstoff-Brom-Bindung wandern zum Bromatom -->
+    ${bogen('M 70 108 C 50 124 58 146 80 140', 'sp5')}
+  </g>
+  ${strich(395,140,452,140,2)}
+  <polygon points="452,134 464,140 452,146" fill="${FARBE}"/>
+  <g transform="translate(490,29)">
+    ${H(10,116)}${strich(22,111,52,111)}
+    <text x="64" y="116" text-anchor="middle" font-size="14">C</text>
+    ${strich(76,111,104,111)}
+    <text x="116" y="116" text-anchor="middle" font-size="14">C</text>
+    ${strich(128,111,150,111)}${H(158,116)}
+    ${strich(64,98,64,82)}${br(64,72,'tlr')}
+    ${strich(116,98,116,76)}${CH3(116,66)}
+    ${strich(64,124,64,148)}${H(64,164)}
+    ${strich(116,124,116,140)}${br(116,157,'blr')}
+  </g>
+</svg>`;
+
+/* ---------- Inhalte ---------- */
+const stufen = [
+  {
+    hilfe: `<p>Es liegt wieder eine elektrophile Addition vor. Ein Brommolekül ist ungeladen. Dennoch läuft diese Reaktion spontan (also ohne Katalysator) ab. Erkläre diesen Sachverhalt.</p>
+            <p class="tipp">Tipp: Was passiert im Brommolekül, wenn sich dieses der Doppelbindung nähert?</p>`,
+    loesung: `<p>Es kommt im Brommolekül zu einer Verschiebung der Elektronen. Der Teil des Moleküls, der nah an der Doppelbindung ist, wird dadurch partiell positiv geladen. Der hintere Teil des Moleküls wird partiell negativ. Man kann sagen, dass die Elektronen von der Doppelbindung weg fliehen.</p>
+              ${svgLoesung1}
+              <p>Ein Angriff des partiell positiven Teiles an die Doppelbindung ist jetzt möglich.</p>`
+  },
+  {
+    hilfe: `<p>Notiere den Angriff des nun unterschiedlich polarisierten Brommoleküls an die Doppelbindung. Wie ist das entstandene Molekül geladen?</p>`,
+    loesung: svgLoesung2
+  },
+  {
+    hilfe: `<p>Es ist ein positiv geladenes Molekül entstanden. Notiere das Teilchen, welches jetzt angreifen kann.</p>`,
+    loesung: `<p>Das Bromid-Ion (Br<sup>–</sup>) greift an.</p>`
+  },
+  {
+    hilfe: `<p>Der Angriff des Bromid-Ions erfolgt von einer ganz bestimmten Richtung. Wie nennt man diesen Angriff?</p>`,
+    loesung: `<p>Es findet ein Rückseitenangriff statt (aufgrund der sterischen Hinderung durch das Bromatom).</p>`
+  },
+  {
+    hilfe: `<p>Notiere den letzten Reaktionsschritt mit dem Endprodukt der Reaktion.</p>`,
+    loesung: svgLoesung5
+  }
+];
+
+/* ---------- Aufbau & Logik ---------- */
+const wurzel = document.getElementById('stufen');
+const zustand = stufen.map(() => ({hilfe:false, loesung:false}));
+
+stufen.forEach((s, i) => {
+  const n = i + 1;
+  const box = document.createElement('section');
+  box.className = 'stufe';
+  box.innerHTML = `
+    <button class="btn" type="button" id="bh${n}" aria-expanded="false" aria-controls="ih${n}">
+      Hilfe ${n} <span class="pfeil">▸</span>
+    </button>
+    <div class="inhalt" id="ih${n}" hidden>${s.hilfe}</div>
+    <div style="margin-top:6px">
+      <button class="btn loesung" type="button" id="bl${n}" aria-expanded="false" aria-controls="il${n}" disabled>
+        Lösung Hilfe ${n} <span class="pfeil">▸</span>
+      </button>
+      <div class="inhalt loesung" id="il${n}" hidden>${s.loesung}</div>
+    </div>`;
+  wurzel.appendChild(box);
+
+  document.getElementById('bh' + n).addEventListener('click', () => {
+    zustand[i].hilfe = !zustand[i].hilfe;
+    if (!zustand[i].hilfe) zustand[i].loesung = false;
+    aktualisiere();
+  });
+  document.getElementById('bl' + n).addEventListener('click', () => {
+    zustand[i].loesung = !zustand[i].loesung;
+    aktualisiere();
+  });
+});
+
+function aktualisiere(){
+  stufen.forEach((s, i) => {
+    const n = i + 1;
+    const frei = i === 0 || zustand[i-1].loesung || zustand[i].hilfe || zustand[i].loesung;
+    const bh = document.getElementById('bh' + n);
+    const bl = document.getElementById('bl' + n);
+    const ih = document.getElementById('ih' + n);
+    const il = document.getElementById('il' + n);
+
+    bh.disabled = !frei;
+    ih.hidden = !zustand[i].hilfe;
+    bh.setAttribute('aria-expanded', zustand[i].hilfe);
+    bh.querySelector('.pfeil').textContent = zustand[i].hilfe ? '▾' : '▸';
+
+    bl.disabled = !zustand[i].hilfe;
+    il.hidden = !zustand[i].loesung;
+    bl.setAttribute('aria-expanded', zustand[i].loesung);
+    bl.querySelector('.pfeil').textContent = zustand[i].loesung ? '▾' : '▸';
+  });
+}
+
+document.getElementById('reset').addEventListener('click', () => {
+  zustand.forEach(z => { z.hilfe = false; z.loesung = false; });
+  aktualisiere();
+  window.scrollTo({top:0, behavior:'smooth'});
+});
+
+aktualisiere();
+</script>
+</body>
+</html>

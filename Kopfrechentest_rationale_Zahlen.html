@@ -1,0 +1,853 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Kopfrechentest rationale Zahlen</title>
+<style>
+:root{
+  --ink:#061C63; --frame:#4A5F9E; --bg:#EEF2FA; --card:#FFFFFF;
+  --soft:#DDE4F3; --muted:#5B6A94; --active:#FFF6D6; --warn:#C62828;
+  --shadow:0 2px 10px rgba(6,28,99,.12);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:Verdana,Geneva,sans-serif;font-size:16px;
+  -webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+button{font-family:inherit;color:inherit;touch-action:manipulation;cursor:pointer}
+.hidden{display:none!important}
+
+/* Kopfleiste */
+.topbar{position:sticky;top:0;z-index:20;background:var(--card);border-bottom:2px solid var(--frame);
+  display:flex;align-items:center;gap:16px;padding:10px 16px;box-shadow:var(--shadow)}
+.topbar h1{font-size:17px;margin:0;flex:1;font-weight:bold}
+.pill{border:2px solid var(--frame);padding:6px 12px;font-size:15px;white-space:nowrap}
+.timer{font-size:22px;font-weight:bold;font-variant-numeric:tabular-nums;min-width:92px;text-align:center}
+.timer.low{color:var(--warn);border-color:var(--warn)}
+.btn{background:var(--ink);color:#fff;border:0;padding:12px 20px;font-size:16px;font-weight:bold;min-height:46px}
+.btn.secondary{background:#fff;color:var(--ink);border:2px solid var(--frame)}
+.btn:active{transform:translateY(1px)}
+
+/* Karten */
+.wrap{max-width:760px;margin:28px auto;padding:0 16px}
+.card{background:var(--card);box-shadow:var(--shadow);padding:24px 26px;margin-bottom:20px}
+.card h2{margin:0 0 14px;font-size:21px}
+.card p,.card li{line-height:1.55;text-align:justify;hyphens:auto;-webkit-hyphens:auto}
+.card ul{padding-left:22px;margin:8px 0}
+label.big{display:block;font-weight:bold;margin:18px 0 8px}
+.nrinput{font-family:inherit;font-size:28px;width:120px;padding:8px 12px;border:2px solid var(--frame);color:var(--ink);text-align:center}
+.err{color:var(--warn);min-height:22px;margin-top:8px;font-size:15px}
+
+/* Testbereich */
+.testlayout{display:flex;align-items:flex-start;gap:20px;padding:16px;max-width:1400px;margin:0 auto}
+.sheet{flex:1;background:var(--card);box-shadow:var(--shadow);padding:10px 14px}
+.row{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--soft)}
+.row:last-child{border-bottom:0}
+.task{display:flex;align-items:center;gap:6px;padding:6px 4px;font-size:17px;white-space:nowrap}
+.task .a{min-width:58px;text-align:right}
+.task .op{width:18px;text-align:center}
+.task .b{min-width:72px;text-align:left}
+.task .eq{width:14px;text-align:center}
+.ans{min-width:84px;height:42px;border:2px solid var(--soft);background:#fff;font-size:18px;font-weight:bold;
+  padding:0 8px;text-align:left;font-variant-numeric:tabular-nums;scroll-margin:90px 0 260px 0}
+.ans.filled{border-color:var(--frame)}
+.ans.active{border-color:var(--ink);background:var(--active);box-shadow:0 0 0 2px var(--ink)}
+.ans.active::after{content:"";display:inline-block;width:2px;height:20px;background:var(--ink);
+  vertical-align:middle;margin-left:2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* Bildschirmtastatur */
+.pad{width:300px;background:var(--card);box-shadow:var(--shadow);padding:14px;position:sticky;top:84px;user-select:none;-webkit-user-select:none}
+.pad .hint{font-size:13px;color:var(--muted);text-align:center;margin-bottom:10px}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.key{height:62px;font-size:26px;background:#F4F6FC;border:2px solid var(--soft);font-weight:bold}
+.key:active{background:var(--soft)}
+.key.fn{font-size:17px}
+.key.wide{grid-column:span 3;background:var(--ink);color:#fff;border-color:var(--ink);font-size:19px}
+.key.half{grid-column:span 1}
+.navkeys{display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-top:8px}
+.navkeys .key{font-size:16px;white-space:nowrap}
+.navkeys .next{font-size:18px}
+.navkeys .key:first-child{grid-column:span 2}
+.navkeys .next{background:var(--ink);color:#fff;border-color:var(--ink)}
+.submitrow{margin-top:14px}
+.submitrow .btn{width:100%}
+
+@media (max-width:980px){
+  .testlayout{display:block;padding:10px 10px 300px}
+  .pad{position:fixed;left:0;right:0;bottom:0;top:auto;width:auto;z-index:15;padding:10px 12px 14px;
+    box-shadow:0 -3px 12px rgba(6,28,99,.18);border-top:2px solid var(--frame)}
+  .pad .hint,.submitrow{display:none}
+  .padgrid{display:grid;grid-template-columns:3fr 1.3fr;gap:10px;max-width:640px;margin:0 auto}
+  .key{height:52px}
+  .navkeys{grid-template-columns:1fr;margin-top:0}
+  .navkeys .key{height:52px}
+  .navkeys .key:first-child{grid-column:auto}
+  .task{font-size:15px;gap:4px}
+  .task .a{min-width:46px}.task .b{min-width:60px}
+  .ans{min-width:70px;height:40px;font-size:16px}
+  .mobilesubmit{display:inline-flex!important}
+}
+@media (max-width:620px){
+  .row{grid-template-columns:1fr}
+  .row .task{border-bottom:1px dotted var(--soft)}
+}
+.mobilesubmit{display:none}
+
+/* Dialog */
+.modal{position:fixed;inset:0;background:rgba(6,28,99,.45);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.modal .card{max-width:460px;width:100%}
+.modal .actions{display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap;margin-top:18px}
+
+/* Ende */
+.dl{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+.dlbox{border:2px solid var(--frame);padding:16px 18px;margin-top:16px}
+.dlbox h3{margin:0 0 6px;font-size:17px}
+.dlbox p{margin:0;font-size:15px;color:var(--muted)}
+.small{font-size:13px;color:var(--muted)}
+.linkbtn{background:none;border:0;text-decoration:underline;color:var(--muted);font-size:14px;padding:8px 0}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>Kopfrechenaufgaben mit rationalen Zahlen</h1>
+  <span id="nrPill" class="pill hidden"></span>
+  <span id="timer" class="pill timer hidden">12:00</span>
+  <button id="mobileSubmit" class="btn mobilesubmit hidden" type="button">Abgeben</button>
+</div>
+
+<!-- Start -->
+<section id="startView" class="wrap hidden">
+  <div class="card">
+    <h2>So funktioniert der Test</h2>
+    <ul>
+      <li>Du bekommst 60 Kopfrechenaufgaben. Du hast <b>12 Minuten</b> Zeit. Danach endet der Test automatisch.</li>
+      <li>Tippe auf ein leeres Feld und gib das Ergebnis mit der Tastatur auf dem Bildschirm ein. Mit <b>Weiter</b> kommst du zur nächsten Aufgabe. Du darfst auch Aufgaben überspringen.</li>
+      <li>Schreibe Kommazahlen mit Komma, zum Beispiel 2,5. Negative Ergebnisse bekommen ein Minuszeichen.</li>
+      <li>Ob deine Ergebnisse richtig sind, erfährst du erst am Ende in deiner Auswertung.</li>
+    </ul>
+    <label class="big" for="nrInput">Deine Nummer in der Klassenliste</label>
+    <input id="nrInput" class="nrinput" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off">
+    <div id="nrErr" class="err"></div>
+    <button id="startBtn" class="btn" type="button">Test starten</button>
+  </div>
+</section>
+
+<!-- Test -->
+<section id="testView" class="hidden">
+  <div class="testlayout">
+    <div id="sheet" class="sheet"></div>
+    <div class="pad" id="pad">
+      <div class="hint">Tippe auf ein Feld, dann gib dein Ergebnis ein.</div>
+      <div class="padgrid">
+        <div class="keys">
+          <button class="key" data-k="7">7</button><button class="key" data-k="8">8</button><button class="key" data-k="9">9</button>
+          <button class="key" data-k="4">4</button><button class="key" data-k="5">5</button><button class="key" data-k="6">6</button>
+          <button class="key" data-k="1">1</button><button class="key" data-k="2">2</button><button class="key" data-k="3">3</button>
+          <button class="key" data-k="-" aria-label="Minus">−</button><button class="key" data-k="0">0</button><button class="key" data-k="," aria-label="Komma">,</button>
+        </div>
+        <div class="navkeys">
+          <button class="key fn" data-k="back" aria-label="Löschen">⌫ Löschen</button>
+          <button class="key fn" data-k="prev">‹ Zurück</button>
+          <button class="key fn next" data-k="next">Weiter ›</button>
+        </div>
+      </div>
+      <div class="submitrow"><button id="submitBtn" class="btn secondary" type="button">Test abgeben</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- Ende -->
+<section id="doneView" class="wrap hidden">
+  <div class="card">
+    <h2 id="doneTitle">Geschafft!</h2>
+    <p id="doneText"></p>
+    <div class="dlbox">
+      <h3>1. Auswertung für deine Lehrkraft</h3>
+      <p>Lade diese Datei herunter und schicke sie über Apple Classroom an deine Lehrkraft.</p>
+      <div class="dl">
+        <button class="btn" id="dlA" type="button">PDF herunterladen</button>
+        <button class="btn secondary hidden" id="shA" type="button">Teilen …</button>
+      </div>
+    </div>
+    <div class="dlbox">
+      <h3>2. Deine eigene Auswertung</h3>
+      <p>Hier siehst du deine typischen Fehler mit Erklärungen und eine Liste zum Üben.</p>
+      <div class="dl">
+        <button class="btn" id="dlB" type="button">PDF herunterladen</button>
+        <button class="btn secondary hidden" id="shB" type="button">Teilen …</button>
+      </div>
+    </div>
+    <p class="small" style="margin-top:22px">Die Dateien bleiben auf diesem Gerät abrufbar, bis ein neuer Test gestartet wird.</p>
+    <button class="linkbtn" id="newBtn" type="button">Neuen Test starten</button>
+  </div>
+</section>
+
+<!-- Dialog -->
+<div id="modal" class="modal hidden">
+  <div class="card">
+    <h2 id="mTitle"></h2>
+    <p id="mText"></p>
+    <div class="actions">
+      <button class="btn secondary" id="mNo" type="button">Abbrechen</button>
+      <button class="btn" id="mYes" type="button">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================================================================
+   Kopfrechentest rationale Zahlen – Sr
+   ================================================================ */
+"use strict";
+const DURATION = 12 * 60 * 1000;      // 12 Minuten
+const N_ROWS = 20, N_COLS = 3;
+const OPS = ["+", "-", "*", ":"];     // zeilenweise im Wechsel
+const OP_NAME = {"+":"Addition","-":"Subtraktion","*":"Multiplikation",":":"Division"};
+const OP_ZUR  = {"+":"zur Addition","-":"zur Subtraktion","*":"zur Multiplikation",":":"zur Division"};
+const OP_SHOW = {"+":"+","-":"−","*":"·",":":":"};
+const STORE_KEY = "kopfrechentest-rational-v1";
+const ATTEMPT_KEY = "kopfrechentest-rational-versuche";
+const GRADES = [[54,1],[48,2],[42,3],[36,4],[20,5]];
+
+/* ---------- Hilfsfunktionen ---------- */
+function ri(a, b){ return a + Math.floor(Math.random() * (b - a + 1)); }
+function r1(x){ return Math.round(x * 10) / 10 + 0; }           // eine Nachkommastelle, kein -0
+function eq(u, v){ return Math.abs(u - v) < 1e-6; }
+function decNonInt(){ let d; do { d = ri(-9, 9); } while (d === 0); return d / 10; } // ±0,1 … ±0,9
+
+function fmt(x, minus){
+  minus = minus || "−";
+  x = r1(x);
+  const ax = Math.abs(x);
+  const s = Number.isInteger(ax) ? String(ax) : ax.toFixed(1).replace(".", ",");
+  return (x < 0 ? minus : "") + s;
+}
+function fmtB(x, minus){ return x < 0 ? "(" + fmt(x, minus) + ")" : fmt(x, minus); }
+function taskText(t, minus){
+  const opc = minus ? (t.op === "-" ? minus : OP_SHOW[t.op]) : OP_SHOW[t.op];
+  return fmt(t.a, minus) + " " + opc + " " + fmtB(t.b, minus);
+}
+function parseAns(s){
+  if (s == null || s === "") return null;
+  const t = String(s).replace(/−/g, "-").replace(",", ".");
+  if (!/^[+-]?(\d+(\.\d*)?|\.\d+)$/.test(t)) return NaN;
+  return parseFloat(t);
+}
+function pad2(n){ return String(n).padStart(2, "0"); }
+function mmss(ms){ const s = Math.max(0, Math.round(ms / 1000)); return pad2(Math.floor(s / 60)) + ":" + pad2(s % 60); }
+function grade(r){ for (const [min, g] of GRADES) if (r >= min) return g; return 6; }
+
+/* ---------- Aufgabengenerator ---------- */
+function makeTask(op){
+  let a, b, c;
+  if (op === "+" || op === "-"){
+    a = ri(-100, 100) / 10;                 // -10 … 10, höchstens eine Nachkommastelle
+    b = ri(-100, 100) / 10;
+    c = r1(op === "+" ? a + b : a - b);
+  } else if (op === "*"){
+    const i = ri(-10, 10), d = decNonInt(); // ganze Zahl · Kommazahl zwischen -1 und 1
+    if (Math.random() < 0.5){ a = i; b = d; } else { a = d; b = i; }
+    c = r1(a * b);
+  } else {
+    const q = ri(-10, 10);                  // Ergebnis: ganze Zahl -10 … 10
+    let d;
+    if (Math.random() < 2/3) d = decNonInt();
+    else { do { d = ri(-10, 10); } while (d === 0); }
+    a = r1(q * d); b = d; c = q;
+  }
+  return { op, a: a + 0, b: b + 0, c: c + 0 };
+}
+function hasZero(t){ return t.a === 0 || t.b === 0 || t.c === 0; }
+function generateTasks(){
+  const tasks = [], seen = new Set();
+  let zeros = 0;
+  for (let r = 0; r < N_ROWS; r++){
+    const op = OPS[r % 4];
+    for (let k = 0; k < N_COLS; k++){
+      let t, key, guard = 0;
+      do {
+        t = makeTask(op);
+        key = t.op + "|" + t.a + "|" + t.b;
+        guard++;
+      } while ((seen.has(key) || (hasZero(t) && zeros >= 2)) && guard < 5000);
+      seen.add(key);
+      if (hasZero(t)) zeros++;
+      tasks.push(t);
+    }
+  }
+  return tasks;
+}
+
+/* ---------- Fehleranalyse ---------- */
+const CATS = {
+  komma:      { title:"Komma an der falschen Stelle",
+    text:"Die Zif|fern stim|men, aber das Kom|ma ist ver|rutscht. Ma|che vor dem Rech|nen ei|nen Über|schlag: 0,7 · 8 ist klei|ner als 1 · 8, also klei|ner als 8. Das Er|geb|nis ist 5,6. Beim Mul|ti|pli|zie|ren hat das Er|geb|nis so vie|le Nach|kom|ma|stel|len wie bei|de Fak|to|ren zu|sam|men. Beim Di|vi|die|ren durch ei|ne Kom|ma|zahl ver|schiebst du bei bei|den Zah|len das Kom|ma um gleich vie|le Stel|len nach rechts: 4,2 : 0,7 = 42 : 7 = 6." },
+  minusminus: { title:"Minus vor einer negativen Zahl",
+    text:"Ein Mi|nus|zei|chen vor ei|ner ne|ga|ti|ven Zahl in Klam|mern wird zum Plus. Statt ei|ne ne|ga|ti|ve Zahl zu sub|tra|hie|ren, ad|dierst du ih|re Ge|gen|zahl: a − (−b) = a + b. Bei|spiel: 3,7 − (−4,2) = 3,7 + 4,2 = 7,9." },
+  vzAdd:      { title:"Vorzeichenfehler beim Addieren und Subtrahieren",
+    text:"Bei die|sen Auf|ga|ben stimmt das Vor|zei|chen nicht oder du hast die Be|trä|ge falsch ver|rech|net. Stell dir die Rech|nung am Zah|len|strahl vor. Ha|ben bei|de Zah|len das glei|che Vor|zei|chen, ad|dierst du die Be|trä|ge und be|hältst das Vor|zei|chen: −3 + (−5) = −8. Ha|ben sie ver|schie|de|ne Vor|zei|chen, sub|tra|hierst du den klei|ne|ren Be|trag vom grö|ße|ren und nimmst das Vor|zei|chen der Zahl mit dem grö|ße|ren Be|trag: −5,5 + 4 = −1,5." },
+  vzMul:      { title:"Vorzeichenregel beim Multiplizieren und Dividieren",
+    text:"Rech|ne zu|erst nur mit den Be|trä|gen und set|ze da|nach das Vor|zei|chen. Ha|ben bei|de Zah|len das glei|che Vor|zei|chen, ist das Er|geb|nis po|si|tiv: −0,7 · (−8) = 5,6. Ha|ben sie ver|schie|de|ne Vor|zei|chen, ist das Er|geb|nis ne|ga|tiv: 0,5 · (−5) = −2,5. Für die Di|vi|si|on gilt die|sel|be Re|gel: −2,4 : 0,6 = −4." },
+  rechenart:  { title:"Falsche Rechenart",
+    text:"Hier hast du mit ei|ner an|de|ren Re|chen|art ge|rech|net, als in der Auf|ga|be steht. Lies vor dem Rech|nen ge|nau das Re|chen|zei|chen, be|son|ders bei · und : so|wie bei + und −." },
+  rechen:     { title:"Rechenfehler",
+    text:"Vor|zei|chen und Kom|ma pas|sen, aber beim Rech|nen mit den Be|trä|gen ist dir ein Feh|ler pas|siert. Rech|ne Schritt für Schritt, zum Bei|spiel erst die Gan|zen und dann die Zehn|tel: 3,6 + 6,9 = 9 + 1,5 = 10,5. Prü|fe dein Er|geb|nis am En|de mit ei|nem Über|schlag." },
+  eingabe:    { title:"Unvollständige Eingabe",
+    text:"Hier ist dei|ne Ein|ga|be kei|ne voll|stän|di|ge Zahl, zum Bei|spiel nur ein Mi|nus|zei|chen. Kon|trol|lie|re am En|de kurz, ob al|le Er|geb|nis|se voll|stän|dig sind." },
+  leer:       { title:"Nicht bearbeitete Aufgaben",
+    text:"Die|se Auf|ga|ben hast du nicht be|ar|bei|tet. Lass schwie|ri|ge Auf|ga|ben zu|nächst aus und rech|ne zu|erst die Auf|ga|ben, die du si|cher kannst. Mit re|gel|mä|ßi|gem Üben wirst du schnel|ler. Die Lis|te am En|de hilft dir da|bei." }
+};
+const CAT_ORDER = ["vzAdd","minusminus","vzMul","komma","rechenart","rechen","eingabe","leer"];
+
+function classify(t, raw){
+  const x = parseAns(raw);
+  if (x === null) return "leer";
+  if (Number.isNaN(x)) return "eingabe";
+  if (eq(x, t.c)) return "ok";
+  const a = t.a, b = t.b, c = t.c;
+  if (c !== 0 && x !== 0){
+    const q = Math.abs(x / c);
+    if ([10, 100, 1000, 0.1, 0.01, 0.001].some(f => eq(q, f))) return "komma";
+  }
+  if (t.op === "-" && b < 0 && eq(x, a + b)) return "minusminus";
+  if (eq(x, -c)) return (t.op === "+" || t.op === "-") ? "vzAdd" : "vzMul";
+  if (t.op === "+" || t.op === "-"){
+    const bb = t.op === "+" ? b : -b;
+    const cands = [Math.abs(a) + Math.abs(bb), Math.abs(Math.abs(a) - Math.abs(bb))];
+    if (cands.some(m => eq(Math.abs(x), m))) return "vzAdd";
+  }
+  const alt = { "+": a + b, "-": a - b, "*": a * b, ":": b !== 0 ? a / b : NaN };
+  for (const op of OPS){
+    if (op === t.op || Number.isNaN(alt[op])) continue;
+    if (eq(Math.abs(x), Math.abs(alt[op]))) return "rechenart";
+  }
+  if (Math.sign(x) !== Math.sign(c) && c !== 0) return (t.op === "+" || t.op === "-") ? "vzAdd" : "vzMul";
+  return "rechen";
+}
+
+function evaluate(st){
+  const res = st.tasks.map((t, i) => ({ t, raw: st.answers[i] || "", cat: classify(t, st.answers[i] || "") }));
+  const right = res.filter(r => r.cat === "ok").length;
+  const empty = res.filter(r => r.cat === "leer").length;
+  const wrong = res.length - right - empty;
+  const perOp = {};
+  for (const op of OPS) perOp[op] = { ok:0, wrong:0, empty:0, total:0 };
+  for (const r of res){
+    const p = perOp[r.t.op]; p.total++;
+    if (r.cat === "ok") p.ok++; else if (r.cat === "leer") p.empty++; else p.wrong++;
+  }
+  const cats = {};
+  for (const r of res) if (r.cat !== "ok"){ (cats[r.cat] = cats[r.cat] || []).push(r); }
+  const used = Math.min(DURATION, (st.end || Date.now()) - st.start);
+  return { res, right, wrong, empty, done: 60 - empty, perOp, cats, used, grade: grade(right) };
+}
+
+/* ---------- Zustand ---------- */
+let state = null;
+function save(){ try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e){} }
+function load(){ try { const s = localStorage.getItem(STORE_KEY); return s ? JSON.parse(s) : null; } catch(e){ return null; } }
+function nextAttempt(){
+  let n = 0;
+  try { n = parseInt(localStorage.getItem(ATTEMPT_KEY) || "0", 10) || 0; n++; localStorage.setItem(ATTEMPT_KEY, String(n)); }
+  catch(e){ n = 1; }
+  return n;
+}
+function newId(){ const c = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let s = ""; for (let i = 0; i < 6; i++) s += c[ri(0, c.length - 1)]; return s; }
+
+/* ---------- Ansichten ---------- */
+const $ = id => document.getElementById(id);
+function show(view){
+  for (const v of ["startView","testView","doneView"]) $(v).classList.toggle("hidden", v !== view);
+  const inTest = view === "testView";
+  $("timer").classList.toggle("hidden", !inTest);
+  $("mobileSubmit").classList.toggle("hidden", !inTest);
+  $("nrPill").classList.toggle("hidden", view === "startView");
+  if (state && state.nr) $("nrPill").textContent = "Nr. " + state.nr;
+}
+
+/* Start */
+$("startBtn").addEventListener("click", () => {
+  const v = $("nrInput").value.trim();
+  const n = parseInt(v, 10);
+  if (!/^\d{1,2}$/.test(v) || n < 1 || n > 40){ $("nrErr").textContent = "Gib deine Nummer aus der Klassenliste ein (1 bis 40)."; return; }
+  state = { phase:"test", nr:n, tasks: generateTasks(), answers: Array(60).fill(""), start: Date.now(), end:null,
+            endReason:null, attempt: nextAttempt(), id: newId(), active: 0 };
+  save(); startTest();
+});
+$("nrInput").addEventListener("keydown", e => { if (e.key === "Enter") $("startBtn").click(); });
+
+/* Test */
+let tick = null, fields = [];
+function buildSheet(){
+  const sh = $("sheet"); sh.innerHTML = ""; fields = [];
+  for (let r = 0; r < N_ROWS; r++){
+    const row = document.createElement("div"); row.className = "row";
+    for (let k = 0; k < N_COLS; k++){
+      const i = r * N_COLS + k, t = state.tasks[i];
+      const cell = document.createElement("div"); cell.className = "task";
+      cell.innerHTML = '<span class="a"></span><span class="op"></span><span class="b"></span><span class="eq">=</span>';
+      cell.querySelector(".a").textContent = fmt(t.a);
+      cell.querySelector(".op").textContent = OP_SHOW[t.op];
+      cell.querySelector(".b").textContent = fmtB(t.b);
+      const btn = document.createElement("button"); btn.type = "button"; btn.className = "ans";
+      btn.setAttribute("aria-label", "Ergebnis Aufgabe " + (i + 1));
+      btn.addEventListener("click", () => setActive(i));
+      cell.appendChild(btn); row.appendChild(cell); fields.push(btn);
+    }
+    sh.appendChild(row);
+  }
+  fields.forEach((_, i) => renderField(i));
+}
+function renderField(i){
+  const v = state.answers[i] || "";
+  fields[i].textContent = v.replace(/-/g, "−");
+  fields[i].classList.toggle("filled", v !== "");
+  fields[i].classList.toggle("active", i === state.active);
+}
+function setActive(i){
+  const old = state.active; state.active = Math.max(0, Math.min(59, i));
+  if (old != null && fields[old]) renderField(old);
+  renderField(state.active);
+  fields[state.active].scrollIntoView({ block:"nearest", behavior:"smooth" });
+  save();
+}
+function press(k){
+  if (!state || state.phase !== "test") return;
+  const i = state.active; let v = state.answers[i] || "";
+  if (k === "next"){ setActive(i + 1); return; }
+  if (k === "prev"){ setActive(i - 1); return; }
+  if (k === "back"){ v = v.slice(0, -1); }
+  else if (k === "-"){ v = v.startsWith("-") ? v.slice(1) : "-" + v; }
+  else if (k === ","){ if (!v.includes(",")) v = (v === "" || v === "-") ? v + "0," : v + ","; }
+  else if (/^\d$/.test(k)){
+    const digits = v.replace(/[^0-9]/g, "");
+    const dec = v.includes(",") ? v.split(",")[1].length : -1;
+    if (digits.length >= 5 || dec >= 2) return;
+    if (/^-?0$/.test(v)) v = v.slice(0, -1);    // führende Null ersetzen
+    v += k;
+  }
+  state.answers[i] = v; renderField(i); save();
+}
+document.querySelectorAll(".key").forEach(b => {
+  b.addEventListener("click", e => { e.preventDefault(); press(b.dataset.k); });
+});
+document.addEventListener("keydown", e => {
+  if (!state || state.phase !== "test" || !$("modal").classList.contains("hidden")) return;
+  const k = e.key;
+  if (/^\d$/.test(k)) press(k);
+  else if (k === "," || k === ".") press(",");
+  else if (k === "-" || k === "−") press("-");
+  else if (k === "Backspace") press("back");
+  else if (k === "Enter" || (k === "Tab" && !e.shiftKey) || k === "ArrowRight") press("next");
+  else if ((k === "Tab" && e.shiftKey) || k === "ArrowLeft") press("prev");
+  else if (k === "ArrowDown") setActive(state.active + 3);
+  else if (k === "ArrowUp") setActive(state.active - 3);
+  else return;
+  e.preventDefault();
+});
+function updateTimer(){
+  const left = state.start + DURATION - Date.now();
+  $("timer").textContent = mmss(left);
+  $("timer").classList.toggle("low", left <= 60000);
+  if (left <= 0) finish("time");
+}
+function startTest(){
+  show("testView"); buildSheet();
+  if (state.active == null) state.active = 0;
+  setActive(state.active);
+  updateTimer();
+  clearInterval(tick); tick = setInterval(updateTimer, 250);
+}
+function openSubmit(){
+  const open = state.answers.filter(a => !a).length;
+  ask("Test abgeben?",
+      open ? "Du hast noch " + open + (open === 1 ? " Aufgabe" : " Aufgaben") + " ohne Ergebnis. Möchtest du trotzdem abgeben?"
+           : "Du hast alle Aufgaben bearbeitet. Möchtest du den Test jetzt abgeben?",
+      "Abgeben", () => finish("manual"));
+}
+$("submitBtn").addEventListener("click", openSubmit);
+$("mobileSubmit").addEventListener("click", openSubmit);
+
+function finish(reason){
+  if (!state || state.phase !== "test") return;
+  clearInterval(tick);
+  state.phase = "done"; state.endReason = reason;
+  state.end = Math.min(Date.now(), state.start + DURATION);
+  save(); hideModal(); showDone();
+}
+
+/* Ende */
+let pdfA = null, pdfB = null;
+function fileBase(){ const d = new Date(state.start); return "Kopfrechentest_Nr" + pad2(state.nr) + "_" + d.getFullYear() + "-" + pad2(d.getMonth()+1) + "-" + pad2(d.getDate()); }
+function showDone(){
+  show("doneView");
+  const ev = evaluate(state);
+  $("doneTitle").textContent = state.endReason === "time" ? "Die Zeit ist um!" : "Geschafft!";
+  $("doneText").textContent = "Du hast " + ev.done + " von 60 Aufgaben bearbeitet. Lade jetzt beide Auswertungen herunter.";
+  pdfA = { name: fileBase() + "_Lehrkraft.pdf", bytes: buildPdfA(state, ev) };
+  pdfB = { name: fileBase() + "_meine_Auswertung.pdf", bytes: buildPdfB(state, ev) };
+  const canShare = !!(navigator.canShare && navigator.share && (() => { try { return navigator.canShare({ files:[new File([pdfA.bytes], pdfA.name, {type:"application/pdf"})] }); } catch(e){ return false; } })());
+  $("shA").classList.toggle("hidden", !canShare);
+  $("shB").classList.toggle("hidden", !canShare);
+}
+function download(p){
+  const blob = new Blob([p.bytes], { type:"application/pdf" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = p.name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+function share(p){
+  const f = new File([p.bytes], p.name, { type:"application/pdf" });
+  navigator.share({ files:[f], title:p.name }).catch(() => {});
+}
+$("dlA").addEventListener("click", () => download(pdfA));
+$("dlB").addEventListener("click", () => download(pdfB));
+$("shA").addEventListener("click", () => share(pdfA));
+$("shB").addEventListener("click", () => share(pdfB));
+$("newBtn").addEventListener("click", () => ask("Neuen Test starten?",
+  "Deine bisherigen Auswertungen sind danach auf diesem Gerät nicht mehr abrufbar. Hast du beide PDF-Dateien gespeichert?",
+  "Neuer Test", () => { state = null; try { localStorage.removeItem(STORE_KEY); } catch(e){} $("nrInput").value = ""; hideModal(); show("startView"); }));
+
+/* Dialog */
+let modalYes = null;
+function ask(title, text, yesLabel, onYes){
+  $("mTitle").textContent = title; $("mText").textContent = text; $("mYes").textContent = yesLabel;
+  modalYes = onYes; $("modal").classList.remove("hidden");
+}
+function hideModal(){ $("modal").classList.add("hidden"); modalYes = null; }
+$("mNo").addEventListener("click", hideModal);
+$("mYes").addEventListener("click", () => { const f = modalYes; hideModal(); if (f) f(); });
+
+/* ================================================================
+   PDF-Erzeugung (ohne externe Bibliothek, Schrift Helvetica)
+   ================================================================ */
+const FW={R:[278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584,761,556,278,222,556,333,1000,556,556,333,1000,667,333,1000,278,611,278,278,222,222,333,333,350,556,1000,333,1000,500,333,944,278,500,667,278,333,556,556,556,556,260,556,333,737,370,556,584,333,737,333,400,584,333,333,333,556,537,278,333,333,365,556,834,834,834,611,667,667,667,667,667,667,1000,722,667,667,667,667,278,278,278,278,722,722,778,778,778,778,778,584,778,722,722,722,722,667,667,611,556,556,556,556,556,556,889,500,556,556,556,556,278,278,278,278,556,556,556,556,556,556,556,584,611,556,556,556,556,500,556,500],B:[278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584,761,556,278,278,556,500,1000,556,556,333,1000,667,333,1000,278,611,278,278,278,278,500,500,350,556,1000,333,1000,556,333,944,278,500,667,278,333,556,556,556,556,280,556,333,737,370,556,584,333,737,333,400,584,333,333,333,611,556,278,333,333,365,556,834,834,834,611,722,722,722,722,722,722,1000,722,667,667,667,667,278,278,278,278,722,722,778,778,778,778,778,584,778,722,722,722,722,667,667,611,556,556,556,556,556,556,889,556,556,556,556,556,278,278,278,278,611,611,611,611,611,611,611,584,611,611,611,611,611,556,611,556]};
+const K = 72 / 25.4, PW = 210, PH = 297;
+const COL = { ink:"#061C63", frame:"#4A5F9E", green:"#1E8C3A", red:"#C62828", grey:"#7A86A8", light:"#C9D1E6", fillLight:"#EEF2FA" };
+const SHY = "­";
+const CP = { "€":0x80,"‚":0x82,"„":0x84,"…":0x85,"–":0x96,"—":0x97,"−":0x96,"‘":0x91,"’":0x92,"“":0x93,"”":0x94,"·":0xB7,"•":0x95 };
+function enc(s){
+  const out = [];
+  for (const ch of s){
+    if (ch === SHY) continue;
+    if (CP[ch] != null) out.push(CP[ch]);
+    else { const c = ch.charCodeAt(0); out.push(c < 256 ? c : 0x3F); }
+  }
+  return out;
+}
+function tw(s, size, bold){ const w = bold ? FW.B : FW.R; let t = 0; for (const c of enc(s)) t += w[c]; return t * size / 1000 / K; } // mm
+function rgb(hex){ const n = parseInt(hex.slice(1), 16); return [(n >> 16) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255].map(v => v.toFixed(3)).join(" "); }
+function n2(v){ return (Math.round(v * 100) / 100).toString(); }
+function pdfStr(s){
+  let o = "";
+  for (const c of enc(s)){
+    if (c === 40 || c === 41 || c === 92) o += "\\" + String.fromCharCode(c);
+    else if (c < 32 || c > 126) o += "\\" + c.toString(8).padStart(3, "0");
+    else o += String.fromCharCode(c);
+  }
+  return "(" + o + ")";
+}
+
+class Pdf {
+  constructor(){ this.pages = []; this.page = null; }
+  add(){ this.page = []; this.pages.push(this.page); return this; }
+  text(s, x, y, o){
+    o = o || {}; const size = o.size || 10, bold = !!o.bold;
+    let xx = x; const w = tw(s, size, bold);
+    if (o.align === "center") xx = x - w / 2; else if (o.align === "right") xx = x - w;
+    this.page.push("BT /F" + (bold ? 2 : 1) + " " + size + " Tf " + n2((o.wordSpace || 0) * K) + " Tw " + rgb(o.color || COL.ink) +
+      " rg " + n2(xx * K) + " " + n2((PH - y) * K) + " Td " + pdfStr(s) + " Tj ET");
+  }
+  rect(x, y, w, h, o){
+    o = o || {}; let s = "";
+    if (o.fill) s += rgb(o.fill) + " rg ";
+    if (o.stroke) s += rgb(o.stroke) + " RG " + n2((o.lw || 0.3) * K) + " w " + (o.dash ? "[" + n2(o.dash[0] * K) + " " + n2(o.dash[1] * K) + "] 0 d " : "[] 0 d ");
+    s += n2(x * K) + " " + n2((PH - y - h) * K) + " " + n2(w * K) + " " + n2(h * K) + " re " + (o.fill && o.stroke ? "B" : o.fill ? "f" : "S");
+    this.page.push(s);
+  }
+  line(x1, y1, x2, y2, o){
+    o = o || {};
+    this.page.push(rgb(o.color || COL.ink) + " RG " + n2((o.lw || 0.3) * K) + " w " + (o.dash ? "[" + n2(o.dash[0] * K) + " " + n2(o.dash[1] * K) + "] 0 d " : "[] 0 d ") +
+      n2(x1 * K) + " " + n2((PH - y1) * K) + " m " + n2(x2 * K) + " " + n2((PH - y2) * K) + " l S");
+  }
+  bytes(){
+    const objs = [];
+    objs.push("<< /Type /Catalog /Pages 2 0 R >>");
+    const kids = this.pages.map((_, i) => (5 + i * 2) + " 0 R").join(" ");
+    objs.push("<< /Type /Pages /Kids [" + kids + "] /Count " + this.pages.length + " >>");
+    objs.push("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
+    objs.push("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");
+    this.pages.forEach((p, i) => {
+      objs.push("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + n2(PW * K) + " " + n2(PH * K) + "] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents " + (6 + i * 2) + " 0 R >>");
+      const content = p.join("\n");
+      objs.push("<< /Length " + content.length + " >>\nstream\n" + content + "\nendstream");
+    });
+    let out = "%PDF-1.4\n"; const offs = [];
+    objs.forEach((o, i) => { offs.push(out.length); out += (i + 1) + " 0 obj\n" + o + "\nendobj\n"; });
+    const xref = out.length;
+    out += "xref\n0 " + (objs.length + 1) + "\n0000000000 65535 f \n";
+    for (const o of offs) out += String(o).padStart(10, "0") + " 00000 n \n";
+    out += "trailer\n<< /Size " + (objs.length + 1) + " /Root 1 0 R >>\nstartxref\n" + xref + "\n%%EOF";
+    const b = new Uint8Array(out.length);
+    for (let i = 0; i < out.length; i++) b[i] = out.charCodeAt(i) & 255;
+    return b;
+  }
+}
+
+/* Seitenlayout im Arbeitsblatt-Format */
+const ML = 20, MR = 20, CW = PW - ML - MR, TOP = 15, BOTTOM = 274;
+class Doc {
+  constructor(title){ this.pdf = new Pdf(); this.title = title; this.newPage(true); }
+  newPage(first){
+    this.pdf.add();
+    if (first){
+      const h = 10, dateW = 34;
+      this.pdf.rect(ML, TOP, CW, h, { stroke:COL.frame, lw:0.5, fill:"#FFFFFF" });
+      this.pdf.line(ML + CW - dateW, TOP, ML + CW - dateW, TOP + h, { color:COL.frame, lw:0.5 });
+      this.pdf.text(this.title, ML + (CW - dateW) / 2, TOP + 6.6, { size:13, bold:true, align:"center" });
+      this.y = TOP + h + 9;
+    } else this.y = TOP + 4;
+  }
+  ensure(h){ if (this.y + h > BOTTOM){ this.newPage(false); return true; } return false; }
+  heading(s){ this.ensure(14); this.y += 2; this.pdf.text(s, ML, this.y, { size:12, bold:true }); this.y += 6; }
+  /* Absatz mit Zeilenumbruch, Silbentrennung (weiche Trennstellen) und Blocksatz ab 3 Zeilen */
+  para(text, o){
+    o = o || {}; const size = o.size || 10, bold = !!o.bold, lh = o.lh || size * 0.48, x = o.x != null ? o.x : ML, width = o.width || CW;
+    const lines = wrap(text.replace(/\|/g, SHY), width, size, bold);
+    const justify = lines.length > 2;
+    lines.forEach((ln, i) => {
+      this.ensure(lh);
+      let ws = 0;
+      const plain = ln.replace(new RegExp(SHY, "g"), "");
+      const spaces = (plain.match(/ /g) || []).length;
+      if (justify && i < lines.length - 1 && spaces > 0) ws = (width - tw(plain, size, bold)) / spaces;
+      this.pdf.text(plain, x, this.y, { size, bold, color:o.color, wordSpace:ws });
+      this.y += lh;
+    });
+  }
+  finish(){
+    const n = this.pdf.pages.length;
+    this.pdf.pages.forEach((p, i) => {
+      this.pdf.page = p;
+      this.pdf.line(ML, 281, ML + CW, 281, { color:COL.frame, lw:0.4, dash:[1.6, 1.2] });
+      this.pdf.text("Sr", ML, 286, { size:9, color:COL.ink });
+      if (n > 1) this.pdf.text("Seite " + (i + 1) + " von " + n, ML + CW, 286, { size:9, align:"right", color:COL.ink });
+    });
+    return this.pdf.bytes();
+  }
+}
+function wrap(text, width, size, bold){
+  const words = text.split(" ").filter(w => w !== "");
+  const lines = []; let cur = "";
+  const W = s => tw(s, size, bold);
+  let i = 0;
+  while (i < words.length){
+    const w = words[i];
+    const trial = cur ? cur + " " + w : w;
+    if (W(trial) <= width){ cur = trial; i++; continue; }
+    const parts = w.split(SHY);
+    let done = false;
+    for (let k = parts.length - 1; k >= 1; k--){
+      const head = parts.slice(0, k).join("") + "-";
+      const t2 = cur ? cur + " " + head : head;
+      if (W(t2) <= width){
+        lines.push(t2); cur = ""; words[i] = parts.slice(k).join(SHY); done = true; break;
+      }
+    }
+    if (done) continue;
+    if (cur){ lines.push(cur); cur = ""; }
+    else { lines.push(w); i++; }
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+/* Aufgabenzeile im Raster zeichnen */
+function drawTask(pdf, t, x0, y, o){
+  const size = o.size || 10, m = "–";
+  pdf.text(fmt(t.a, m), x0 + 13, y, { size, align:"right" });
+  pdf.text(t.op === "-" ? m : OP_SHOW[t.op], x0 + 15.6, y, { size, align:"center" });
+  pdf.text(fmtB(t.b, m), x0 + 18.2, y, { size });
+  pdf.text("=", x0 + 30.5, y, { size, align:"center" });
+}
+
+/* ---------- Teil A: Lehrkraft ---------- */
+function buildPdfA(st, ev){
+  const d = new Doc("Kopfrechentest – Auswertung für die Lehrkraft");
+  const p = d.pdf, s = new Date(st.start);
+  const date = pad2(s.getDate()) + "." + pad2(s.getMonth()+1) + "." + s.getFullYear();
+  const time = pad2(s.getHours()) + ":" + pad2(s.getMinutes()) + " Uhr";
+  const info = [
+    ["Nummer in der Klassenliste:", String(st.nr)],
+    ["Datum, Beginn:", date + ", " + time],
+    ["Bearbeitungszeit:", mmss(ev.used) + " von 12:00 min"],
+    ["Abgabe:", st.endReason === "time" ? "Zeit abgelaufen" : "selbst abgegeben"],
+    ["Bearbeitet:", ev.done + " von 60 Aufgaben"],
+    ["Richtig / falsch / leer:", ev.right + " / " + ev.wrong + " / " + ev.empty],
+  ];
+  let y = d.y;
+  info.forEach((r, i) => {
+    const col = i % 2, row = Math.floor(i / 2);
+    const x = ML + col * 92, yy = y + row * 5.6;
+    p.text(r[0], x, yy, { size:9, color:COL.grey });
+    p.text(r[1], x + (col ? 38 : 45), yy, { size:9, bold:true });
+  });
+  // Notenfeld
+  y += 3 * 5.6 + 2;
+  p.rect(ML, y, CW, 11, { stroke:COL.frame, lw:0.4, fill:COL.fillLight });
+  p.text("Richtige Aufgaben: " + ev.right + " von 60", ML + 4, y + 7.2, { size:11, bold:true });
+  p.text("Note: " + ev.grade, ML + CW - 4, y + 7.4, { size:14, bold:true, align:"right" });
+  p.text("(ab 54: 1 · ab 48: 2 · ab 42: 3 · ab 36: 4 · ab 20: 5)", ML + 108, y + 7.2, { size:8, color:COL.grey, align:"center" });
+  y += 17;
+  // Rechenarten
+  p.text("Ergebnis nach Rechenart", ML, y, { size:11, bold:true }); y += 3;
+  const cx = [ML, ML + 50, ML + 80, ML + 110, ML + 145], hh = 5.6;
+  const head = ["Rechenart", "richtig", "falsch", "nicht bearbeitet", "von"];
+  p.rect(ML, y, CW, hh, { fill:COL.fillLight });
+  head.forEach((h, i) => p.text(h, cx[i] + 2, y + 4, { size:9, bold:true }));
+  y += hh;
+  for (const op of OPS){
+    const q = ev.perOp[op];
+    [OP_NAME[op], String(q.ok), String(q.wrong), String(q.empty), String(q.total)].forEach((v, i) => p.text(v, cx[i] + 2, y + 4, { size:9 }));
+    p.line(ML, y + hh, ML + CW, y + hh, { color:COL.light, lw:0.2 });
+    y += hh;
+  }
+  y += 6;
+  // Ergebnisraster
+  p.text("Bearbeitete Aufgaben", ML, y, { size:11, bold:true });
+  // Legende
+  const lx = ML + 52;
+  p.rect(lx, y - 3, 4, 3.4, { stroke:COL.green, lw:0.5 }); p.text("richtig", lx + 5.5, y, { size:8 });
+  p.rect(lx + 20, y - 3, 4, 3.4, { stroke:COL.red, lw:0.5 }); p.text("falsch", lx + 25.5, y, { size:8 });
+  p.rect(lx + 39, y - 3, 4, 3.4, { stroke:COL.red, lw:0.5, dash:[0.8, 0.6] }); p.text("nicht bearbeitet", lx + 44.5, y, { size:8 });
+  p.text("grau: richtiges Ergebnis", lx + 72, y, { size:8, color:COL.grey });
+  y += 3;
+  const rowH = 8.2, colW = CW / 3;
+  p.rect(ML, y, CW, rowH * N_ROWS, { stroke:COL.frame, lw:0.3 });
+  for (let r = 0; r < N_ROWS; r++){
+    const yy = y + r * rowH;
+    if (r > 0) p.line(ML, yy, ML + CW, yy, { color:COL.light, lw:0.2 });
+    for (let k = 0; k < N_COLS; k++){
+      const i = r * N_COLS + k, R = ev.res[i], x0 = ML + k * colW;
+      if (k > 0 && r === 0) p.line(x0, y, x0, y + rowH * N_ROWS, { color:COL.light, lw:0.2 });
+      const base = yy + 5.4;
+      drawTask(p, R.t, x0, base, { size:9.5 });
+      const bx = x0 + 32.6, bw = 14.2, by = yy + 1.3, bh = 5.6;
+      if (R.cat === "ok") p.rect(bx, by, bw, bh, { stroke:COL.green, lw:0.55 });
+      else if (R.cat === "leer") p.rect(bx, by, bw, bh, { stroke:COL.red, lw:0.45, dash:[0.8, 0.6] });
+      else p.rect(bx, by, bw, bh, { stroke:COL.red, lw:0.55 });
+      if (R.raw) p.text(R.raw.replace(/-/g, "–"), bx + 1.3, base, { size:9.5, bold:true });
+      if (R.cat !== "ok") p.text(fmt(R.t.c, "–"), x0 + colW - 1.2, base, { size:7.5, color:COL.grey, align:"right" });
+    }
+  }
+  d.y = y + rowH * N_ROWS + 6;
+  p.text("Test-ID: " + st.id + " · Versuch " + st.attempt + " auf diesem Gerät", ML, d.y, { size:8, color:COL.grey });
+  return d.finish();
+}
+
+/* ---------- Teil B: Schülerin / Schüler ---------- */
+function buildPdfB(st, ev){
+  const d = new Doc("Kopfrechentest – Deine Auswertung");
+  const p = d.pdf;
+  d.para("Du hast " + ev.right + " von 60 Auf|ga|ben rich|tig ge|löst. " +
+         (ev.wrong ? ev.wrong + (ev.wrong === 1 ? " Auf|ga|be hast du falsch ge|löst" : " Auf|ga|ben hast du falsch ge|löst") : "Du hast kei|ne Auf|ga|be falsch ge|löst") +
+         (ev.empty ? " und " + ev.empty + (ev.empty === 1 ? " Auf|ga|be" : " Auf|ga|ben") + " nicht be|ar|bei|tet." : "."),
+         { size:10.5 });
+  d.y += 3;
+
+  // 1. Rechenarten
+  d.heading("1. Bei welcher Rechenart du die meisten Fehler gemacht hast");
+  const maxW = Math.max(...OPS.map(op => ev.perOp[op].wrong));
+  const worst = OPS.filter(op => ev.perOp[op].wrong === maxW && maxW > 0);
+  let sent;
+  if (!worst.length) sent = "Du hast bei kei|ner Re|chen|art ei|ne Auf|ga|be falsch ge|löst. Sehr gut!";
+  else if (worst.length === 1) sent = "Am häu|figs|ten falsch ge|löst hast du Auf|ga|ben " + OP_ZUR[worst[0]] + " (" + maxW + " von 15). Übe die|se Re|chen|art be|son|ders.";
+  else sent = "Am häu|figs|ten falsch ge|löst hast du Auf|ga|ben " + worst.map(o => OP_ZUR[o]).join(" und ").replace(/ und (?=.* und )/g, ", ") + " (je " + maxW + " von 15).";
+  d.para(sent, { size:10 });
+  d.y += 1.5;
+  // Balken
+  const bx = ML + 34, bwMax = 100;
+  for (const op of OPS){
+    d.ensure(7);
+    const q = ev.perOp[op], y = d.y;
+    p.text(OP_NAME[op], ML, y + 3.3, { size:9.5, bold:worst.includes(op) });
+    p.rect(bx, y, bwMax, 4.2, { stroke:COL.light, lw:0.2 });
+    const unit = bwMax / 15;
+    if (q.ok) p.rect(bx, y, q.ok * unit, 4.2, { fill:COL.green });
+    if (q.wrong) p.rect(bx + q.ok * unit, y, q.wrong * unit, 4.2, { fill:COL.red });
+    p.text(q.ok + " richtig · " + q.wrong + " falsch · " + q.empty + " offen", bx + bwMax + 3, y + 3.3, { size:8.5 });
+    d.y += 6.2;
+  }
+  d.y += 3;
+
+  // 2. Typische Fehler
+  d.heading("2. Deine typischen Fehler");
+  const present = CAT_ORDER.filter(c => ev.cats[c]);
+  if (!present.length) d.para("Du hast kei|ne Feh|ler ge|macht. Groß|ar|tig!", { size:10 });
+  present.sort((a, b) => (a === "leer") - (b === "leer") || ev.cats[b].length - ev.cats[a].length);
+  for (const c of present){
+    const list = ev.cats[c], info = CATS[c];
+    d.ensure(26);
+    d.y += 1.5;
+    p.rect(ML, d.y - 3.6, 1.4, 4.6, { fill:COL.frame });
+    p.text(info.title + " (" + list.length + "-mal)", ML + 3.5, d.y, { size:10.5, bold:true });
+    d.y += 5.5;
+    if (c !== "leer"){
+      for (const r of list.slice(0, 2)){
+        d.ensure(5);
+        const t = r.t;
+        p.text("Aufgabe:", ML + 3.5, d.y, { size:9, color:COL.grey });
+        p.text(taskText(t, "–") + " = ?", ML + 20, d.y, { size:9.5 });
+        p.text("deine Antwort:", ML + 70, d.y, { size:9, color:COL.grey });
+        p.text(r.raw.replace(/-/g, "–") || "–", ML + 94, d.y, { size:9.5, bold:true, color:COL.red });
+        p.text("richtig:", ML + 118, d.y, { size:9, color:COL.grey });
+        p.text(fmt(t.c, "–"), ML + 131, d.y, { size:9.5, bold:true, color:COL.green });
+        d.y += 4.8;
+      }
+      d.y += 0.8;
+    }
+    d.para(info.text, { size:9.5, x:ML + 3.5, width:CW - 3.5 });
+    d.y += 3;
+  }
+
+  // 3. Wiederholung
+  const rep = ev.res.filter(r => r.cat !== "ok");
+  d.y += 2;
+  d.ensure(34);
+  d.heading("3. Aufgaben zum Wiederholen");
+  if (!rep.length){ d.para("Du hast al|le Auf|ga|ben rich|tig ge|löst. Es gibt nichts zu wie|der|ho|len.", { size:10 }); }
+  else {
+    d.para("Be|rech|ne die fol|gen|den Auf|ga|ben noch ein|mal. Schrei|be das Er|geb|nis in das lee|re Feld.", { size:10 });
+    d.y += 2;
+    const rowH = 10, colW = CW / 3;
+    for (let i = 0; i < rep.length; i += 3){
+      d.ensure(rowH);
+      const y = d.y;
+      for (let k = 0; k < 3 && i + k < rep.length; k++){
+        const x0 = ML + k * colW;
+        drawTask(p, rep[i + k].t, x0, y + 6.2, { size:10 });
+        p.rect(x0 + 33, y + 1.6, 18, 6.6, { stroke:COL.frame, lw:0.3 });
+      }
+      p.line(ML, y + rowH, ML + CW, y + rowH, { color:COL.light, lw:0.2 });
+      d.y += rowH;
+    }
+  }
+  return d.finish();
+}
+
+/* ---------- Start ---------- */
+(function init(){
+  state = load();
+  if (state && state.phase === "test"){
+    if (Date.now() >= state.start + DURATION){ state.phase = "test"; finish("time"); }
+    else startTest();
+  } else if (state && state.phase === "done") showDone();
+  else { state = null; show("startView"); }
+})();
+</script>
+</body>
+</html>

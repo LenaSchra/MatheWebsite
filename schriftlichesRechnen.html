@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Schriftlich rechnen</title>
+<style>
+:root{
+  --dark:#061C63; --mid:#4A5F9E; --light:#E3E9F8; --bg:#EEF2FB;
+  --ok:#1E7B4A; --okbg:#E4F4EB; --bad:#B3261E; --badbg:#FCEAE8;
+  --star:#F2B01E; --hint:#FFF5D6; --cell:46px;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--dark);font-family:Verdana,Geneva,sans-serif;font-size:17px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+.top{background:var(--dark);color:#fff;padding:12px 20px}
+.top strong{font-size:19px}
+#app{max-width:900px;margin:0 auto;padding:18px 14px 70px}
+body.kpon #app{padding-bottom:170px}
+h1{font-size:28px;margin:0 0 8px}
+h2{font-size:21px;margin:0 0 8px}
+h3{font-size:17px;margin:0 0 6px}
+p{margin:6px 0}
+.small{font-size:14px;color:var(--mid)}
+.card{background:#fff;border-radius:14px;box-shadow:0 3px 14px rgba(6,28,99,.13);padding:20px 22px;margin-bottom:18px}
+.nav{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.btn{background:var(--dark);color:#fff;border:2px solid var(--dark);border-radius:10px;padding:11px 20px;font:inherit;font-weight:bold;cursor:pointer;min-height:44px}
+.btn:hover:not(:disabled){background:var(--mid);border-color:var(--mid)}
+.btn.sec{background:#fff;color:var(--dark);border-color:var(--mid)}
+.btn.sec:hover:not(:disabled){background:var(--light)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.big{font-size:18px;padding:14px 26px}
+
+/* Startseite */
+.ops{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.opbtn{background:#fff;border:none;border-radius:14px;box-shadow:0 3px 14px rgba(6,28,99,.13);padding:20px 16px;font:inherit;color:var(--dark);cursor:pointer;text-align:center}
+.opbtn:hover{box-shadow:0 5px 20px rgba(6,28,99,.25);transform:translateY(-2px)}
+.opsym{width:76px;height:76px;border-radius:50%;background:var(--dark);color:#fff;font-size:46px;line-height:74px;margin:0 auto 10px;font-weight:bold}
+.opname{font-size:19px;font-weight:bold}
+
+/* Sterne */
+.starbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.starbar .cnt{font-weight:bold;min-width:56px}
+.starbar .row{display:flex;gap:2px;flex-wrap:wrap}
+.s{font-size:20px;color:#CBD3EA;line-height:1}
+.s.f{color:var(--star)}
+.s.pop{animation:pop .6s ease-out}
+@keyframes pop{0%{transform:scale(.3)}60%{transform:scale(1.5)}100%{transform:scale(1)}}
+.stars{color:var(--star);letter-spacing:1px}
+.certbadge{background:#FFF1C9;border:2px solid var(--star);border-radius:20px;padding:1px 10px;font-size:14px;font-weight:bold}
+@media (prefers-reduced-motion:reduce){.s.pop{animation:none}}
+
+/* Stufenliste */
+.lvl{display:grid;grid-template-columns:54px 1fr auto;gap:14px;align-items:center}
+.lnum{width:54px;height:54px;border-radius:50%;background:var(--dark);color:#fff;font-size:26px;font-weight:bold;text-align:center;line-height:54px}
+.lvl h3{margin-bottom:2px}
+.req{font-size:14.5px;background:var(--light);border-radius:8px;padding:6px 10px;margin-top:8px}
+details.help{background:var(--light);border-radius:10px;padding:10px 14px;margin-top:12px}
+details.help summary{cursor:pointer;font-weight:bold}
+@media (max-width:620px){.lvl{grid-template-columns:44px 1fr}.lvl .btn{grid-column:1/-1}.lnum{width:44px;height:44px;line-height:44px;font-size:21px}}
+
+/* Aufgabe */
+.taskhead{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+.badge{background:var(--dark);color:#fff;border-radius:20px;padding:3px 14px;font-weight:bold;font-size:15px}
+.stmt{font-size:19px}
+.step{border:2px solid var(--light);border-radius:12px;padding:14px 16px;margin:14px 0}
+.step.locked{opacity:.4;pointer-events:none}
+.step h3{margin:0 0 8px}
+.estrow,.corrrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+input.est,input.corr{font:inherit;font-size:20px;padding:8px 12px;border:2px solid #b8c4e6;border-radius:8px;width:190px;color:var(--dark);background:#fff}
+input.corr.short{width:90px}
+input.est:focus,input.corr:focus{outline:none;border-color:var(--mid);box-shadow:0 0 0 3px rgba(74,95,158,.25)}
+input.est[readonly]{background:var(--okbg);border-color:var(--ok)}
+.opt{display:flex;gap:12px;align-items:center;border:2px solid var(--light);border-radius:10px;padding:10px 14px;margin:8px 0;cursor:pointer}
+.opt.on{border-color:var(--mid);background:var(--light)}
+.opt input{width:22px;height:22px;flex:none}
+
+/* Rechenschema */
+.scheme{display:inline-block;padding:6px 4px;max-width:100%;overflow-x:auto}
+.srow{display:flex;align-items:center}
+.sign{width:calc(var(--cell)*.8);text-align:center;font-size:calc(var(--cell)*.6);font-weight:bold;flex:none}
+.c{width:var(--cell);height:var(--cell);margin:2px;flex:none;display:flex;align-items:center;justify-content:center;font-size:calc(var(--cell)*.62);color:var(--dark);font-family:inherit}
+.c.opc{font-weight:bold;color:var(--mid)}
+input.c,button.c{border:2px solid #b8c4e6;border-radius:8px;background:#fff;text-align:center;padding:0}
+input.c:focus{outline:none;border-color:var(--mid);box-shadow:0 0 0 3px rgba(74,95,158,.3)}
+input.c:disabled{background:#f1f3f9;border-color:#e0e5f3}
+.lrow{display:flex;align-items:center;margin:2px 0}
+.lrow .sign{height:4px}
+.lc{width:calc(var(--cell) + 4px);height:4px;flex:none}
+.lc.on{background:var(--dark)}
+.lrow.thin .lc{height:2px}
+.lrow.thin .lc.on{background:#9fb0dd}
+.srow.carry .c{height:calc(var(--cell)*.58);font-size:calc(var(--cell)*.4);color:var(--mid)}
+.srow.carry input.c{border-style:dashed;border-color:#9fb0dd}
+.srow.res .c{font-weight:bold}
+.c.gap{background:#FFF9E0;border-color:#E0C75A}
+.c.firstp{background:#FFE8B3;border-radius:8px}
+.c.bad{border-color:var(--bad)!important;background:var(--badbg)!important;color:var(--bad)}
+.c.good{border-color:var(--ok)!important;background:var(--okbg)!important;color:var(--ok)}
+button.c.sel{cursor:pointer;border-style:dashed;border-color:var(--mid)}
+button.c.sel:hover:not(:disabled){background:var(--light)}
+button.c.sel.chosen{background:#FFE8B3;border:2px solid #D98A00}
+button.c:disabled{cursor:default}
+.c.sym{font-weight:bold}
+.sym0{color:#C92A2A}.sym1{color:#1864AB}.sym2{color:#2B8A3E}.sym3{color:#862E9C}.sym4{color:#D9730D}.sym5{color:#0B7285}.sym6{color:#A61E4D}.sym7{color:#5C940D}.sym8{color:#364FC7}.sym9{color:#6B4F1D}
+.symans{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px}
+.symans label{display:flex;align-items:center;gap:6px;font-size:22px;font-weight:bold}
+.symans input{width:52px;height:52px;font:inherit;font-size:24px;text-align:center;border:2px solid #b8c4e6;border-radius:8px;color:var(--dark)}
+.c.sym.filled{background:var(--light);border-radius:8px}
+.symans input.tip{background:#FFF5D6;border-color:var(--star)}
+.symans input:focus{outline:none;border-color:var(--mid);box-shadow:0 0 0 3px rgba(74,95,158,.3)}
+
+/* Division: erste Teilzahl, Vielfachen-Tabelle */
+.pchoice{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0}
+.pbtn{font-size:20px;min-width:80px}
+.pbtn.chosen{background:var(--light)}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;margin-top:8px}
+.mgrid label{display:flex;align-items:center;gap:6px}
+input.mt{width:76px;font:inherit;font-size:18px;padding:4px 8px;border:2px solid #b8c4e6;border-radius:8px;text-align:center;color:var(--dark);background:#fff}
+input.mt:focus{outline:none;border-color:var(--mid)}
+input.mt.good{border-color:var(--ok);background:var(--okbg)}
+input.mt.bad{border-color:var(--bad);background:var(--badbg)}
+
+/* Rückmeldungen */
+.fb{border-radius:12px;padding:14px 16px;margin:12px 0;border-left:8px solid}
+.fb.ok{background:var(--okbg);border-color:var(--ok)}
+.fb.bad{background:var(--badbg);border-color:var(--bad)}
+.fb.info{background:var(--light);border-color:var(--mid)}
+.fb p{margin:6px 0}
+.hint{background:var(--hint);border:2px solid var(--star);border-radius:12px;padding:14px 16px;margin:12px 0}
+.hint .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.solwrap{margin-top:10px}
+.earn{font-size:24px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+
+/* Ziffernfeld für das iPad */
+.kp{position:fixed;left:0;right:0;bottom:0;background:#fff;box-shadow:0 -3px 14px rgba(6,28,99,.22);padding:8px 8px calc(8px + env(safe-area-inset-bottom));display:flex;flex-wrap:wrap;gap:6px;justify-content:center;z-index:50;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.kpk{width:54px;height:54px;border:none;border-radius:10px;background:var(--light);color:var(--dark);font:inherit;font-size:24px;font-weight:bold;cursor:pointer;touch-action:manipulation}
+.kpk.fn{background:var(--mid);color:#fff}
+.kpk:active{transform:scale(.93)}
+</style>
+</head>
+<body>
+<div class="top"><strong>Schriftlich rechnen</strong></div>
+<div id="app"><noscript>Bitte aktiviere JavaScript, damit die Übungen funktionieren.</noscript></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ======================= LOGIK-START ======================= */
+var STAR_GOAL=15;
+function rnd(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+function pick(a){return a[rnd(0,a.length-1)];}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=rnd(0,i);var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function sum(a){return a.reduce(function(x,y){return x+y;},0);}
+function digs(n){return String(n).split('').map(Number);}
+function randNum(len){return rnd(Math.pow(10,len-1),Math.pow(10,len)-1);}
+function noZeroNum(len){var s='';for(var i=0;i<len;i++) s+=rnd(1,9);return Number(s);}
+function fmt(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,' ');}
+var COLNAMES=['Einerspalte','Zehnerspalte','Hunderterspalte','Tausenderspalte','Zehntausenderspalte','Hunderttausenderspalte','Millionenspalte','Zehnmillionenspalte'];
+function colName(p){return COLNAMES[p]||('Spalte '+(p+1));}
+function circ(n){return String.fromCharCode(0x245F+n);}
+
+/* Rechnet Spalte für Spalte. Addition: Übertrag = Zehner der Spaltensumme.
+   Subtraktion (Ergänzungsverfahren): Subtrahenden + Übertrag werden zur Ziffer des Minuenden ergänzt. */
+function compute(op,operands){
+  var maxLen=Math.max.apply(null,operands.map(function(o){return String(o).length;}));
+  var L=maxLen+1;
+  var dig=operands.map(function(o){return digs(o).reverse();});
+  var carry=[0],res=[];
+  for(var p=0;p<L;p++){
+    var g=function(i){return dig[i][p]||0;};
+    if(op==='+'){
+      var s=carry[p];
+      for(var i=0;i<dig.length;i++) s+=g(i);
+      res[p]=s%10; carry[p+1]=Math.floor(s/10);
+    }else{
+      var t=carry[p];
+      for(var j=1;j<dig.length;j++) t+=g(j);
+      var m=g(0),c=0;
+      if(t>m) c=Math.ceil((t-m)/10);
+      res[p]=m+10*c-t; carry[p+1]=c;
+    }
+  }
+  var value=op==='+'?sum(operands):operands[0]-sum(operands.slice(1));
+  var len=String(value).length;
+  return {value:value,len:len,cl:Math.max(len,maxLen),res:res.slice(0,len),carry:carry.slice(0,L+1),L:L};
+}
+function countCarries(c){var n=0;for(var p=1;p<c.cl;p++) if(c.carry[p]>0) n++;return n;}
+function roundLead(n){var l=String(n).length,f=Math.pow(10,l-1);return Math.round(n/f)*f;}
+function estimate(op,operands){var r=operands.map(roundLead);return op==='+'?sum(r):r[0]-sum(r.slice(1));}
+
+/* ---------- Überschlag: Beispiel und Prüfung, ob ein Überschlag sinnvoll ist ---------- */
+function leadF(n){var l=String(n).length;return l===1?1:Math.pow(10,l-1);}
+function lo(n){var f=leadF(n);return f===1?n:Math.floor(n/f)*f;}
+function hi(n){var f=leadF(n);return f===1?n:Math.ceil(n/f)*f;}
+function exactValue(op,o){return op==='+'?sum(o):op==='-'?o[0]-sum(o.slice(1)):op==='*'?o[0]*o[1]:o[0]/o[1];}
+/* Bereich, in dem ein vernünftiger Überschlag liegt: jede Zahl auf ihre größte Stelle ab- oder aufgerundet, plus 10 % Spielraum. */
+function estimateRange(op,o){
+  var a,b;
+  if(op==='+'){a=sum(o.map(lo));b=sum(o.map(hi));}
+  else if(op==='-'){a=lo(o[0])-sum(o.slice(1).map(hi));b=hi(o[0])-sum(o.slice(1).map(lo));}
+  else if(op==='*'){a=lo(o[0])*lo(o[1]);b=hi(o[0])*hi(o[1]);}
+  else{a=lo(o[0])/hi(o[1]);b=hi(o[0])/lo(o[1]);}
+  var ex=exactValue(op,o),sl=Math.max(0.1*Math.abs(ex),1);
+  return [Math.min(a,ex)-sl,Math.max(b,ex)+sl];
+}
+function estimateOk(op,o,v){var r=estimateRange(op,o);return v>=r[0]&&v<=r[1];}
+function sigDigits(n){return String(n).replace(/0+$/,'').length;}
+/* Division: passende Zahlen suchen, die sich leicht im Kopf teilen lassen (z. B. 2 856 : 4 ≈ 2 800 : 4) */
+function divEstimate(a,d){
+  var d2=roundLead(d),L=String(a).length,best=null;
+  for(var k=Math.max(0,L-3);k<=L-1;k++){
+    var f=Math.pow(10,k);
+    for(var m=1;m<=99;m++){
+      var x=m*f;
+      if(Math.abs(x-a)>0.2*a||x%d2!==0||sigDigits(x)>2) continue;
+      var q=x/d2,sc=sigDigits(q)+Math.abs(x-a)/a*10;
+      if(!best||sc<best.sc) best={x:x,q:q,sc:sc};
+    }
+  }
+  if(!best){var q2=Math.max(1,roundLead(Math.round(a/d2)));best={x:q2*d2,q:q2};}
+  return {a:best.x,d:d2,q:best.q};
+}
+function estimateText(op,operands){
+  if(op==='*'){var r=operands.map(roundLead);return fmt(r[0])+' · '+fmt(r[1])+' = '+fmt(r[0]*r[1]);}
+  if(op===':'){var e=divEstimate(operands[0],operands[1]);return fmt(e.a)+' : '+fmt(e.d)+' = '+fmt(e.q);}
+  var r2=operands.map(roundLead);
+  return r2.map(fmt).join(op==='+'?' + ':' − ')+' = '+fmt(estimate(op,operands));
+}
+
+function genOperands(op,spec){
+  var last=null;
+  for(var t=0;t<3000;t++){
+    var operands,n=Array.isArray(spec.n)?rnd(spec.n[0],spec.n[1]):spec.n;
+    if(op==='+'){
+      operands=[];
+      for(var i=0;i<n;i++) operands.push(randNum(rnd(spec.lens[0],spec.lens[1])));
+    }else{
+      var ml=rnd(spec.mlens[0],spec.mlens[1]);
+      operands=[randNum(ml)];
+      for(var k=0;k<n;k++) operands.push(randNum(Math.min(ml,rnd(spec.lens[0],spec.lens[1]))));
+      if(operands[0]-sum(operands.slice(1))<10) continue;
+    }
+    if(operands.some(function(o){return o%10===0;})) continue;
+    if(spec.differ){
+      var set={};operands.forEach(function(o){set[String(o).length]=1;});
+      if(Object.keys(set).length<2) continue;
+    }
+    var c=compute(op,operands);
+    last={op:op,operands:operands,c:c};
+    var nc=countCarries(c);
+    if(nc<(spec.minC||0)||nc>(spec.maxC||99)) continue;
+    if(spec.estPos&&estimate(op,operands)<=0) continue;
+    return last;
+  }
+  if(last) return last;
+  var fb=op==='+'?[3478,2956,845]:[7845,2368,1457];
+  return {op:op,operands:fb,c:compute(op,fb)};
+}
+
+/* Lückenaufgabe: höchstens eine Lücke pro Spalte -> die Lösung ist eindeutig. */
+function genLuecke(op,spec){
+  var g=genOperands(op,spec);
+  var rows=g.operands.map(String).concat([String(g.c.value)]);
+  var byCol={};
+  rows.forEach(function(s,ri){for(var p=0;p<s.length;p++){(byCol[p]=byCol[p]||[]).push(ri);}});
+  var cols=Object.keys(byCol).map(Number);
+  for(var t=0;t<300;t++){
+    var k=Math.min(cols.length,rnd(4,5));
+    var chosen=shuffle(cols).slice(0,k);
+    var blanks=chosen.map(function(p){return {p:p,ri:pick(byCol[p])};});
+    var touched={};blanks.forEach(function(b){touched[b.ri]=1;});
+    if(Object.keys(touched).length<2) continue;
+    var ok=rows.every(function(s,ri){return blanks.filter(function(b){return b.ri===ri;}).length<s.length;});
+    if(!ok) continue;
+    return {kind:'luecke',op:op,operands:g.operands,c:g.c,rows:rows,blanks:blanks};
+  }
+  var bl=[0,1,2,3].map(function(p){return {p:p,ri:p%2===0?rows.length-1:0};});
+  return {kind:'luecke',op:op,operands:g.operands,c:g.c,rows:rows,blanks:bl};
+}
+
+/* Fehleraufgabe: genau eine falsche Ziffer im Ergebnis. */
+function genFehler(op,spec){
+  var s2={};for(var k in spec) s2[k]=spec[k];
+  s2.minC=Math.max(spec.minC||0,2); s2.estPos=true;
+  var g=genOperands(op,s2),c=g.c,len=c.len;
+  for(var t=0;t<500;t++){
+    var p=rnd(0,len-1),d=c.res[p],nd,type;
+    if(c.carry[p]>0&&Math.random()<0.6){
+      type='vergessen';
+      nd=op==='+'?(d-c.carry[p]+10)%10:(d+c.carry[p])%10;
+    }else{
+      type='slip';
+      nd=(d+pick([-3,-2,-1,1,2,3])+10)%10;
+    }
+    if(nd===d) continue;
+    if(p===len-1&&nd===0) continue;
+    var child=c.res.slice();child[p]=nd;
+    var childValue=Number(child.slice().reverse().join(''));
+    return {kind:'fehler',op:op,operands:g.operands,c:c,child:child,childValue:childValue,errPos:p,errType:type,wrongDigit:nd};
+  }
+  return genFehler(op,spec);
+}
+
+/* Buchstabenrätsel (nur Addition): ALLE Ziffern sind durch Buchstaben ersetzt.
+   Alle Rätsel wurden vorab durch Durchprobieren geprüft: Es gibt jeweils genau eine Lösung. */
+var RIDDLE_NUMS=[[6443,6916],[3171,2151],[7784,4194],[6741,7715],[201,921],[8633,1848],[3471,7752],[6662,6166],[4957,5151,5491],[7813,9176],[3518,8358],[210,812],[6829,5126],[8828,2412],[4477,3497],[9889,1178],[871,866],[811,321],[5954,8964],[8476,8748,7748],[1182,4944],[555,545],[177,831],[8494,9197],[2312,1211],[5410,5094],[560,550],[9622,2691],[911,188],[8387,1786],[1018,1424],[516,585],[4179,7476],[7681,6466],[9284,2141],[181,917],[5331,8853],[7167,6763],[648,838],[8312,5523]];
+var RIDDLE_WORDS=[
+  {w:['SEND','MORE','MONEY'],o:[9567,1085]},
+  {w:['FORTY','TEN','TEN','SIXTY'],o:[29786,850,850]},
+  {w:['SECHS','SECHS','ZWOELF'],o:[69476,69476]},
+  {w:['SIX','SEVEN','SEVEN','TWENTY'],o:[650,68782,68782]}
+];
+var RIDDLE_LETTERS='ABCDEFGHKLMNPRSTUVWXYZ'.split('');
+var riddleSeen={};
+function genSymbol(){
+  var useWord=Math.random()<0.2,pool=useWord?RIDDLE_WORDS:RIDDLE_NUMS,tag=useWord?'w':'n';
+  var free=[];pool.forEach(function(_,i){if(!riddleSeen[tag+i]) free.push(i);});
+  if(!free.length){pool.forEach(function(_,i){delete riddleSeen[tag+i];});free=pool.map(function(_,i){return i;});}
+  var idx=pick(free);riddleSeen[tag+idx]=1;
+  var operands,patterns,map={},syms=[];
+  if(useWord){
+    var it=pool[idx];operands=it.o;patterns=it.w;
+    var strs=operands.concat([sum(operands)]).map(String);
+    patterns.forEach(function(pat,r){pat.split('').forEach(function(ch,k){if(!(ch in map)){map[ch]=strs[r][k];syms.push(ch);}});});
+  }else{
+    operands=pool[idx];
+    var strs2=operands.concat([sum(operands)]).map(String),letters=shuffle(RIDDLE_LETTERS),byDigit={};
+    patterns=strs2.map(function(st){return st.split('').map(function(d){
+      if(!(d in byDigit)){byDigit[d]=letters[syms.length];syms.push(byDigit[d]);map[byDigit[d]]=d;}
+      return byDigit[d];}).join('');});
+  }
+  return {kind:'symbol',op:'+',operands:operands,c:compute('+',operands),patterns:patterns,syms:syms,map:map,word:useWord};
+}
+
+/* Erste Spalte (von rechts), in der eine Rechnung nicht stimmt. strs: Summanden..., Summe (als Zeichenketten). */
+function firstBadColumn(strs){
+  var L=Math.max.apply(null,strs.map(function(s){return s.length;}));
+  var n=strs.length-1,carry=0;
+  for(var p=0;p<L;p++){
+    var s=carry;
+    for(var i=0;i<n;i++){var st=strs[i];s+=Number(st[st.length-1-p]||0);}
+    var rs=strs[n];
+    if(s%10!==Number(rs[rs.length-1-p]||0)) return p;
+    carry=Math.floor(s/10);
+  }
+  return carry>0?L:-1;
+}
+
+/* ---------------------- Multiplikation ----------------------
+   Raster: erster Faktor | · | zweiter Faktor. Jedes Teilprodukt endet unter der Ziffer des
+   zweiten Faktors, mit der malgenommen wird; das Ergebnis endet unter der letzten Ziffer. */
+function mulInfo(a,b){
+  var sa=String(a),sb=String(b),la=sa.length,lb=sb.length,D=la+1+lb;
+  var parts=sb.split('').map(function(ch,i){var d=Number(ch);return {i:i,d:d,val:a*d,pos:lb-1-i,k:la+1+i};});
+  var nz=parts.filter(function(p){return p.d>0;});
+  var addc=lb>1?compute('+',nz.map(function(p){return p.val*Math.pow(10,p.pos);})):null;
+  return {a:a,b:b,sa:sa,sb:sb,la:la,lb:lb,D:D,parts:parts,value:a*b,addc:addc};
+}
+/* Überträge beim Malnehmen mit einer einstelligen Zahl: c[p] gehört in die Ergebnisspalte p */
+function mulCarry1(a,d){var ad=digs(a).reverse(),c=[0];for(var j=0;j<ad.length;j++) c[j+1]=Math.floor((ad[j]*d+c[j])/10);return c;}
+function genMulAB(spec){
+  for(var t=0;t<3000;t++){
+    var a=randNum(rnd(spec.la[0],spec.la[1]));
+    if(a%10===0) continue;
+    var lb=rnd(spec.lb[0],spec.lb[1]),b;
+    if(lb===1) b=rnd(3,9);
+    else{
+      var s='';for(var i=0;i<lb;i++) s+=rnd(2,9);
+      if(lb>=3&&spec.zero&&Math.random()<spec.zero) s=s[0]+'0'+s.slice(2);
+      b=Number(s);
+    }
+    var nc;
+    if(lb===1){nc=mulCarry1(a,b).slice(1,String(a).length).filter(function(x){return x>0;}).length;}
+    else nc=countCarries(mulInfo(a,b).addc);
+    if(nc<(spec.minC||0)) continue;
+    return {a:a,b:b};
+  }
+  return {a:4372,b:6};
+}
+function mkMul(spec,mode,feedback){var ab=genMulAB(spec);return {kind:'mul',op:'*',operands:[ab.a,ab.b],a:ab.a,b:ab.b,mode:mode,feedback:feedback};}
+/* Alle Ziffern einer fertigen Malrechnung mit Schlüssel "zeile:spalte" */
+function mulCellMap(a,b,partVals,resVal){
+  var info=mulInfo(a,b),D=info.D,m={};
+  info.sa.split('').forEach(function(ch,k){m['a:'+k]=ch;});
+  info.sb.split('').forEach(function(ch,j){m['b:'+(info.la+1+j)]=ch;});
+  if(info.lb>1) info.parts.forEach(function(p){
+    if(p.d===0) return;
+    var s=String(partVals?partVals[p.i]:p.val);
+    for(var j=0;j<s.length;j++) m['p'+p.i+':'+(p.k-s.length+1+j)]=s[j];
+  });
+  var rs=String(resVal!==undefined?resVal:info.value);
+  for(var j2=0;j2<rs.length;j2++) m['res:'+(D-rs.length+j2)]=rs[j2];
+  return {info:info,map:m};
+}
+function mulSolCarries(info){
+  var cr=[];
+  if(info.lb>1){var c=info.addc;for(var p=1;p<c.cl;p++) cr[p]=c.carry[p];}
+  else{var c1=mulCarry1(info.a,info.b);for(var q=1;q<info.la;q++) cr[q]=c1[q];}
+  return cr;
+}
+/* Zeilen für das Rechenschema aus einer Ziffern-Karte bauen */
+function mulRows(info,map,o){
+  o=o||{};
+  var D=info.D,rows=[];
+  function cellOf(key){if(!(key in map)) return {};return o.cell?o.cell(key,map[key]):{v:map[key],key:key};}
+  rows.push({type:'op',line:false,cells:Array.from({length:D},function(_,k){if(k===info.la) return {v:'·',cls:'opc'};return cellOf((k<info.la?'a:':'b:')+k);})});
+  var first=true;
+  if(info.lb>1) info.parts.forEach(function(p){
+    if(p.d===0) return;
+    rows.push({type:'part',line:first,cells:Array.from({length:D},function(_,k){return cellOf('p'+p.i+':'+k);})});
+    first=false;
+  });
+  rows.push({type:'carry',line:false,cells:Array.from({length:D},function(_,k){
+    var p=D-1-k;
+    if(o.carryInput) return {inp:k<D-1};
+    var cv=o.carry?(o.carry[p]||0):0;
+    return (p>=1&&cv>0)?{v:String(cv)}:{};
+  })});
+  rows.push({type:'res',line:true,cells:Array.from({length:D},function(_,k){return cellOf('res:'+k);})});
+  return rows;
+}
+function mulSolution(a,b){
+  var cm=mulCellMap(a,b);
+  return buildScheme({D:cm.info.D,rows:mulRows(cm.info,cm.map,{carry:mulSolCarries(cm.info),cell:function(key,ch){return {v:ch,key:key,cls:key.indexOf('res:')===0?'good':''};}})});
+}
+function countMulSol(a,b,map,blanks){
+  var sa=String(a).split(''),sb=String(b).split(''),la=sa.length,bl={};
+  blanks.forEach(function(k){bl[k]=1;});
+  var aB=blanks.filter(function(k){return k.indexOf('a:')===0;}),bB=blanks.filter(function(k){return k.indexOf('b:')===0;});
+  var ai=aB.length?Number(aB[0].split(':')[1]):-1,bi=bB.length?Number(bB[0].split(':')[1])-la-1:-1;
+  var xs=ai>=0?[0,1,2,3,4,5,6,7,8,9]:[0],ys=bi>=0?[0,1,2,3,4,5,6,7,8,9]:[0];
+  var k0=Object.keys(map),cnt=0;
+  xs.forEach(function(x){ys.forEach(function(y){
+    var A=sa.slice(),B=sb.slice();
+    if(ai>=0) A[ai]=String(x);
+    if(bi>=0) B[bi]=String(y);
+    if(A[0]==='0'||B[0]==='0') return;
+    var m2=mulCellMap(Number(A.join('')),Number(B.join(''))).map;
+    if(Object.keys(m2).length!==k0.length) return;
+    if(k0.every(function(k){return (k in m2)&&(bl[k]||m2[k]===map[k]);})) cnt++;
+  });});
+  return cnt;
+}
+function genMulLuecke(){
+  for(var t=0;t<400;t++){
+    var ab=genMulAB({la:[3,3],lb:[2,2],minC:1});
+    var cm=mulCellMap(ab.a,ab.b),keys=Object.keys(cm.map);
+    var chosen=shuffle(keys).slice(0,rnd(4,5));
+    var groups={};chosen.forEach(function(k){var g=k.split(':')[0];groups[g]=(groups[g]||0)+1;});
+    if((groups.a||0)>1||(groups.b||0)>1||Object.keys(groups).length<3) continue;
+    var sizes={};keys.forEach(function(k){var g=k.split(':')[0];sizes[g]=(sizes[g]||0)+1;});
+    if(Object.keys(groups).some(function(g){return groups[g]>=sizes[g];})) continue;
+    if(countMulSol(ab.a,ab.b,cm.map,chosen)!==1) continue;
+    return {kind:'mulluecke',op:'*',operands:[ab.a,ab.b],a:ab.a,b:ab.b,info:cm.info,map:cm.map,blanks:chosen};
+  }
+  var f=mulCellMap(347,26);
+  return {kind:'mulluecke',op:'*',operands:[347,26],a:347,b:26,info:f.info,map:f.map,blanks:['res:2','p0:3','b:5','p1:5']};
+}
+function genMulFehler(){
+  for(var t=0;t<600;t++){
+    var ab=genMulAB({la:[3,4],lb:[2,2],minC:2}),a=ab.a,b=ab.b,info=mulInfo(a,b);
+    var pv=info.parts.map(function(p){return p.val;}),errKey,errType,errPart=null,errPos=null,resVal,carryShown;
+    if(Math.random()<0.6){
+      var p=pick(info.parts),s=String(p.val),L=s.length,j=rnd(0,L-1),dg=Number(s[L-1-j]),cs=mulCarry1(a,p.d),nd;
+      if(j>=1&&j<info.la&&cs[j]>0&&Math.random()<0.6){nd=(dg-cs[j]+10)%10;errType='malvergessen';}
+      else{nd=(dg+pick([-2,-1,1,2])+10)%10;errType='malslip';}
+      if(nd===dg||(j===L-1&&nd===0)) continue;
+      var arr=s.split('');arr[L-1-j]=String(nd);
+      pv[p.i]=Number(arr.join(''));
+      errKey='p'+p.i+':'+(p.k-j);errPart=p;
+      var shifted=info.parts.map(function(q){return pv[q.i]*Math.pow(10,q.pos);});
+      resVal=sum(shifted);
+      var cc=compute('+',shifted);carryShown=[];for(var q=1;q<cc.cl;q++) carryShown[q]=cc.carry[q];
+    }else{
+      var c=info.addc,len=String(info.value).length,pp=rnd(0,len-1),d=c.res[pp],nd2;
+      if(c.carry[pp]>0&&Math.random()<0.6){errType='addvergessen';nd2=(d-c.carry[pp]+10)%10;}
+      else{errType='addslip';nd2=(d+pick([-3,-2,-1,1,2,3])+10)%10;}
+      if(nd2===d||(pp===len-1&&nd2===0)) continue;
+      var rs=String(info.value).split('');rs[len-1-pp]=String(nd2);resVal=Number(rs.join(''));
+      errKey='res:'+(info.D-1-pp);errPos=pp;carryShown=mulSolCarries(info);
+    }
+    if(resVal===info.value) continue;
+    return {kind:'mulfehler',op:'*',operands:[a,b],a:a,b:b,info:info,pv:pv,resVal:resVal,errKey:errKey,errType:errType,errPart:errPart,errPos:errPos,carryShown:carryShown};
+  }
+  return null;
+}
+
+/* ---------------------- Division ----------------------
+   Teilen – Malnehmen – Abziehen – Herunterholen. err (nur für Fehleraufgaben) baut einen Fehler in einen Schritt ein. */
+function divCompute(a,d,err){
+  var s=String(a),steps=[],q='',k=0,cur=0;
+  while(k<s.length&&cur<d){cur=cur*10+Number(s[k]);k++;}
+  for(var i=0;;i++){
+    var qd=Math.floor(cur/d),prod=qd*d,diff=cur-prod;
+    if(err&&err.step===i){if(err.kind==='mal'){prod=err.val;diff=cur-prod;}else diff=err.val;}
+    steps.push({partial:cur,end:k-1,qd:qd,prod:prod,diff:diff});
+    q+=qd;
+    if(k>=s.length) break;
+    cur=diff*10+Number(s[k]);k++;
+  }
+  return {a:a,d:d,q:Number(q),qs:q,r:steps[steps.length-1].diff,steps:steps,first:steps[0].end+1};
+}
+function divResText(dv){return fmt(dv.q)+(dv.r>0?' R '+dv.r:'');}
+function divProbe(dv){return 'Probe: '+fmt(dv.q)+' · '+dv.d+(dv.r>0?' + '+dv.r:'')+' = '+fmt(dv.a)+' ✔';}
+/* Vollständig ausgeschriebene Division als Rechenschema (Schlüssel: a Dividend, q Ergebnis, r Rest,
+   m Produkt, u Unterschied, h heruntergeholte Ziffer) */
+function divLayout(dv,o){
+  o=o||{};
+  var s=String(dv.a),L=s.length,sd=String(dv.d),ld=sd.length,qs=dv.qs,rs=String(dv.r);
+  var showR=o.showR!==undefined?o.showR:dv.r>0;
+  var D=L+1+ld+1+qs.length+(showR?1+rs.length:0);
+  var map={},rows=[];
+  function C(key,ch){map[key]=ch;return o.cell?o.cell(key,ch):{v:ch,key:key};}
+  var head=[],j;
+  for(var k=0;k<L;k++) head.push(C('a:'+k,s[k]));
+  head.push({v:':',cls:'opc'});
+  for(j=0;j<ld;j++) head.push({v:sd[j],key:'d:'+j});
+  head.push({v:'=',cls:'opc'});
+  for(j=0;j<qs.length;j++) head.push(C('q:'+j,qs[j]));
+  if(showR){head.push({v:'R',cls:'opc'});for(j=0;j<rs.length;j++) head.push(C('r:'+j,rs[j]));}
+  rows.push({type:'op',ltr:true,line:false,cells:head});
+  var prevStart=0;
+  dv.steps.forEach(function(st,i){
+    var ps=String(st.prod),pStart=st.end-ps.length+1,t;
+    var cells=Array.from({length:D},function(){return {};});
+    for(t=0;t<ps.length;t++) cells[pStart+t]=C('m'+i+':'+(pStart+t),ps[t]);
+    var prow={type:'work',ltr:true,line:false,cells:cells};
+    if(pStart>=1) cells[pStart-1]={v:'−',cls:'opc'}; else prow.sign='−';
+    rows.push(prow);
+    var ds=String(st.diff),dStart=st.end-ds.length+1;
+    var cells2=Array.from({length:D},function(){return {};});
+    for(t=0;t<ds.length;t++) cells2[dStart+t]=C('u'+i+':'+(dStart+t),ds[t]);
+    if(i<dv.steps.length-1) cells2[st.end+1]=C('h'+i+':'+(st.end+1),s[st.end+1]);
+    rows.push({type:'work',ltr:true,line:[Math.min(prevStart,pStart),st.end],cells:cells2});
+    prevStart=dStart;
+  });
+  return {D:D,rows:rows,map:map};
+}
+function divSolution(dv){
+  var lay=divLayout(dv,{cell:function(key,ch){return {v:ch,key:key,cls:(key[0]==='q'||key[0]==='r')?'good':''};}});
+  return buildScheme({D:lay.D,rows:lay.rows});
+}
+function genDivAB(lv){
+  for(var t=0;t<4000;t++){
+    var d,q,r=0;
+    if(lv===1){d=rnd(3,9);q=noZeroNum(rnd(2,3));}
+    else if(lv===2){
+      d=rnd(3,9);var ql=rnd(3,4);q=randNum(ql);
+      if(Math.random()<0.6){var qa=String(q).split('');qa[rnd(1,ql-1)]='0';q=Number(qa.join(''));}
+      if(Math.random()<0.7) r=rnd(1,d-1);
+      if(String(q).indexOf('0')<0&&r===0) continue;
+    }
+    else if(lv===3){d=pick([12,15,20,25,30,40,50]);q=randNum(rnd(2,3));if(Math.random()<0.65) r=rnd(1,d-1);}
+    else{d=rnd(13,98);if(d%10===0) continue;q=randNum(rnd(2,3));if(Math.random()<0.65) r=rnd(1,d-1);}
+    var a=q*d+r,la=String(a).length;
+    if(lv===1){if(la<3||la>4) continue;}else if(la<4||la>5) continue;
+    if(lv===1&&!divCompute(a,d).steps.some(function(st){return st.diff>0;})) continue;
+    return {a:a,d:d};
+  }
+  return {a:2856,d:4};
+}
+function mkDiv(lv,mode,feedback,table){var ab=genDivAB(lv);return {kind:'div',op:':',operands:[ab.a,ab.d],a:ab.a,d:ab.d,mode:mode,feedback:feedback,table:table};}
+function countDivSol(dv,map,blanks){
+  var bl={};blanks.forEach(function(k){bl[k]=1;});
+  var aB=blanks.filter(function(k){return k.indexOf('a:')===0;}),s=String(dv.a).split(''),cands=[];
+  if(!aB.length) cands=[dv.a];
+  else{var idx=Number(aB[0].split(':')[1]);for(var x=0;x<=9;x++){var A=s.slice();A[idx]=String(x);if(A[0]!=='0') cands.push(Number(A.join('')));}}
+  var k0=Object.keys(map),cnt=0;
+  cands.forEach(function(a2){
+    if(a2<dv.d) return;
+    var m2=divLayout(divCompute(a2,dv.d),{showR:dv.r>0}).map;
+    if(Object.keys(m2).length!==k0.length) return;
+    if(k0.every(function(k){return (k in m2)&&(bl[k]||m2[k]===map[k]);})) cnt++;
+  });
+  return cnt;
+}
+function genDivLuecke(){
+  for(var t=0;t<500;t++){
+    var d=Math.random()<0.6?rnd(3,9):pick([12,15,20,25]),q=randNum(rnd(2,3)),r=Math.random()<0.5?rnd(1,d-1):0,a=q*d+r;
+    if(String(a).length!==4) continue;
+    var dv=divCompute(a,d),lay=divLayout(dv),keys=Object.keys(lay.map);
+    var chosen=shuffle(keys).slice(0,rnd(4,5)),g={};
+    chosen.forEach(function(k){var p=k[0];g[p]=(g[p]||0)+1;});
+    if((g.a||0)>1||(g.q||0)>2||(g.r||0)>1) continue;
+    if(!((g.m||0)+(g.u||0)+(g.h||0))) continue;
+    if(countDivSol(dv,lay.map,chosen)!==1) continue;
+    return {kind:'divluecke',op:':',operands:[a,d],a:a,d:d,dv:dv,map:lay.map,blanks:chosen};
+  }
+  var dv0=divCompute(2856,4);
+  return {kind:'divluecke',op:':',operands:[2856,4],a:2856,d:4,dv:dv0,map:divLayout(dv0).map,blanks:['q:1','m1:2','u2:3','h0:2']};
+}
+function genDivFehler(){
+  for(var t=0;t<800;t++){
+    var d=Math.random()<0.5?rnd(3,9):rnd(12,39),q=randNum(3),r=Math.random()<0.6?rnd(1,d-1):0,a=q*d+r;
+    var la=String(a).length;if(la<4||la>5) continue;
+    var dv=divCompute(a,d),i=rnd(0,dv.steps.length-1),st=dv.steps[i];
+    var kind=Math.random()<0.55?'mal':'minus',delta=pick([-2,-1,1,2]),val,errKey;
+    if(kind==='mal'){
+      if(st.qd===0) continue;
+      var u=st.prod%10;if(u+delta<0||u+delta>9) continue;
+      val=st.prod+delta;var nd=st.partial-val;if(nd<0||nd>=d) continue;
+      errKey='m'+i+':'+st.end;
+    }else{
+      var u2=st.diff%10;if(u2+delta<0||u2+delta>9) continue;
+      val=st.diff+delta;if(val<0||val>=d) continue;
+      errKey='u'+i+':'+st.end;
+    }
+    var wv=divCompute(a,d,{step:i,kind:kind,val:val});
+    if(wv.q===dv.q&&wv.r===dv.r) continue;
+    return {kind:'divfehler',op:':',operands:[a,d],a:a,d:d,dv:dv,wv:wv,errKey:errKey,errStep:i,errKind:kind};
+  }
+  return null;
+}
+/* ======================= LOGIK-ENDE ======================== */
+
+/* ---------------------- Sterne (nur für diese Sitzung, nichts wird gespeichert) ---------------------- */
+var store={
+  data:{},
+  stars:function(op){return this.data[op]||0;},
+  add:function(op,n){var before=this.stars(op);this.data[op]=before+Math.max(0,n);return {before:before,after:this.data[op]};}
+};
+
+/* Urkunden gibt es für zwei Rechenarten gemeinsam */
+var PARTNER={add:'sub',sub:'add',mul:'div',div:'mul'};
+var CERT={add:'Addition und Subtraktion',sub:'Addition und Subtraktion',mul:'Multiplikation und Division',div:'Multiplikation und Division'};
+function certDone(op){return store.stars(op)>=STAR_GOAL&&store.stars(PARTNER[op])>=STAR_GOAL;}
+
+/* ---------------------- Rechenarten und Stufen ---------------------- */
+function mkRechnen(op,spec,write,feedback){
+  var g=genOperands(op,Object.assign({estPos:true},spec));
+  var maxLen=Math.max.apply(null,g.operands.map(function(o){return String(o).length;}));
+  var D=write?8:(op==='+'?maxLen+1:maxLen);
+  return {kind:'rechnen',op:op,operands:g.operands,c:g.c,write:write,feedback:feedback,D:D};
+}
+var OPS={
+  add:{key:'add',name:'Addition',sign:'+',verb:'Addieren',
+   help:'Rechne Spalte für Spalte von rechts nach links. Zähle alle Ziffern einer Spalte und den Übertrag zusammen. Schreibe die Einer der Summe ins Ergebnis. Die Zehner schreibst du als kleinen Übertrag in die nächste Spalte – in die kleine Zeile über dem Strich.',
+   levels:[
+    {title:'Die Zahlen stehen schon untereinander',
+     desc:'Drei Zahlen sind schon richtig untereinander geschrieben. Du trägst nur den Übertrag und das Ergebnis ein.',
+     req:'Du bringst mit: das kleine Einspluseins sicher im Kopf und die Stellenwerte (Einer, Zehner, Hunderter, Tausender …).',
+     gen:function(){return mkRechnen('+',{n:3,lens:[3,4],minC:2},false,false);}},
+    {title:'Selbst untereinander schreiben – mit Kontrolle',
+     desc:'Du schreibst drei Zahlen selbst untereinander. Bevor du rechnest, bekommst du eine Rückmeldung, ob alles richtig steht.',
+     req:'Aus Stufe 1 solltest du sicher können: drei Zahlen schriftlich addieren, auch wenn der Übertrag über mehrere Spalten weitergegeben wird.',
+     gen:function(){return mkRechnen('+',{n:3,lens:[3,5],differ:true,minC:2},true,true);}},
+    {title:'Selbst untereinander schreiben – ohne Kontrolle',
+     desc:'Wie Stufe 2, aber du bekommst keine Rückmeldung mehr zum Untereinanderschreiben.',
+     req:'Aus Stufe 2 solltest du sicher können: Zahlen mit verschieden vielen Stellen fehlerfrei untereinander schreiben (Einer unter Einer, Zehner unter Zehner …).',
+     gen:function(){return mkRechnen('+',{n:3,lens:[4,6],differ:true,minC:3},true,false);}},
+    {title:'Lücken füllen und Fehler finden',
+     desc:'Bei Lückenaufgaben fehlen Ziffern in den Zahlen oder in der Summe. Bei Fehleraufgaben suchst du einen Fehler in einer fertigen Rechnung.',
+     req:'Aus Stufe 3 solltest du sicher können: eine ganze Aufgabe ohne Hilfe aufschreiben und ausrechnen und dazu einen Überschlag machen.',
+     gen:function(n){return n%2===0?genLuecke('+',{n:[2,3],lens:[4,5],minC:2}):genFehler('+',{n:3,lens:[4,6],minC:2});}},
+    {title:'Buchstabenrätsel',
+     desc:'Alle Ziffern sind durch Buchstaben ersetzt. Gleicher Buchstabe heißt gleiche Ziffer, verschiedene Buchstaben heißen verschiedene Ziffern. Finde heraus, für welche Ziffer jeder Buchstabe steht.',
+     req:'Aus Stufe 4 solltest du sicher können: rückwärts denken – fehlende Ziffern ergänzen und Fehler in Rechnungen finden.',
+     gen:function(){return genSymbol();}}
+  ]},
+  sub:{key:'sub',name:'Subtraktion',sign:'−',verb:'Subtrahieren',
+   help:'Wir rechnen mit dem Ergänzen. Zähle in jeder Spalte alle Subtrahenden und den Übertrag zusammen. Dann ergänzt du bis zur Ziffer des Minuenden (oben). Reicht die Ziffer nicht aus, ergänzt du bis zur nächsten Zehnerzahl über der Ziffer und schreibst den Übertrag 1 in die nächste Spalte – in die kleine Zeile über dem Strich.',
+   levels:[
+    {title:'Eine Zahl abziehen – schon untereinander',
+     desc:'Zwei Zahlen stehen schon richtig untereinander. Du trägst nur den Übertrag und das Ergebnis ein.',
+     req:'Du bringst mit: das Einspluseins und seine Umkehraufgaben im Kopf (Was muss ich zu 7 ergänzen, um 13 zu erhalten?) und die Stellenwerte.',
+     gen:function(){return mkRechnen('-',{n:1,mlens:[4,5],lens:[3,4],minC:2},false,false);}},
+    {title:'Zwei Zahlen abziehen – schon untereinander',
+     desc:'Der Minuend und zwei Subtrahenden stehen schon richtig untereinander. Du trägst Übertrag und Ergebnis ein.',
+     req:'Aus Stufe 1 solltest du sicher können: schriftlich subtrahieren, auch wenn ein Übertrag nötig ist.',
+     gen:function(){return mkRechnen('-',{n:2,mlens:[4,5],lens:[3,4],minC:2},false,false);}},
+    {title:'Zwei Zahlen abziehen – selbst schreiben, mit Kontrolle',
+     desc:'Du schreibst Minuend und zwei Subtrahenden selbst untereinander. Vor dem Rechnen bekommst du eine Rückmeldung zur Aufstellung.',
+     req:'Aus Stufe 2 solltest du sicher können: bei zwei Subtrahenden die Ziffern einer Spalte zusammenzählen und den Übertrag richtig weitergeben.',
+     gen:function(){return mkRechnen('-',{n:2,mlens:[5,6],lens:[3,5],differ:true,minC:3},true,true);}},
+    {title:'Zwei oder drei Zahlen abziehen – ohne Kontrolle',
+     desc:'Du schreibst alles selbst untereinander (zwei oder drei Subtrahenden) und bekommst keine Rückmeldung zur Aufstellung.',
+     req:'Aus Stufe 3 solltest du sicher können: Minuend und Subtrahenden fehlerfrei untereinander schreiben (Einer unter Einer …).',
+     gen:function(){return mkRechnen('-',{n:[2,3],mlens:[5,6],lens:[3,5],differ:true,minC:3},true,false);}},
+    {title:'Lücken füllen und Fehler finden',
+     desc:'Bei Lückenaufgaben fehlen Ziffern im Minuenden, in den Subtrahenden oder in der Differenz. Bei Fehleraufgaben suchst du einen Fehler in einer fertigen Rechnung.',
+     req:'Aus Stufe 4 solltest du sicher können: auch mit drei Subtrahenden ohne Hilfe richtig subtrahieren und einen Überschlag machen.',
+     gen:function(n){return n%2===0?genLuecke('-',{n:2,mlens:[4,6],lens:[3,5],minC:2}):genFehler('-',{n:2,mlens:[5,6],lens:[3,5],minC:3});}}
+  ]},
+  mul:{key:'mul',name:'Multiplikation',sign:'·',verb:'Multiplizieren',
+   help:'Rechne von rechts nach links: erst die Einer, dann die Zehner, dann die Hunderter … Ist der zweite Faktor mehrstellig, nimmst du mit jeder seiner Ziffern einzeln mal (Teilprodukte). Die letzte Ziffer jedes Teilprodukts steht genau unter der Ziffer, mit der du malnimmst. Zum Schluss addierst du die Teilprodukte. Den Übertrag beim Addieren schreibst du in die kleine Zeile über dem Strich.',
+   levels:[
+    {title:'Mal eine einstellige Zahl',
+     desc:'Die Aufgabe steht schon da. Du trägst den Übertrag und das Ergebnis ein. Die letzte Ziffer des Ergebnisses steht unter der letzten Ziffer des zweiten Faktors.',
+     req:'Du bringst mit: das kleine Einmaleins sicher im Kopf und den Übertrag aus der schriftlichen Addition.',
+     gen:function(){return mkMul({la:[3,4],lb:[1,1],minC:2},'one',false);}},
+    {title:'Mal eine zweistellige Zahl – Kästchen vorgegeben',
+     desc:'Die Kästchen für die Teilprodukte stehen schon an der richtigen Stelle. Du rechnest die Teilprodukte aus und addierst sie.',
+     req:'Aus Stufe 1 solltest du sicher können: eine Zahl mit einer einstelligen Zahl malnehmen, auch mit Übertrag. Außerdem: schriftlich addieren.',
+     gen:function(){return mkMul({la:[3,3],lb:[2,2],minC:2},'given',false);}},
+    {title:'Selbst einrücken – mit Kontrolle',
+     desc:'Du schreibst die Teilprodukte selbst eingerückt auf. Bevor du addierst, bekommst du eine Rückmeldung, ob sie an der richtigen Stelle stehen. Manchmal steckt eine 0 im zweiten Faktor.',
+     req:'Aus Stufe 2 solltest du sicher können: Teilprodukte richtig ausrechnen und schriftlich addieren.',
+     gen:function(){return mkMul({la:[3,4],lb:[2,3],zero:0.4,minC:2},'free',true);}},
+    {title:'Selbst einrücken – ohne Kontrolle',
+     desc:'Wie Stufe 3, jetzt mit dreistelligem zweiten Faktor und ohne Rückmeldung zum Einrücken.',
+     req:'Aus Stufe 3 solltest du sicher können: jedes Teilprodukt so einrücken, dass seine letzte Ziffer unter der richtigen Ziffer des zweiten Faktors steht – auch bei einer 0.',
+     gen:function(){return mkMul({la:[3,4],lb:[3,3],zero:0.4,minC:2},'free',false);}},
+    {title:'Lücken füllen und Fehler finden',
+     desc:'Bei Lückenaufgaben fehlen Ziffern in den Faktoren, in den Teilprodukten oder im Ergebnis. Bei Fehleraufgaben suchst du einen Fehler in einer fertigen Rechnung.',
+     req:'Aus Stufe 4 solltest du sicher können: eine ganze Malaufgabe ohne Hilfe aufschreiben, ausrechnen und mit einem Überschlag prüfen.',
+     gen:function(n){return n%2===0?genMulLuecke():genMulFehler();}}
+  ]},
+  div:{key:'div',name:'Division',sign:':',verb:'Dividieren',
+   help:'Beginne links: Nimm so viele Ziffern, dass die Zahl mindestens so groß ist wie der Teiler. Dann immer: Teilen (Wie oft passt der Teiler hinein? Diese Ziffer kommt ins Ergebnis) – Malnehmen – Abziehen – nächste Ziffer Herunterholen. Passt der Teiler einmal nicht hinein, schreibst du eine 0 ins Ergebnis. Was am Ende übrig bleibt, ist der Rest: Du schreibst ihn hinter das R.',
+   levels:[
+    {title:'Durch eine einstellige Zahl – mit Rechengerüst',
+     desc:'Die Kästchen für jeden Schritt sind schon vorgegeben: Teilen, Malnehmen, Abziehen, Herunterholen. Es bleibt kein Rest.',
+     req:'Du bringst mit: das Einmaleins auch rückwärts (Wie oft passt 7 in 45?) und die schriftliche Subtraktion.',
+     gen:function(){return mkDiv(1,'scaffold',false,false);}},
+    {title:'Durch eine einstellige Zahl – mit Nullen und Rest',
+     desc:'Jetzt schreibst du die Schritte selbst auf. Vorher wählst du die erste Teilzahl und bekommst dazu eine Rückmeldung. Im Ergebnis können Nullen vorkommen, und manchmal bleibt ein Rest.',
+     req:'Aus Stufe 1 solltest du sicher können: den Ablauf Teilen – Malnehmen – Abziehen – Herunterholen ohne Fehler.',
+     gen:function(){return mkDiv(2,'free',true,false);}},
+    {title:'Durch einfache zweistellige Zahlen',
+     desc:'Du teilst durch Zahlen wie 12, 15, 20 oder 25. Zur ersten Teilzahl bekommst du wieder eine Rückmeldung. Eine Vielfachen-Tabelle hilft dir, wenn du möchtest.',
+     req:'Aus Stufe 2 solltest du sicher können: durch eine einstellige Zahl teilen, auch wenn eine 0 ins Ergebnis kommt oder ein Rest bleibt.',
+     gen:function(){return mkDiv(3,'free',true,true);}},
+    {title:'Durch beliebige zweistellige Zahlen',
+     desc:'Du teilst durch zweistellige Zahlen wie 37 oder 64. Eine Rückmeldung zur ersten Teilzahl gibt es nicht mehr.',
+     req:'Aus Stufe 3 solltest du sicher können: die erste Teilzahl richtig wählen und Vielfache einer zweistelligen Zahl bestimmen.',
+     gen:function(){return mkDiv(4,'free',false,true);}},
+    {title:'Lücken füllen und Fehler finden',
+     desc:'Bei Lückenaufgaben fehlen Ziffern in einer fertigen Rechnung. Bei Fehleraufgaben suchst du einen Fehler. Mit der Probe (Malnehmen) kannst du dich selbst kontrollieren.',
+     req:'Aus Stufe 4 solltest du sicher können: auch durch zweistellige Zahlen ohne Hilfe teilen und einen Überschlag machen.',
+     gen:function(n){return n%2===0?genDivLuecke():genDivFehler();}}
+  ]}
+};
+
+/* ---------------------- Hilfsfunktionen für die Oberfläche ---------------------- */
+var app=document.getElementById('app');
+var uid=0;
+var S={cur:null,counters:{},mastery:{},last:null};
+
+function el(tag,attrs){
+  var e=document.createElement(tag);
+  if(attrs) for(var k in attrs){
+    var v=attrs[k];
+    if(v===false||v===null||v===undefined) continue;
+    if(k==='class') e.className=v;
+    else if(k==='html') e.innerHTML=v;
+    else if(k.indexOf('on')===0) e.addEventListener(k.slice(2),v);
+    else e.setAttribute(k,v===true?'':v);
+  }
+  for(var i=2;i<arguments.length;i++){
+    var kid=arguments[i];
+    if(kid===null||kid===undefined||kid===false) continue;
+    if(Array.isArray(kid)) kid.forEach(function(x){if(x!==null&&x!==undefined&&x!==false) e.append(x);});
+    else e.append(kid);
+  }
+  return e;
+}
+function starsText(n){return '★'.repeat(n);}
+function starBar(opKey){
+  var all=store.stars(opKey),n=Math.min(all,STAR_GOAL);
+  var row=el('div',{class:'row'});
+  for(var i=0;i<STAR_GOAL;i++) row.append(el('span',{class:'s'+(i<n?' f':'')},'★'));
+  return el('div',{class:'starbar'},el('span',{class:'cnt'},n+' / '+STAR_GOAL),row,
+    certDone(opKey)?el('span',{class:'certbadge'},'🏅 Urkunde verdient!'):(all>=STAR_GOAL?el('span',{class:'certbadge'},'✔ Ziel erreicht'):null));
+}
+function navBar(items){
+  return el('div',{class:'nav'},items.map(function(it){return el('button',{class:'btn sec',type:'button',onclick:it[1]},it[0]);}));
+}
+
+/* ---------------------- Ziffernfeld (statt Bildschirmtastatur auf dem iPad) ---------------------- */
+var KP={bar:null,target:null};
+function isTextInput(t){return t&&t.tagName==='INPUT'&&t.type==='text';}
+function initKeypad(){
+  var bar=el('div',{class:'kp',hidden:true});
+  ['1','2','3','4','5','6','7','8','9','0','⌫','←','→'].forEach(function(k){
+    bar.append(el('button',{type:'button',class:'kpk'+(/\d/.test(k)?'':' fn'),'data-k':k,'aria-label':k==='⌫'?'Löschen':k==='←'?'nach links':k==='→'?'nach rechts':'Ziffer '+k},k));
+  });
+  ['pointerdown','mousedown','touchstart'].forEach(function(ev){bar.addEventListener(ev,function(e){e.preventDefault();},{passive:false});});
+  bar.addEventListener('pointerup',function(e){var b=e.target.closest('button');if(b) press(b.getAttribute('data-k'));});
+  bar.addEventListener('click',function(e){if(e.detail===0){var b=e.target.closest('button');if(b) press(b.getAttribute('data-k'));}});
+  document.body.append(bar);KP.bar=bar;
+  document.addEventListener('focusin',function(e){
+    var t=e.target;
+    if(isTextInput(t)&&!t.readOnly&&!t.disabled){
+      KP.target=t;bar.hidden=false;document.body.classList.add('kpon');
+      setTimeout(function(){var r=t.getBoundingClientRect(),lim=window.innerHeight-bar.offsetHeight-16;if(r.bottom>lim) window.scrollBy(0,r.bottom-lim);},30);
+    }
+  });
+  document.addEventListener('focusout',function(){
+    setTimeout(function(){var a=document.activeElement;if(!(isTextInput(a)&&!a.readOnly&&!a.disabled)){bar.hidden=true;document.body.classList.remove('kpon');}},200);
+  });
+}
+function press(k){
+  var t=KP.target;
+  if(!t||t.readOnly||t.disabled||!document.body.contains(t)) return;
+  if(document.activeElement!==t) t.focus();
+  var single=t.maxLength===1;
+  if(/\d/.test(k)){
+    if(single) t.value=k;
+    else if(t.value.length<(t.maxLength>0?t.maxLength:9)) t.value+=k;
+    t.dispatchEvent(new Event('input',{bubbles:true}));
+  }else if(k==='⌫'){
+    if(t.value!==''){t.value=single?'':t.value.slice(0,-1);t.dispatchEvent(new Event('input',{bubbles:true}));}
+    else t.dispatchEvent(new KeyboardEvent('keydown',{key:'Backspace',bubbles:true}));
+  }else t.dispatchEvent(new KeyboardEvent('keydown',{key:k==='←'?'ArrowLeft':'ArrowRight',bubbles:true}));
+}
+
+/* ---------------------- Rechenschema (Kästchen-Raster) ---------------------- */
+function cellSizeFor(D){
+  var avail=Math.min(window.innerWidth||900,900)-110;
+  return Math.max(28,Math.min(46,Math.floor(avail/(D+0.9))-4));
+}
+function lineEl(D,span,thin){
+  var r=el('div',{class:'lrow'+(thin?' thin':'')});
+  r.append(el('div',{class:'sign'}));
+  for(var k=0;k<D;k++) r.append(el('div',{class:'lc'+((!span||(k>=span[0]&&k<=span[1]))?' on':'')}));
+  return r;
+}
+/* Zeilen: {type:'op'|'part'|'work'|'carry'|'res', sign, ltr, line:true|[von,bis], thin, cells:[{v|inp|sel, cls, key}]}.
+   Ohne line-Angaben steht der Strich direkt über der Ergebniszeile (also unter der Übertragszeile). */
+function buildScheme(cfg){
+  var D=cfg.D,root=el('div',{class:'scheme'});
+  root.style.setProperty('--cell',cellSizeFor(D)+'px');
+  var rows=cfg.rows,explicit=rows.some(function(r){return r.line!==undefined;});
+  var firstRes=-1;rows.forEach(function(r,i){if(firstRes<0&&r.type==='res') firstRes=i;});
+  var cells=[],types=[],ltr=[],inputs=[],byKey={};
+  rows.forEach(function(row,r){
+    var ln=explicit?row.line:(r===firstRes);
+    if(ln) root.append(lineEl(D,Array.isArray(ln)?ln:null,row.thin));
+    var rowEl=el('div',{class:'srow '+row.type});
+    rowEl.append(el('div',{class:'sign'},row.sign||''));
+    var rc=[];
+    row.cells.forEach(function(d,c){
+      d=d||{};var n;
+      if(d.inp){
+        n=el('input',{class:'c inp'+(d.cls?' '+d.cls:''),type:'text',inputmode:'none',maxlength:'1',autocomplete:'off','aria-label':'Ziffer'});
+        inputs.push(n);
+      }else if(d.sel){
+        n=el('button',{class:'c sel'+(d.cls?' '+d.cls:''),type:'button'},d.v||'');
+      }else{
+        n=el('div',{class:'c st'+(d.cls?' '+d.cls:'')},d.v||'');
+      }
+      if(d.symIdx!==undefined) n.classList.add('sym','sym'+d.symIdx);
+      if(d.key){n._key=d.key;n.setAttribute('data-key',d.key);byKey[d.key]=n;}
+      n._r=r;n._c=c;
+      rowEl.append(n);rc.push(n);
+    });
+    cells.push(rc);types.push(row.type);ltr.push(!!row.ltr);root.append(rowEl);
+  });
+  var sc={el:root,cells:cells,types:types,ltr:ltr,inputs:inputs,D:D,byKey:byKey};
+  wireNav(sc,cfg.order);
+  return sc;
+}
+function wireNav(sc,order){
+  var cells=sc.cells,types=sc.types;
+  if(order) order.forEach(function(o,i){cells[o[0]][o[1]]._o=i;});
+  function isInp(n){return n&&n.tagName==='INPUT'&&!n.disabled&&!n.readOnly;}
+  function focusEl(n){if(n){n.focus();if(n.select) n.select();}}
+  function nextIn(t,dir){
+    if(order&&t._o!==undefined){var o=order[t._o+dir];return o?cells[o[0]][o[1]]:null;}
+    var row=cells[t._r],step=((types[t._r]==='op'||sc.ltr[t._r])?1:-1)*dir;
+    for(var c=t._c+step;c>=0&&c<row.length;c+=step) if(isInp(row[c])) return row[c];
+    return null;
+  }
+  sc.el.addEventListener('input',function(e){
+    var t=e.target;if(t.tagName!=='INPUT') return;
+    t.value=t.value.replace(/\D/g,'').slice(-1);
+    if(t.value) focusEl(nextIn(t,1));
+  });
+  sc.el.addEventListener('keydown',function(e){
+    var t=e.target;if(t.tagName!=='INPUT'||t._r===undefined) return;
+    if(e.key==='Backspace'&&t.value===''){
+      var p=nextIn(t,-1);
+      if(p){e.preventDefault();p.value='';focusEl(p);p.dispatchEvent(new Event('input',{bubbles:true}));}
+    }else if(e.key==='ArrowLeft'||e.key==='ArrowRight'){
+      var dir=e.key==='ArrowRight'?1:-1,row=cells[t._r];
+      for(var c=t._c+dir;c>=0&&c<row.length;c+=dir) if(isInp(row[c])){e.preventDefault();focusEl(row[c]);break;}
+    }else if(e.key==='ArrowUp'||e.key==='ArrowDown'){
+      var d2=e.key==='ArrowDown'?1:-1;
+      for(var r=t._r+d2;r>=0&&r<cells.length;r+=d2) if(isInp(cells[r][t._c])){e.preventDefault();focusEl(cells[r][t._c]);break;}
+    }
+  });
+}
+function lockScheme(sc){
+  sc.inputs.forEach(function(i){i.readOnly=true;});
+  sc.el.querySelectorAll('button.sel').forEach(function(b){b.disabled=true;});
+}
+function clearMarks(sc){sc.el.querySelectorAll('.c').forEach(function(n){n.classList.remove('bad','good');});}
+function readInputs(list){
+  var vals=list.map(function(n){return n.value||'';}),idx=[];
+  vals.forEach(function(v,k){if(v!=='') idx.push(k);});
+  if(!idx.length) return {empty:true,vals:vals,str:''};
+  return {empty:false,vals:vals,contiguous:idx[idx.length-1]-idx[0]+1===idx.length,str:idx.map(function(k){return vals[k];}).join(''),start:idx[0],end:idx[idx.length-1]};
+}
+function readRow(sc,r){return readInputs(sc.cells[r]);}
+/* Ergebniszeile, die rechtsbündig in der letzten Spalte enden muss, Kästchen grün/rot markieren */
+function markRight(sc,r,trueStr,endK){
+  sc.cells[r].forEach(function(n,k){
+    if(!n.value) return;
+    var p=endK-k,t=(p>=0&&p<trueStr.length)?trueStr[trueStr.length-1-p]:'';
+    n.classList.add(n.value===t?'good':'bad');
+  });
+}
+
+/* Statisches Schema mit richtiger Lösung (Addition/Subtraktion) */
+function solutionScheme(op,operands,c,gapMarks){
+  var D=Math.max(Math.max.apply(null,operands.map(function(o){return String(o).length;})),c.len);
+  var sign=op==='+'?'+':'−',rows=[];
+  operands.forEach(function(o,i){
+    var s=String(o);
+    rows.push({type:'op',sign:i===0?'':sign,cells:Array.from({length:D},function(_,k){var j=k-(D-s.length);return j>=0?{v:s[j],cls:gapMarks&&gapMarks.indexOf(i+':'+(D-1-k))>=0?'good':''}:{};})});
+  });
+  rows.push({type:'carry',sign:'',cells:Array.from({length:D},function(_,k){var p=D-1-k;return (p>=1&&p<c.cl&&c.carry[p]>0)?{v:String(c.carry[p])}:{};})});
+  var rs=String(c.value);
+  rows.push({type:'res',sign:'',cells:Array.from({length:D},function(_,k){var j=k-(D-rs.length);return j>=0?{v:rs[j],cls:'good'}:{};})});
+  return buildScheme({D:D,rows:rows});
+}
+
+/* ---------------------- gemeinsame Bausteine ---------------------- */
+var EST_TIPS={
+  '+':'Runde jede Zahl, zum Beispiel auf ihre größte Stelle, und rechne im Kopf.',
+  '-':'Runde jede Zahl, zum Beispiel auf ihre größte Stelle, und rechne im Kopf.',
+  '*':'Runde die Faktoren, zum Beispiel auf ihre größte Stelle, und rechne im Kopf.',
+  ':':'Suche Zahlen in der Nähe, die sich leicht im Kopf teilen lassen.'
+};
+function estimateStep(task,card,onOk){
+  var inp=el('input',{class:'est',type:'text',inputmode:'none',autocomplete:'off',placeholder:'dein Überschlag','aria-label':'Überschlag'});
+  var btn=el('button',{class:'btn sec',type:'button'},'Überschlag prüfen');
+  var msg=el('div'),ok=false,tries=0;
+  inp.addEventListener('input',function(){inp.value=inp.value.replace(/\D/g,'').slice(0,9);});
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter') btn.click();});
+  btn.addEventListener('click',function(){
+    if(ok||inp.value==='') return;
+    msg.innerHTML='';
+    if(estimateOk(task.op,task.operands,Number(inp.value))){
+      ok=true;inp.readOnly=true;btn.hidden=true;inp.blur();
+      msg.className='fb ok';
+      msg.append(el('strong',null,'✔ Das ist ein sinnvoller Überschlag.'),el('p',null,'Jetzt geht es weiter.'));
+      if(onOk) onOk();
+    }else{
+      tries++;
+      msg.className='fb bad';
+      msg.append(el('strong',null,'Dein Überschlag liegt zu weit vom Ergebnis entfernt.'),el('p',null,EST_TIPS[task.op]+' Versuche es noch einmal.'));
+      if(tries>=2) msg.append(el('p',null,'Tipp: '+estimateText(task.op,task.operands)));
+    }
+    card.dispatchEvent(new Event('input',{bubbles:true}));
+  });
+  var box=el('div',{class:'step'},
+    el('h3',null,circ(1)+' Überschlag'),
+    el('p',{class:'small'},EST_TIPS[task.op]+' Schreibe das Ergebnis deines Überschlags auf.'),
+    el('div',{class:'estrow'},inp,btn),msg);
+  return {el:box,input:inp,done:function(){return ok;}};
+}
+/* Selbsteinschätzung. recheck: Wer "passt nicht" ankreuzt, darf vor dem Prüfen nachrechnen. */
+function selfStep(title,labels,recheck){
+  var name='sc'+(++uid);
+  var wrap=el('div',{class:'step'},el('h3',null,title));
+  var note=el('div',{class:'hint',hidden:true});
+  function mark(){wrap.querySelectorAll('.opt').forEach(function(x){x.classList.toggle('on',x.querySelector('input').checked);});}
+  [['ja',labels[0]],['nein',labels[1]]].forEach(function(o){
+    var inp=el('input',{type:'radio',name:name,value:o[0]});
+    var lab=el('label',{class:'opt'},inp,el('span',null,o[1]));
+    inp.addEventListener('change',function(){
+      mark();
+      if(!recheck) return;
+      note.innerHTML='';
+      if(o[0]==='nein'){
+        note.hidden=false;
+        note.append(el('strong',null,'Rechne noch einmal nach!'),
+          el('p',null,'Du kannst dein Ergebnis oben noch verbessern. Wenn du etwas änderst, kreuzt du danach noch einmal an. Du kannst aber auch gleich auf „Prüfen“ tippen.'));
+      }else note.hidden=true;
+    });
+    wrap.append(lab);
+  });
+  wrap.append(note);
+  return {el:wrap,
+    done:function(){return !!wrap.querySelector('input:checked');},
+    claim:function(){var c=wrap.querySelector('input:checked');return c?c.value:null;},
+    reset:function(){
+      wrap.querySelectorAll('input').forEach(function(i){i.checked=false;});mark();
+      note.innerHTML='';note.hidden=false;
+      note.append(el('strong',null,'Du hast etwas verändert.'),el('p',null,'Kreuze bitte noch einmal an, ob dein Ergebnis jetzt zu deinem Überschlag passt.'));
+    }};
+}
+function resultSelf(){return selfStep('Passt dein Ergebnis zu deinem Überschlag?',['Mein Ergebnis passt zu meinem Überschlag.','Mein Ergebnis passt nicht zu meinem Überschlag.'],true);}
+function watchReset(sc,self){sc.el.addEventListener('input',function(){if(self.done()) self.reset();});}
+function metaText(claim,resultOk){
+  if(resultOk) return claim==='ja'
+    ?'Du hast richtig eingeschätzt: Dein Ergebnis passt zum Überschlag und ist richtig.'
+    :'Dein Ergebnis ist richtig, obwohl du gedacht hast, dass es nicht zum Überschlag passt. Vergleiche mit dem Beispiel-Überschlag unten: Vielleicht war dein Überschlag zu ungenau.';
+  return claim==='ja'
+    ?'Du hast gedacht, dass dein Ergebnis zum Überschlag passt – es war aber falsch. Ein Überschlag findet nur grobe Fehler. Kleine Fehler entdeckst du erst beim genauen Nachrechnen.'
+    :'Gut, dass du misstrauisch warst: Du hast bemerkt, dass dein Ergebnis nicht zum Überschlag passt.';
+}
+function fehlerMeta(detectable,claim){
+  if(detectable) return claim==='nein'?'Richtig erkannt: Das Ergebnis passt nicht zum Überschlag – das war ein Hinweis auf einen Fehler.':'Hier hätte dir der Überschlag geholfen: Das Ergebnis weicht deutlich vom Überschlag ab.';
+  return claim==='ja'?'Dieser Fehler ist klein: Das falsche Ergebnis passt trotzdem zum Überschlag. Solche Fehler findest du nur, wenn du genau nachrechnest.':'Der Fehler ist eigentlich zu klein, um im Überschlag aufzufallen – vielleicht war dein Überschlag etwas ungenau.';
+}
+function checkAufstellung(sc,operands,resLen){
+  var exp=operands.map(String),ends=[],bad={},msgs=[],okAlign=true;
+  exp.forEach(function(s,i){
+    var vals=sc.cells[i].map(function(n){return n.value||'';});
+    var idx=[];vals.forEach(function(v,k){if(v!=='') idx.push(k);});
+    if(!idx.length){bad[i]=1;msgs.push('Zeile '+(i+1)+' ist noch leer.');ends.push(null);return;}
+    var contiguous=idx[idx.length-1]-idx[0]+1===idx.length;
+    var str=idx.map(function(k){return vals[k];}).join('');
+    ends.push(idx[idx.length-1]);
+    if(!contiguous){bad[i]=1;msgs.push('In Zeile '+(i+1)+' ist eine Lücke zwischen den Ziffern.');}
+    else if(str!==s){bad[i]=1;msgs.push('In Zeile '+(i+1)+' sollte die Zahl '+fmt(s)+' stehen.');}
+  });
+  var count={};ends.forEach(function(e){if(e!==null) count[e]=(count[e]||0)+1;});
+  var e=null,best=0;
+  Object.keys(count).forEach(function(k){var kk=Number(k);if(count[k]>best||(count[k]===best&&kk>e)){best=count[k];e=kk;}});
+  if(e!==null){
+    var misaligned=false;
+    ends.forEach(function(x,i){if(x!==null&&x!==e){bad[i]=1;misaligned=true;}});
+    if(misaligned){okAlign=false;msgs.push('Nicht alle Zahlen stehen richtig untereinander: Die Einer müssen in einer Spalte stehen, ebenso die Zehner, die Hunderter und so weiter.');}
+    if(e+1<resLen){okAlign=false;msgs.push('Du hast zu weit links angefangen. Für das Ergebnis ist nicht genug Platz – schreibe weiter rechts.');}
+  }
+  return {ok:Object.keys(bad).length===0&&okAlign&&e!==null,e:e,bad:bad,msgs:msgs};
+}
+/* Tippen auf eine Ziffer (Fehleraufgaben) */
+function wireSelect(sc,card,onSel){
+  var btns=sc.el.querySelectorAll('button.c.sel');
+  btns.forEach(function(b){
+    b.addEventListener('click',function(){
+      btns.forEach(function(x){x.classList.remove('chosen');});
+      b.classList.add('chosen');onSel(b);
+      card.dispatchEvent(new Event('input',{bubbles:true}));
+    });
+  });
+}
+function corrInput(ph,short){
+  var i=el('input',{class:'corr'+(short?' short':''),type:'text',inputmode:'none',autocomplete:'off',maxlength:'9',placeholder:ph,'aria-label':ph});
+  i.addEventListener('input',function(){i.value=i.value.replace(/\D/g,'').slice(0,9);});
+  return i;
+}
+
+/* ---------------------- Aufgabentypen ---------------------- */
+var KINDS={};
+
+KINDS.rechnen=function(task,card){
+  var op=task.op,operands=task.operands,c=task.c,D=task.D,write=task.write,feedback=task.feedback;
+  var sign=op==='+'?'+':'−';
+  var nOp=operands.length,rCarry=nOp,rRes=nOp+1;
+  card.append(el('p',{class:'stmt'},'Berechne schriftlich: ',el('strong',null,operands.map(fmt).join(' '+sign+' '))));
+  var s2;
+  var est=estimateStep(task,card,function(){s2.classList.remove('locked');});card.append(est.el);
+
+  var rows=[];
+  operands.forEach(function(o,i){
+    var s=String(o);
+    rows.push({type:'op',sign:i===0?'':sign,cells:Array.from({length:D},function(_,k){if(write) return {inp:true};var j=k-(D-s.length);return j>=0?{v:s[j]}:{};})});
+  });
+  rows.push({type:'carry',sign:'',cells:Array.from({length:D},function(_,k){return {inp:write?true:k<D-1};})});
+  rows.push({type:'res',sign:'',cells:Array.from({length:D},function(){return {inp:true};})});
+  var sc=buildScheme({D:D,rows:rows});
+  var gated=write&&feedback,aufOk=!gated,rep=null;
+  s2=el('div',{class:'step locked'},
+    el('h3',null,circ(2)+(write?' Schreibe die Zahlen untereinander und rechne.':' Trage den Übertrag und das Ergebnis ein.')),
+    write?el('p',{class:'small'},'Schreibe in jedes Kästchen eine Ziffer. Die Einer stehen ganz rechts untereinander.'):null);
+  s2.append(sc.el);
+  s2.append(el('p',{class:'small'},'Die kleine Zeile über dem Strich ist für den Übertrag.'));
+  function setCalc(disabled){[rCarry,rRes].forEach(function(r){sc.cells[r].forEach(function(n){if(n.tagName==='INPUT') n.disabled=disabled;});});}
+  if(gated){
+    setCalc(true);
+    var msg=el('div');
+    var btn=el('button',{class:'btn sec',type:'button'},'Aufstellung prüfen');
+    btn.addEventListener('click',function(){
+      clearMarks(sc);
+      rep=checkAufstellung(sc,operands,c.len);
+      msg.innerHTML='';
+      if(rep.ok){
+        msg.className='fb ok';
+        msg.append(el('strong',null,'✔ Die Zahlen stehen richtig untereinander!'),el('p',null,'Einer unter Einer, Zehner unter Zehner … Jetzt kannst du rechnen.'));
+        for(var r=0;r<nOp;r++) sc.cells[r].forEach(function(n){if(n.tagName==='INPUT') n.readOnly=true;});
+        setCalc(false);btn.hidden=true;aufOk=true;
+        var last=sc.cells[rRes][rep.e];if(last) last.focus();
+      }else{
+        msg.className='fb bad';
+        msg.append(el('strong',null,'Das passt noch nicht ganz:'));
+        rep.msgs.forEach(function(m){msg.append(el('p',null,m));});
+        Object.keys(rep.bad).forEach(function(i){sc.cells[i].forEach(function(n){n.classList.add('bad');});});
+        msg.append(el('p',{class:'small'},'Verbessere deine Zahlen und tippe dann noch einmal auf „Aufstellung prüfen“.'));
+      }
+      card.dispatchEvent(new Event('input',{bubbles:true}));
+    });
+    s2.append(el('div',{class:'actions'},btn),msg);
+  }
+  card.append(s2);
+  var self=selfStep(circ(3)+' Passt dein Ergebnis zu deinem Überschlag?',['Mein Ergebnis passt zu meinem Überschlag.','Mein Ergebnis passt nicht zu meinem Überschlag.'],true);
+  card.append(self.el);
+  watchReset(sc,self);
+
+  function ready(){
+    var any=sc.cells[rRes].some(function(n){return n.value!=='';});
+    return est.done()&&any&&self.done()&&aufOk;
+  }
+  function evaluate(){
+    var e=D-1,repL=null;
+    if(write){repL=(rep&&rep.ok)?rep:checkAufstellung(sc,operands,c.len);if(repL.e!==null) e=repL.e;}
+    var rr=readRow(sc,rRes),lines=[],correct=false,trueStr=String(c.value);
+    if(!rr.empty&&rr.contiguous&&rr.str===trueStr&&rr.end===e) correct=true;
+    if(!correct){
+      if(rr.empty) lines.push('Du hast kein Ergebnis eingetragen.');
+      else if(!rr.contiguous) lines.push('In deinem Ergebnis ist eine Lücke zwischen den Ziffern.');
+      else if(rr.str===trueStr) lines.push('Die Ziffern sind richtig, aber das Ergebnis steht an der falschen Stelle: Die Einer müssen unter den Einern stehen.');
+      else{
+        var firstBad=-1;
+        for(var p=0;p<Math.max(trueStr.length,rr.str.length);p++){
+          var u=rr.vals[e-p]!==undefined?rr.vals[e-p]:'';
+          var t=p<trueStr.length?trueStr[trueStr.length-1-p]:'';
+          if(u!==t){firstBad=p;break;}
+        }
+        if(firstBad>=0) lines.push('Schau dir die '+colName(firstBad)+' noch einmal an – dort stimmt etwas nicht.');
+        for(var q=1;q<c.cl;q++){
+          var cn=sc.cells[rCarry][e-q];
+          if(cn&&cn.value!==''&&Number(cn.value)!==c.carry[q]){lines.push('Auch dein Übertrag in der '+colName(q)+' stimmt nicht (richtig wäre '+c.carry[q]+').');break;}
+        }
+      }
+      if(write&&!feedback&&repL&&!repL.ok) repL.msgs.forEach(function(m){lines.push('Beim Untereinanderschreiben: '+m);});
+      if(write&&repL&&!repL.ok) Object.keys(repL.bad).forEach(function(i){sc.cells[i].forEach(function(n){n.classList.add('bad');});});
+      if(!rr.empty) markRight(sc,rRes,trueStr,e);
+    }else{
+      sc.cells[rRes].forEach(function(n){if(n.value!=='') n.classList.add('good');});
+    }
+    return {correct:correct,
+      headline:correct?'Richtig! Gut gerechnet.':'Leider nicht richtig. Das richtige Ergebnis ist '+fmt(c.value)+'.',
+      lines:lines,claim:self.claim(),
+      estimateLine:'Ein möglicher Überschlag: '+estimateText(op,operands),
+      solution:correct?null:solutionScheme(op,operands,c)};
+  }
+  return {ready:ready,evaluate:evaluate,lock:function(){lockScheme(sc);}};
+};
+
+KINDS.luecke=function(task,card){
+  var op=task.op,rows=task.rows,n=task.operands.length,c=task.c;
+  var D=Math.max.apply(null,rows.map(function(s){return s.length;}));
+  var sign=op==='+'?'+':'−';
+  card.append(el('p',{class:'stmt'},el('strong',null,'Lückenaufgabe: '),'Ergänze die gelben Kästchen, sodass die Rechnung stimmt.'));
+  var blankSet={};task.blanks.forEach(function(b){blankSet[b.ri+':'+b.p]=1;});
+  var order=[];
+  var srows=[];
+  rows.forEach(function(s,ri){
+    var rowIdx=ri<n?ri:n+1;
+    var cellsArr=Array.from({length:D},function(_,k){
+      var p=D-1-k,j=s.length-1-p;
+      if(j<0) return {};
+      if(blankSet[ri+':'+p]){order.push({r:rowIdx,c:k,p:p,ri:ri});return {inp:true,cls:'gap'};}
+      return {v:s[j]};
+    });
+    srows.push({type:ri<n?'op':'res',sign:ri<n&&ri>0?sign:'',cells:cellsArr});
+  });
+  var carryRow={type:'carry',sign:'',cells:Array.from({length:D},function(_,k){return {inp:k<D-1};})};
+  srows.splice(n,0,carryRow);
+  order.sort(function(a,b){return b.c-a.c||a.r-b.r;});
+  var sc=buildScheme({D:D,rows:srows,order:order.map(function(o){return [o.r,o.c];})});
+  var step=el('div',{class:'step'},el('h3',null,'Ergänze die fehlenden Ziffern.'),sc.el,
+    el('p',{class:'small'},'Die kleine Zeile über dem Strich ist für den Übertrag (du musst sie nicht ausfüllen).'));
+  card.append(step);
+  function gapInputs(){return order.map(function(o){return sc.cells[o.r][o.c];});}
+  function ready(){return gapInputs().every(function(i){return i.value!=='';});}
+  function evaluate(){
+    var strs=rows.map(function(s,ri){
+      var rowIdx=ri<n?ri:n+1;
+      return s.split('').map(function(ch,j){var p=s.length-1-j;return blankSet[ri+':'+p]?sc.cells[rowIdx][D-1-p].value:ch;}).join('');
+    });
+    var nums=strs.map(Number);
+    var eq=op==='+'?sum(nums.slice(0,-1))===nums[nums.length-1]:nums[0]-sum(nums.slice(1,-1))===nums[nums.length-1];
+    var leadZero=strs.some(function(s){return s.length>1&&s[0]==='0';});
+    var correct=eq&&!leadZero,lines=[];
+    if(!correct){
+      if(leadZero) lines.push('Eine Zahl darf nicht mit 0 beginnen.');
+      var chk=op==='+'?strs:[strs[strs.length-1]].concat(strs.slice(1,-1)).concat([strs[0]]);
+      var bc=firstBadColumn(chk);
+      if(bc>=0) lines.push('Deine Rechnung geht nicht auf. Prüfe die '+colName(bc)+' noch einmal.');
+      else lines.push('Deine Rechnung geht nicht auf.');
+    }
+    order.forEach(function(o){var cell=sc.cells[o.r][o.c];var right=cell.value===rows[o.ri][rows[o.ri].length-1-o.p];cell.classList.add(right?'good':'bad');});
+    var marks=task.blanks.map(function(b){return b.ri+':'+b.p;});
+    return {correct:correct,
+      headline:correct?'Richtig! Die Rechnung stimmt.':'Leider nicht richtig.',
+      lines:lines,solution:correct?null:solutionScheme(op,task.operands,c,marks),claim:null};
+  }
+  return {ready:ready,evaluate:evaluate,lock:function(){lockScheme(sc);}};
+};
+
+KINDS.fehler=function(task,card){
+  var op=task.op,operands=task.operands,c=task.c,len=c.len;
+  var sign=op==='+'?'+':'−',n=operands.length;
+  var D=Math.max(Math.max.apply(null,operands.map(function(o){return String(o).length;})),len);
+  card.append(el('p',{class:'stmt'},el('strong',null,'Fehleraufgabe: '),'Jemand hat so gerechnet: ',el('strong',null,operands.map(fmt).join(' '+sign+' ')),'. In dem Ergebnis steckt ein Fehler.'));
+  var s2,s3;
+  var est=estimateStep(task,card,function(){s2.classList.remove('locked');s3.classList.remove('locked');});card.append(est.el);
+  var rows=[];
+  operands.forEach(function(o,i){
+    var s=String(o);
+    rows.push({type:'op',sign:i===0?'':sign,cells:Array.from({length:D},function(_,k){var j=k-(D-s.length);return j>=0?{v:s[j]}:{};})});
+  });
+  rows.push({type:'carry',sign:'',cells:Array.from({length:D},function(_,k){var p=D-1-k;return (p>=1&&p<c.cl&&c.carry[p]>0)?{v:String(c.carry[p])}:{};})});
+  rows.push({type:'res',sign:'',cells:Array.from({length:D},function(_,k){var p=D-1-k;return p<len?{sel:true,v:String(task.child[p])}:{};})});
+  var sc=buildScheme({D:D,rows:rows});
+  var selP=null;
+  wireSelect(sc,card,function(b){selP=D-1-b._c;});
+  var self=selfStep('Passt das Ergebnis dieser Rechnung zu deinem Überschlag?',['Das Ergebnis passt zu meinem Überschlag.','Das Ergebnis passt nicht zu meinem Überschlag.'],false);
+  var corr=corrInput('richtiges Ergebnis');
+  s2=el('div',{class:'step locked'},
+    el('h3',null,circ(2)+' Schau dir die Rechnung an.'),sc.el,
+    el('p',{class:'small'},'Die kleinen Ziffern über dem Strich sind die Überträge.'),
+    self.el);
+  s3=el('div',{class:'step locked'},
+    el('h3',null,circ(3)+' Finde den Fehler.'),
+    el('p',null,'Tippe oben im Ergebnis auf die Ziffer, die falsch ist. Schreibe dann das richtige Ergebnis auf:'),corr);
+  card.append(s2,s3);
+  function ready(){return est.done()&&self.done()&&selP!==null&&corr.value!=='';}
+  function evaluate(){
+    corr.readOnly=true;
+    var foundOk=selP===task.errPos,valOk=Number(corr.value)===c.value,correct=foundOk&&valOk,lines=[];
+    var cells=sc.cells[n+1];
+    cells.forEach(function(b,k){if(b.tagName==='BUTTON'&&D-1-k===task.errPos) b.classList.add('bad');});
+    lines.push(foundOk?'✔ Du hast die falsche Ziffer gefunden (in der '+colName(task.errPos)+').'
+                      :'✘ Die falsche Ziffer steht in der '+colName(task.errPos)+' (markiert).');
+    lines.push(task.errType==='vergessen'?'Hier wurde der Übertrag nicht mitgerechnet.':'Hier hat sich ein Rechenfehler eingeschlichen: Richtig ist die Ziffer '+c.res[task.errPos]+'.');
+    lines.push(valOk?'✔ Dein verbessertes Ergebnis ist richtig.':'✘ Das richtige Ergebnis ist '+fmt(c.value)+'.');
+    var detectable=Math.abs(task.childValue-c.value)>0.1*c.value,claim=self.claim();
+    return {correct:correct,
+      headline:correct?'Super! Fehler gefunden und richtig verbessert.':'Das war noch nicht ganz richtig.',
+      lines:lines,metaCustom:fehlerMeta(detectable,claim),
+      estimateLine:'Ein möglicher Überschlag: '+estimateText(op,operands),
+      solution:solutionScheme(op,operands,c),claim:claim};
+  }
+  return {ready:ready,evaluate:evaluate,lock:function(){lockScheme(sc);}};
+};
+
+KINDS.symbol=function(task,card){
+  var c=task.c,pats=task.patterns,n=task.operands.length;
+  var D=pats[pats.length-1].length;
+  card.append(el('p',{class:'stmt'},el('strong',null,'Buchstabenrätsel: '),'Jeder Buchstabe steht für eine Ziffer.'));
+  card.append(el('p',{class:'small'},'Gleiche Buchstaben bedeuten gleiche Ziffern, verschiedene Buchstaben bedeuten verschiedene Ziffern. Keine Zahl beginnt mit 0. Es gibt genau eine Lösung.'+(task.word?' Das ist ein berühmtes Rätsel mit vielen Buchstaben – nimm dir Zeit!':'')));
+  var rows=[];
+  pats.forEach(function(s,ri){
+    var cellsArr=Array.from({length:D},function(_,k){
+      var j=k-(D-s.length);if(j<0) return {};
+      var ch=s[j],si=task.syms.indexOf(ch);
+      return si>=0?{v:ch,symIdx:si}:{v:ch};
+    });
+    rows.push({type:ri<n?'op':'res',sign:ri<n&&ri>0?'+':'',cells:cellsArr});
+  });
+  rows.splice(n,0,{type:'carry',sign:'',cells:Array.from({length:D},function(_,k){return {inp:k<D-1};})});
+  var sc=buildScheme({D:D,rows:rows});
+  var inputs=task.syms.map(function(sym){
+    var inp=el('input',{type:'text',inputmode:'none',maxlength:'1',autocomplete:'off','aria-label':'Ziffer für '+sym});
+    inp.addEventListener('input',function(){inp.value=inp.value.replace(/\D/g,'').slice(-1);});
+    return inp;
+  });
+  /* Eingetragene Ziffern ersetzen oben im Rätsel sofort den Buchstaben (und umgekehrt beim Löschen) */
+  var symCells=Array.prototype.slice.call(sc.el.querySelectorAll('.c.sym'));
+  symCells.forEach(function(n){n._sym=n.textContent;});
+  function showDigits(){
+    symCells.forEach(function(n){
+      var v=inputs[task.syms.indexOf(n._sym)].value;
+      n.textContent=v!==''?v:n._sym;
+      n.classList.toggle('filled',v!=='');
+    });
+  }
+  card.addEventListener('input',showDigits);
+  var tipsLeft=2,tipMsg=el('p',{class:'small'},'Du kannst dir höchstens 2 Ziffern verraten lassen.');
+  var tipBtn=el('button',{class:'btn sec',type:'button'},'\uD83D\uDCA1 Tipp: eine Ziffer verraten (noch 2)');
+  tipBtn.addEventListener('click',function(){
+    if(tipsLeft<=0) return;
+    var cand=[];task.syms.forEach(function(sym,i){if(!inputs[i]._tip&&inputs[i].value!==task.map[sym]) cand.push(i);});
+    if(!cand.length){tipMsg.textContent='Alle deine Ziffern stimmen schon – du brauchst keinen Tipp mehr.';return;}
+    var i=pick(cand),inp=inputs[i];
+    inp.value=task.map[task.syms[i]];inp._tip=true;inp.readOnly=true;inp.classList.add('tip');
+    tipsLeft--;
+    tipMsg.textContent='Tipp: '+task.syms[i]+' = '+inp.value+'.'+(tipsLeft>0?' Du hast noch einen Tipp.':' Jetzt hast du keinen Tipp mehr.');
+    if(tipsLeft>0) tipBtn.textContent='\uD83D\uDCA1 Tipp: eine Ziffer verraten (noch '+tipsLeft+')';else tipBtn.hidden=true;
+    if(document.activeElement&&document.activeElement.blur) document.activeElement.blur();
+    card.dispatchEvent(new Event('input',{bubbles:true}));
+  });
+  var tipWrap=el('div',{class:'actions'},tipBtn);
+  tipWrap=el('div',null,tipWrap,tipMsg);
+  var ans=el('div',{class:'symans'},task.syms.map(function(sym,i){return el('label',null,el('span',{class:'sym'+i},sym),' = ',inputs[i]);}));
+  card.append(el('div',{class:'step'},el('h3',null,'Finde die Ziffern.'),sc.el,
+    el('p',{class:'small'},'Trägst du unten eine Ziffer ein, erscheint sie oben anstelle des Buchstabens. Die kleine Zeile über dem Strich ist für deine Überträge und Notizen. Tipp: Überlege zuerst, wo ein Übertrag entstehen muss.'),
+    el('p',null,'Welche Ziffer gehört zu welchem Buchstaben?'),ans,tipWrap));
+  function ready(){return inputs.every(function(i){return i.value!=='';});}
+  function evaluate(){
+    tipBtn.hidden=true;
+    var vals=inputs.map(function(i){return i.value;}),lines=[];
+    var dup=vals.some(function(v,i){return vals.indexOf(v)!==i;});
+    var correct=task.syms.every(function(s,i){return vals[i]===task.map[s];});
+    inputs.forEach(function(inp,i){inp.parentNode.style.color=vals[i]===task.map[task.syms[i]]?'var(--ok)':'var(--bad)';inp.readOnly=true;});
+    if(!correct){
+      if(dup) lines.push('Zwei verschiedene Buchstaben haben bei dir dieselbe Ziffer – das geht nicht.');
+      lines.push('Richtig ist: '+task.syms.map(function(s){return s+' = '+task.map[s];}).join('   '));
+    }
+    return {correct:correct,headline:correct?'Richtig! Du hast alle Buchstaben entschlüsselt.':'Leider nicht richtig.',lines:lines,solution:correct?null:buildSymSolution(task),claim:null};
+  }
+  return {ready:ready,evaluate:evaluate,lock:function(){lockScheme(sc);}};
+};
+function buildSymSolution(task){
+  var c=task.c,n=task.operands.length,D=task.patterns[n].length;
+  var rows=[];
+  task.operands.concat([c.value]).forEach(function(o,ri){
+    var s=String(o),pat=task.patterns[ri];
+    rows.push({type:ri<n?'op':'res',sign:ri<n&&ri>0?'+':'',cells:Array.from({length:D},function(_,k){
+      var j=k-(D-s.length);if(j<0) return {};
+      var si=task.syms.indexOf(pat[j]);
+      return si>=0?{v:s[j],symIdx:si}:{v:s[j]};
+    })});
+  });
+  rows.splice(n,0,{type:'carry',sign:'',cells:Array.from({length:D},function(_,k){var p=D-1-k;return (p>=1&&p<c.cl&&c.carry[p]>0)?{v:String(c.carry[p])}:{};})});
+  return buildScheme({D:D,rows:rows});
+}
+
+/* ---------- Multiplikation: rechnen ---------- */
+function checkMulPlacement(sc,partRows,info){
+  var used={},msgs=[],bad={},matches=[];
+  partRows.forEach(function(r,idx){
+    var rr=readRow(sc,r);if(rr.empty) return;
+    var z='Teilprodukt in Zeile '+(idx+1)+': ';
+    if(!rr.contiguous){bad[r]=1;msgs.push(z+'Zwischen den Ziffern ist eine Lücke.');return;}
+    var pos=info.D-1-rr.end,part=info.parts.filter(function(p){return p.pos===pos;})[0];
+    if(!part){bad[r]=1;msgs.push(z+'Die letzte Ziffer muss genau unter einer Ziffer des zweiten Faktors stehen – nämlich unter der, mit der du malnimmst.');return;}
+    if(part.d===0&&!/^0+$/.test(rr.str)){bad[r]=1;msgs.push(z+'Es endet unter der 0 des zweiten Faktors. Rücke es unter die Ziffer, mit der du malgenommen hast.');return;}
+    if(used[part.i]){bad[r]=1;msgs.push(z+'Unter der Ziffer '+part.d+' endet schon ein anderes Teilprodukt. Jedes Teilprodukt endet unter einer anderen Ziffer.');return;}
+    used[part.i]=true;matches.push({r:r,part:part,rr:rr});
+  });
+  info.parts.forEach(function(p){if(p.d>0&&!used[p.i]) msgs.push('Es fehlt noch das Teilprodukt mit der Ziffer '+p.d+' (also '+fmt(info.a)+' · '+p.d+'). Seine letzte Ziffer steht unter der '+p.d+'.');});
+  return {ok:msgs.length===0,msgs:msgs,bad:bad,matches:matches};
+}
+KINDS.mul=function(task,card){
+  var a=task.a,b=task.b,info=mulInfo(a,b),D=info.D,mode=task.mode,feedback=task.feedback;
+  var hasZero=info.sb.indexOf('0')>=0;
+  card.append(el('p',{class:'stmt'},'Berechne schriftlich: ',el('strong',null,fmt(a)+' · '+fmt(b))));
+  var s2;
+  var est=estimateStep(task,card,function(){s2.classList.remove('locked');});card.append(est.el);
+  var rows=[mulRows(info,mulCellMap(a,b).map,{cell:function(key,ch){return {v:ch,key:key};}})[0]];
+  var partRows=[];
+  if(mode!=='one') info.parts.forEach(function(p,i){
+    partRows.push(rows.length);
+    rows.push({type:'part',line:i===0,cells:Array.from({length:D},function(_,k){
+      var pos=D-1-k;
+      if(mode==='given') return (pos>=p.pos&&pos<=p.pos+info.la)?{inp:true}:{};
+      return {inp:true};
+    })});
+  });
+  var rCarry=rows.length;rows.push({type:'carry',line:false,cells:Array.from({length:D},function(_,k){return {inp:k<D-1};})});
+  var rRes=rows.length;rows.push({type:'res',line:true,cells:Array.from({length:D},function(){return {inp:true};})});
+  var sc=buildScheme({D:D,rows:rows});
+  var title,tip;
+  if(mode==='one'){title='Trage den Übertrag und das Ergebnis ein.';tip='Rechne von rechts nach links: erst die Einer mal '+b+', dann die Zehner mal '+b+' … Die letzte Ziffer des Ergebnisses steht unter der '+b+'. Die kleine Zeile über dem Strich ist für den Übertrag.';}
+  else if(mode==='given'){title='Rechne die Teilprodukte aus und addiere sie.';tip='Oben steht '+fmt(a)+' · '+info.parts[0].d+', darunter '+fmt(a)+' · '+info.parts[1].d+'. Die Kästchen stehen schon an der richtigen Stelle. Die kleine Zeile über dem Strich ist für den Übertrag beim Addieren.';}
+  else{title='Schreibe die Teilprodukte eingerückt auf und addiere sie.';tip='Die letzte Ziffer jedes Teilprodukts steht genau unter der Ziffer des zweiten Faktors, mit der du malnimmst.'+(hasZero?' Bei der 0 im zweiten Faktor ist das Teilprodukt 0 – diese Zeile darfst du leer lassen.':'')+' Die kleine Zeile über dem Strich ist für den Übertrag beim Addieren.';}
+  s2=el('div',{class:'step locked'},el('h3',null,circ(2)+' '+title),el('p',{class:'small'},tip),sc.el);
+  function setCalc(dis){[rCarry,rRes].forEach(function(r){sc.cells[r].forEach(function(n){if(n.tagName==='INPUT') n.disabled=dis;});});}
+  var gated=mode==='free'&&feedback,placeOk=!gated;
+  if(gated){
+    setCalc(true);
+    var msg=el('div'),btn=el('button',{class:'btn sec',type:'button'},'Einrücken prüfen');
+    btn.addEventListener('click',function(){
+      clearMarks(sc);msg.innerHTML='';
+      var rep=checkMulPlacement(sc,partRows,info);
+      if(rep.ok){
+        msg.className='fb ok';
+        msg.append(el('strong',null,'✔ Deine Teilprodukte stehen an der richtigen Stelle!'),el('p',null,'Jetzt kannst du sie addieren. Ob du sie richtig ausgerechnet hast, siehst du erst am Ende.'));
+        partRows.forEach(function(r){sc.cells[r].forEach(function(n){n.readOnly=true;});});
+        setCalc(false);btn.hidden=true;placeOk=true;
+        sc.cells[rRes][D-1].focus();
+      }else{
+        msg.className='fb bad';
+        msg.append(el('strong',null,'Das passt noch nicht ganz:'));
+        rep.msgs.forEach(function(m){msg.append(el('p',null,m));});
+        Object.keys(rep.bad).forEach(function(r){sc.cells[r].forEach(function(n){if(n.value) n.classList.add('bad');});});
+        msg.append(el('p',{class:'small'},'Verbessere deine Teilprodukte und tippe dann noch einmal auf „Einrücken prüfen“.'));
+      }
+      card.dispatchEvent(new Event('input',{bubbles:true}));
+    });
+    s2.append(el('div',{class:'actions'},btn),msg);
+  }
+  card.append(s2);
+  var self=resultSelf();self.el.querySelector('h3').textContent=circ(3)+' Passt dein Ergebnis zu deinem Überschlag?';
+  card.append(self.el);watchReset(sc,self);
+  function ready(){return est.done()&&placeOk&&self.done()&&sc.cells[rRes].some(function(n){return n.value!=='';});}
+  function evaluate(){
+    var rr=readRow(sc,rRes),ts=String(info.value),lines=[];
+    var correct=!rr.empty&&rr.contiguous&&rr.str===ts&&rr.end===D-1;
+    if(!correct){
+      if(rr.empty) lines.push('Du hast kein Ergebnis eingetragen.');
+      else if(!rr.contiguous) lines.push('In deinem Ergebnis ist eine Lücke zwischen den Ziffern.');
+      else if(rr.str===ts) lines.push('Die Ziffern sind richtig, aber das Ergebnis steht an der falschen Stelle: Seine letzte Ziffer gehört unter die letzte Ziffer des zweiten Faktors.');
+      else{
+        var firstBad=-1;
+        for(var p=0;p<Math.max(ts.length,rr.str.length);p++){
+          var u=rr.vals[D-1-p]||'',t=p<ts.length?ts[ts.length-1-p]:'';
+          if(u!==t){firstBad=p;break;}
+        }
+        if(mode==='one'){
+          if(firstBad>=0) lines.push('Schau dir die '+colName(firstBad)+' noch einmal an – dort stimmt etwas nicht.');
+          var c1=mulCarry1(a,b);
+          for(var q=1;q<info.la;q++){
+            var cn=sc.cells[rCarry][D-1-q];
+            if(cn.value!==''&&Number(cn.value)!==c1[q]){lines.push('Auch dein Übertrag in der '+colName(q)+' stimmt nicht (richtig wäre '+c1[q]+').');break;}
+            if(cn.value===''&&c1[q]>0&&q===firstBad){lines.push('Hast du in der '+colName(q)+' den Übertrag vergessen?');break;}
+          }
+        }else{
+          var matches,anyWrong=false;
+          if(mode==='given'){
+            matches=[];
+            info.parts.forEach(function(pt,i){var r2=readRow(sc,partRows[i]);if(r2.empty) lines.push('Das Teilprodukt '+fmt(a)+' · '+pt.d+' fehlt.');else matches.push({r:partRows[i],part:pt,rr:r2});});
+          }else{
+            var rep=checkMulPlacement(sc,partRows,info);matches=rep.matches;
+            if(!rep.ok){
+              if(!feedback) rep.msgs.forEach(function(m){lines.push('Beim Einrücken: '+m);});
+              Object.keys(rep.bad).forEach(function(r){sc.cells[r].forEach(function(n){if(n.value) n.classList.add('bad');});});
+            }
+          }
+          matches.forEach(function(m){
+            var ok=m.rr.contiguous&&Number(m.rr.str)===m.part.val&&m.rr.end===D-1-m.part.pos;
+            sc.cells[m.r].forEach(function(n){if(n.value) n.classList.add(ok?'good':'bad');});
+            if(!ok){anyWrong=true;lines.push('Das Teilprodukt '+fmt(a)+' · '+m.part.d+' stimmt nicht. Richtig ist '+fmt(m.part.val)+'.');}
+          });
+          if(!anyWrong&&!lines.length&&firstBad>=0) lines.push('Deine Teilprodukte stimmen. Der Fehler steckt beim Addieren – schau dir die '+colName(firstBad)+' an.');
+        }
+      }
+      if(!rr.empty) markRight(sc,rRes,ts,D-1);
+    }else sc.cells[rRes].forEach(function(n){if(n.value!=='') n.classList.add('good');});
+    return {correct:correct,
+      headline:correct?'Richtig! Gut gerechnet.':'Leider nicht richtig. Das richtige Ergebnis ist '+fmt(info.value)+'.',
+      lines:lines,claim:self.claim(),
+      estimateLine:'Ein möglicher Überschlag: '+estimateText('*',[a,b]),
+      solution:correct?null:mulSolution(a,b)};
+  }
+  return {ready:ready,evaluate:evaluate,lock:function(){lockScheme(sc);}};
+};
+
+KINDS.mulluecke=function(task,card){
+  var info=task.info,map=task.map,bl={};task.blanks.forEach(function(k){bl[k]=1;});
+  card.append(el('p',{class:'stmt'},el('strong',null,'Lückenaufgabe: '),'Ergänze die gelben Kästchen, sodass die Malaufgabe stimmt.'));
+  var rows=mulRows(info,map,{carryInput:true,cell:function(key,ch){return bl[key]?{inp:true,cls:'gap',key:key}:{v:ch,key:key};}});
+  var order=[];rows.forEach(function(row,r){row.cells.forEach(function(d,c){if(d.cls==='gap') order.push([r,c]);});});
+  order.sort(function(x,y){return y[1]-x[1]||x[0]-y[0];});
+  var sc=buildScheme({D:info.D,rows:rows,order:order});
+  card.append(el('div',{class:'step'},el('h3',null,'Ergänze die fehlenden Ziffern.'),sc.el,
+    el('p',{class:'small'},'Unter dem ersten Strich stehen die Teilprodukte, ganz unten das Ergebnis. Die kleine Zeile über dem Strich ist für Überträge (du musst sie nicht ausfüllen).')));
+  var gaps=task.blanks.map(function(k){return sc.byKey[k];});
+  function ready(){return gaps.every(function(i){return i.value!=='';});}
+  function evaluate(){
+    var correct=true;
+    task.blanks.forEach(function(k){var n=sc.byKey[k],ok=n.value===map[k];n.classList.add(ok?'good':'bad');if(!ok) correct=false;});
+    var lines=correct?[]:['Die rot markierten Kästchen stimmen noch nicht.','Tipp: Jedes Teilprodukt ist der erste Faktor mal eine Ziffer des zweiten Faktors. Das Ergebnis ist die Summe der Teilprodukte.'];
+    return {correct:correct,headline:correct?'Richtig! Die Rechnung stimmt.':'Leider nicht richtig.',lines:lines,claim:null,
+      solution:correct?null:buildScheme({D:info.D,rows:mulRows(info,map,{carry:mulSolCarries(info),cell:function(key,ch){return {v:ch,key:key,cls:bl[key]?'good':''};}})})};
+  }
+  return {ready:ready,evaluate:evaluate,lock:function(){lockScheme(sc);}};
+};
+
+KINDS.mulfehler=function(task,card){
+  var a=task.a,b=task.b,info=task.info;
+  card.append(el('p',{class:'stmt'},el('strong',null,'Fehleraufgabe: '),'Jemand hat so gerechnet: ',el('strong',null,fmt(a)+' · '+fmt(b)),'. In der Rechnung steckt ein Fehler.'));
+  var s2,s3;
+  var est=estimateStep(task,card,function(){s2.classList.remove('locked');s3.classList.remove('locked');});card.append(est.el);
+  var map=mulCellMap(a,b,task.pv,task.resVal).map;
+  var sc=buildScheme({D:info.D,rows:mulRows(info,map,{carry:task.carryShown,cell:function(key,ch){
+    return (key[0]==='p'||key.indexOf('res:')===0)?{sel:true,v:ch,key:key}:{v:ch,key:key};}})});
+  var selKey=null;wireSelect(sc,card,function(b2){selKey=b2._key;});
+  var self=selfStep('Passt das Ergebnis dieser Rechnung zu deinem Überschlag?',['Das Ergebnis passt zu meinem Überschlag.','Das Ergebnis passt nicht zu meinem Überschlag.'],false);
+  var corr=corrInput('richtiges Ergebnis');
+  s2=el('div',{class:'step locked'},el('h3',null,circ(2)+' Schau dir die Rechnung an.'),sc.el,
+    el('p',{class:'small'},'Unter dem ersten Strich stehen die Teilprodukte. Die kleinen Ziffern über dem unteren Strich sind die Überträge beim Addieren.'),self.el);
+  s3=el('div',{class:'step locked'},el('h3',null,circ(3)+' Finde den Fehler.'),
+    el('p',null,'Tippe auf die Ziffer, bei der zuerst ein Fehler passiert ist – in einem Teilprodukt oder im Ergebnis. Schreibe dann das richtige Ergebnis auf:'),corr);
+  card.append(s2,s3);
+  function ready(){return est.done()&&self.done()&&selKey!==null&&corr.value!=='';}
+  function evaluate(){
+    corr.readOnly=true;
+    var foundOk=selKey===task.errKey,valOk=Number(corr.value)===info.value,lines=[];
+    sc.byKey[task.errKey].classList.add('bad');
+    var where=task.errPart?'im Teilprodukt '+fmt(a)+' · '+task.errPart.d:'im Ergebnis';
+    lines.push(foundOk?'✔ Du hast die falsche Ziffer gefunden ('+where+').':'✘ Der Fehler steckt '+where+' (rot markiert).');
+    if(task.errType==='malvergessen') lines.push('Beim Malnehmen wurde ein Übertrag vergessen. Richtig ist '+fmt(a)+' · '+task.errPart.d+' = '+fmt(task.errPart.val)+'. Weil das Teilprodukt falsch war, ist auch das Ergebnis falsch.');
+    else if(task.errType==='malslip') lines.push('Beim Malnehmen hat sich ein Einmaleins-Fehler eingeschlichen. Richtig ist '+fmt(a)+' · '+task.errPart.d+' = '+fmt(task.errPart.val)+'. Weil das Teilprodukt falsch war, ist auch das Ergebnis falsch.');
+    else if(task.errType==='addvergessen') lines.push('Beim Addieren der Teilprodukte wurde in der '+colName(task.errPos)+' der Übertrag nicht mitgerechnet.');
+    else lines.push('Beim Addieren der Teilprodukte hat sich in der '+colName(task.errPos)+' ein Rechenfehler eingeschlichen.');
+    lines.push(valOk?'✔ Dein verbessertes Ergebnis ist richtig.':'✘ Das richtige Ergebnis ist '+fmt(info.value)+'.');
+    var claim=self.claim();
+    return {correct:foundOk&&valOk,headline:foundOk&&valOk?'Super! Fehler gefunden und richtig verbessert.':'Das war noch nicht ganz richtig.',
+      lines:lines,claim:claim,metaCustom:fehlerMeta(Math.abs(task.resVal-info.value)>0.1*info.value,claim),
+      estimateLine:'Ein möglicher Überschlag: '+estimateText('*',[a,b]),solution:mulSolution(a,b)};
+  }
+  return {ready:ready,evaluate:evaluate,lock:function(){lockScheme(sc);}};
+};
+
+/* ---------- Division: rechnen ---------- */
+function firstPartialStep(dv,num,card,onOk){
+  var s=String(dv.a),d=dv.d,need=dv.first,maxLen=Math.min(s.length,String(d).length+2);
+  var box=el('div',{class:'step locked'},el('h3',null,num+' Mit welcher Teilzahl beginnst du?'),
+    el('p',{class:'small'},'Nimm von links so viele Ziffern, dass '+d+' mindestens einmal hineinpasst – aber nicht mehr als nötig.'));
+  var btns=el('div',{class:'pchoice'}),msg=el('div'),ok=false;
+  for(var n=1;n<=maxLen;n++)(function(n){
+    var v=Number(s.slice(0,n)),b=el('button',{class:'btn sec pbtn',type:'button'},fmt(s.slice(0,n)));
+    b.addEventListener('click',function(){
+      if(ok) return;
+      msg.innerHTML='';
+      btns.querySelectorAll('.pbtn').forEach(function(x){x.classList.remove('chosen');});b.classList.add('chosen');
+      if(n===need){
+        ok=true;msg.className='fb ok';
+        msg.append(el('strong',null,'✔ Richtig! Du beginnst mit '+fmt(v)+'.'),
+          el('p',null,'Wie oft passt '+d+' in '+fmt(v)+'? Das ist die erste Ziffer deines Ergebnisses. Dein Ergebnis hat '+dv.qs.length+' Stellen.'));
+        btns.querySelectorAll('.pbtn').forEach(function(x){x.disabled=true;});
+        onOk(need);
+      }else if(v<d){
+        msg.className='fb bad';
+        msg.append(el('strong',null,fmt(v)+' ist kleiner als '+d+'.'),el('p',null,'Da passt '+d+' nicht hinein. Nimm noch eine Ziffer dazu.'));
+      }else{
+        msg.className='fb bad';
+        msg.append(el('strong',null,'Das geht mit weniger Ziffern.'),el('p',null,'Schon '+fmt(s.slice(0,need))+' ist mindestens so groß wie '+d+'. Nimm so wenige Ziffern wie möglich.'));
+      }
+      card.dispatchEvent(new Event('input',{bubbles:true}));
+    });
+    btns.append(b);
+  })(n);
+  box.append(btns,msg);
+  return {el:box,done:function(){return ok;}};
+}
+function multTable(d){
+  var det=el('details',{class:'help'},el('summary',null,'Hilfe: Vielfachen-Tabelle von '+d));
+  det.append(el('p',{class:'small'},'Rechne die Vielfachen aus. Ein grünes Kästchen heißt: richtig.'));
+  var grid=el('div',{class:'mgrid'});
+  for(var m=1;m<=9;m++)(function(m){
+    var exp=String(m*d),inp=el('input',{class:'mt',type:'text',inputmode:'none',maxlength:'3',autocomplete:'off','aria-label':m+' mal '+d});
+    inp.addEventListener('input',function(){
+      inp.value=inp.value.replace(/\D/g,'').slice(0,3);
+      inp.classList.remove('good','bad');
+      if(inp.value===exp) inp.classList.add('good');else if(inp.value.length>=exp.length) inp.classList.add('bad');
+    });
+    grid.append(el('label',null,m+' · '+d+' = ',inp));
+  })(m);
+  det.append(grid);
+  return det;
+}
+KINDS.div=function(task,card){
+  var a=task.a,d=task.d,dv=divCompute(a,d),s=String(a),L=s.length,sd=String(d),ld=sd.length,mode=task.mode;
+  var gated=mode==='free'&&task.feedback,num=1;
+  card.append(el('p',{class:'stmt'},'Berechne schriftlich: ',el('strong',null,fmt(a)+' : '+d)));
+  var calc,first=null;
+  var est=estimateStep(task,card,function(){(gated?first.el:calc).classList.remove('locked');});card.append(est.el);num++;
+  var D,rows,lay=null,qIn,rIn;
+  if(mode==='scaffold'){
+    lay=divLayout(dv,{showR:false,cell:function(key,ch){return key.indexOf('a:')===0?{v:ch,key:key}:{inp:true,key:key};}});
+    D=lay.D;rows=lay.rows;
+  }else{
+    D=L+1+ld+1+L+1+ld;rows=[];
+    var head=[],j;
+    for(var k=0;k<L;k++) head.push({v:s[k],key:'a:'+k});
+    head.push({v:':',cls:'opc'});
+    for(j=0;j<ld;j++) head.push({v:sd[j]});
+    head.push({v:'=',cls:'opc'});
+    for(j=0;j<L;j++) head.push({inp:true,key:'q:'+j});
+    head.push({v:'R',cls:'opc'});
+    for(j=0;j<ld;j++) head.push({inp:true,key:'r:'+j});
+    rows.push({type:'op',ltr:true,line:false,cells:head});
+    dv.steps.forEach(function(st,i){
+      rows.push({type:'work',ltr:true,line:false,cells:Array.from({length:D},function(_,c){return c<L?{inp:true}:{};})});
+      rows.push({type:'work',ltr:true,line:[0,L-1],thin:true,cells:Array.from({length:D},function(_,c){return c<L?{inp:true}:{};})});
+    });
+  }
+  var sc=buildScheme({D:D,rows:rows});
+  qIn=[];rIn=[];
+  for(var q=0;sc.byKey['q:'+q];q++) qIn.push(sc.byKey['q:'+q]);
+  for(var r=0;sc.byKey['r:'+r];r++) rIn.push(sc.byKey['r:'+r]);
+  if(gated){
+    first=firstPartialStep(dv,circ(num),card,function(n){
+      calc.classList.remove('locked');
+      for(var i=0;i<n;i++) sc.byKey['a:'+i].classList.add('firstp');
+    });
+    card.append(first.el);num++;
+  }
+  var tip=mode==='scaffold'
+    ?'Die Kästchen zeigen dir, wo jede Ziffer hinkommt. Schreibe die Ziffern des Ergebnisses hinter das Gleichheitszeichen.'
+    :'Schreibe das Ergebnis hinter das Gleichheitszeichen. Bleibt am Ende etwas übrig, schreibst du den Rest hinter das R. Die Kästchen darunter sind für deine Rechenschritte: Malnehmen, Strich, Abziehen und Herunterholen.';
+  calc=el('div',{class:'step locked'},el('h3',null,circ(num)+' Rechne schriftlich.'),el('p',{class:'small'},tip),sc.el);num++;
+  if(task.table) calc.append(multTable(d));
+  card.append(calc);
+  var self=resultSelf();self.el.querySelector('h3').textContent=circ(num)+' Passt dein Ergebnis zu deinem Überschlag?';
+  card.append(self.el);watchReset(sc,self);
+  function ready(){return est.done()&&(!gated||first.done())&&self.done()&&qIn.some(function(n){return n.value!=='';});}
+  function evaluate(){
+    var qv=readInputs(qIn),rv=readInputs(rIn),lines=[];
+    var qOk=!qv.empty&&qv.contiguous&&qv.str===dv.qs;
+    var rNum=rv.empty?0:(rv.contiguous?Number(rv.str):NaN),rOk=rNum===dv.r;
+    var correct=qOk&&rOk;
+    if(!correct){
+      if(qv.empty) lines.push('Du hast kein Ergebnis eingetragen.');
+      else if(!qv.contiguous) lines.push('In deinem Ergebnis ist eine Lücke zwischen den Ziffern.');
+      else if(!qOk){
+        if(qv.str.length<dv.qs.length&&qv.str.replace(/0/g,'')===dv.qs.replace(/0/g,'')) lines.push('Hast du eine 0 im Ergebnis vergessen? Wenn der Teiler nicht in die Teilzahl passt, schreibst du eine 0 ins Ergebnis und holst die nächste Ziffer herunter.');
+        else if(qv.str.length!==dv.qs.length) lines.push('Dein Ergebnis hat '+qv.str.length+' Stellen, richtig wären '+dv.qs.length+' Stellen. Prüfe, mit welcher Teilzahl du beginnst und ob du eine 0 vergessen hast.');
+        else{
+          var j=0;while(j<dv.qs.length&&qv.str[j]===dv.qs[j]) j++;
+          var st=dv.steps[j];
+          lines.push('Die '+(j+1)+'. Ziffer deines Ergebnisses stimmt nicht. Im '+(j+1)+'. Schritt rechnest du: Wie oft passt '+d+' in '+fmt(st.partial)+'? Richtig ist '+st.qd+'.');
+        }
+      }else if(dv.r>0&&rv.empty) lines.push('Dein Ergebnis ist richtig, aber du hast den Rest vergessen. Es bleibt R '+dv.r+' übrig.');
+      else if(rNum>=d) lines.push('Dein Rest ist mindestens so groß wie '+d+'. Dann passt '+d+' noch einmal hinein – der Rest muss kleiner als '+d+' sein.');
+      else lines.push('Dein Ergebnis ist richtig, aber der Rest stimmt nicht. Richtig ist R '+dv.r+'.');
+      if(!qv.empty) qIn.forEach(function(n,i){if(n.value) n.classList.add(n.value===dv.qs[i-qv.start]?'good':'bad');});
+      var rs=String(dv.r);
+      if(!rv.empty) rIn.forEach(function(n,i){if(n.value) n.classList.add(n.value===rs[i-rv.start]?'good':'bad');});
+      if(lay){
+        Object.keys(lay.map).forEach(function(key){
+          if(key.indexOf('a:')===0||key.indexOf('q:')===0) return;
+          var n=sc.byKey[key];if(n&&n.tagName==='INPUT') n.classList.add(n.value===lay.map[key]?'good':'bad');
+        });
+      }
+    }else{
+      qIn.concat(rIn).forEach(function(n){if(n.value) n.classList.add('good');});
+    }
+    return {correct:correct,
+      headline:correct?'Richtig! Gut gerechnet.':'Leider nicht richtig. Das richtige Ergebnis ist '+divResText(dv)+'.',
+      lines:lines,claim:self.claim(),probe:divProbe(dv),
+      estimateLine:'Ein möglicher Überschlag: '+estimateText(':',[a,d]),
+      solution:correct?null:divSolution(dv)};
+  }
+  return {ready:ready,evaluate:evaluate,lock:function(){lockScheme(sc);}};
+};
+
+KINDS.divluecke=function(task,card){
+  var dv=task.dv,map=task.map,bl={};task.blanks.forEach(function(k){bl[k]=1;});
+  card.append(el('p',{class:'stmt'},el('strong',null,'Lückenaufgabe: '),'Ergänze die gelben Kästchen, sodass die Division stimmt.'));
+  var lay=divLayout(dv,{cell:function(key,ch){return bl[key]?{inp:true,cls:'gap',key:key}:{v:ch,key:key};}});
+  var order=[];lay.rows.forEach(function(row,r){row.cells.forEach(function(d,c){if(d.cls==='gap') order.push([r,c]);});});
+  var sc=buildScheme({D:lay.D,rows:lay.rows,order:order});
+  card.append(el('div',{class:'step'},el('h3',null,'Ergänze die fehlenden Ziffern.'),sc.el,
+    el('p',{class:'small'},'Denke an die Schritte: Teilen – Malnehmen – Abziehen – Herunterholen. Mit der Probe kannst du dich kontrollieren: Ergebnis mal Teiler plus Rest.')));
+  var gaps=task.blanks.map(function(k){return sc.byKey[k];});
+  function ready(){return gaps.every(function(i){return i.value!=='';});}
+  function evaluate(){
+    var correct=true;
+    task.blanks.forEach(function(k){var n=sc.byKey[k],ok=n.value===map[k];n.classList.add(ok?'good':'bad');if(!ok) correct=false;});
+    return {correct:correct,headline:correct?'Richtig! Die Rechnung stimmt.':'Leider nicht richtig.',
+      lines:correct?[]:['Die rot markierten Kästchen stimmen noch nicht.'],claim:null,probe:divProbe(dv),
+      solution:correct?null:buildScheme({D:lay.D,rows:divLayout(dv,{cell:function(key,ch){return {v:ch,key:key,cls:bl[key]?'good':''};}}).rows})};
+  }
+  return {ready:ready,evaluate:evaluate,lock:function(){lockScheme(sc);}};
+};
+
+KINDS.divfehler=function(task,card){
+  var a=task.a,d=task.d,dv=task.dv,wv=task.wv;
+  card.append(el('p',{class:'stmt'},el('strong',null,'Fehleraufgabe: '),'Jemand hat so gerechnet: ',el('strong',null,fmt(a)+' : '+d),'. In der Rechnung steckt ein Fehler.'));
+  var s2,s3;
+  var est=estimateStep(task,card,function(){s2.classList.remove('locked');s3.classList.remove('locked');});card.append(est.el);
+  var lay=divLayout(wv,{cell:function(key,ch){return key.indexOf('a:')===0?{v:ch,key:key}:{sel:true,v:ch,key:key};}});
+  var sc=buildScheme({D:lay.D,rows:lay.rows});
+  var selKey=null;wireSelect(sc,card,function(b){selKey=b._key;});
+  var self=selfStep('Passt das Ergebnis dieser Rechnung zu deinem Überschlag?',['Das Ergebnis passt zu meinem Überschlag.','Das Ergebnis passt nicht zu meinem Überschlag.'],false);
+  var cq=corrInput('Ergebnis'),cr=corrInput('Rest',true);
+  s2=el('div',{class:'step locked'},el('h3',null,circ(2)+' Schau dir die Rechnung an.'),sc.el,self.el);
+  s3=el('div',{class:'step locked'},el('h3',null,circ(3)+' Finde den Fehler.'),
+    el('p',null,'Tippe auf die Ziffer, bei der zuerst ein Fehler passiert ist. Schreibe dann das richtige Ergebnis auf. Bleibt kein Rest, lässt du das Feld hinter R leer.'),
+    el('div',{class:'corrrow'},cq,el('strong',null,'R'),cr));
+  card.append(s2,s3);
+  function ready(){return est.done()&&self.done()&&selKey!==null&&cq.value!=='';}
+  function evaluate(){
+    cq.readOnly=true;cr.readOnly=true;
+    var i=task.errStep,st=dv.steps[i],wst=wv.steps[i],lines=[];
+    var foundOk=selKey===task.errKey,valOk=Number(cq.value)===dv.q&&(cr.value===''?0:Number(cr.value))===dv.r;
+    sc.byKey[task.errKey].classList.add('bad');
+    lines.push(foundOk?'✔ Du hast die falsche Ziffer gefunden.':'✘ Die falsche Ziffer ist rot markiert.');
+    if(task.errKind==='mal') lines.push('Im '+(i+1)+'. Schritt wurde falsch malgenommen: '+st.qd+' · '+d+' ist nicht '+wst.prod+', sondern '+st.prod+'.');
+    else lines.push('Im '+(i+1)+'. Schritt wurde falsch abgezogen: '+fmt(st.partial)+' − '+fmt(st.prod)+' ist nicht '+wst.diff+', sondern '+st.diff+'.');
+    lines.push(i<dv.steps.length-1?'Deshalb stimmen auch die nächsten Schritte und das Ergebnis nicht.':'Deshalb stimmt der Rest nicht.');
+    lines.push(valOk?'✔ Dein verbessertes Ergebnis ist richtig.':'✘ Das richtige Ergebnis ist '+divResText(dv)+'.');
+    var claim=self.claim();
+    return {correct:foundOk&&valOk,headline:foundOk&&valOk?'Super! Fehler gefunden und richtig verbessert.':'Das war noch nicht ganz richtig.',
+      lines:lines,claim:claim,probe:divProbe(dv),metaCustom:fehlerMeta(Math.abs(wv.q-dv.q)>0.1*dv.q,claim),
+      estimateLine:'Ein möglicher Überschlag: '+estimateText(':',[a,d]),solution:divSolution(dv)};
+  }
+  return {ready:ready,evaluate:evaluate,lock:function(){lockScheme(sc);}};
+};
+
+/* ---------------------- Seiten ---------------------- */
+function showHome(){
+  S.cur=null;app.innerHTML='';
+  app.append(el('div',{class:'card'},
+    el('h1',null,'Schriftlich rechnen'),
+    el('p',null,'Wähle eine Rechenart. Zu jeder Rechenart gibt es fünf Stufen. Für jede richtig gelöste Aufgabe bekommst du Sterne. Dein Ziel sind 15 Sterne bei jeder Rechenart. Es gibt zwei Urkunden: eine für Addition und Subtraktion und eine für Multiplikation und Division.')));
+  var grid=el('div',{class:'ops'});
+  Object.keys(OPS).forEach(function(k){
+    var o=OPS[k];
+    grid.append(el('button',{class:'opbtn',type:'button',onclick:function(){showLevels(k);}},
+      el('div',{class:'opsym'},o.sign),
+      el('div',{class:'opname'},o.name),
+      starBar(k)));
+  });
+  app.append(grid);
+}
+function showLevels(opKey){
+  var op=OPS[opKey];S.cur=null;app.innerHTML='';
+  app.append(navBar([['← Startseite',showHome]]));
+  app.append(el('div',{class:'card'},el('h1',null,op.name),
+    el('p',null,'Wähle eine Stufe. Bei jeder Stufe steht, was du aus der Stufe davor sicher können solltest.'),
+    starBar(opKey),
+    el('p',{class:'small'},'Für jede richtige Aufgabe bekommst du so viele Sterne, wie die Stufe hoch ist. Sterne gibt es nur für richtig gelöste Aufgaben.'),
+    el('details',{class:'help'},el('summary',null,'So rechnest du schriftlich'),el('p',null,op.help))));
+  op.levels.forEach(function(lv,i){
+    app.append(el('div',{class:'card lvl'},
+      el('div',{class:'lnum'},String(i+1)),
+      el('div',null,
+        el('h3',null,'Stufe '+(i+1)+': '+lv.title+' ',el('span',{class:'stars'},starsText(i+1))),
+        el('p',null,lv.desc),
+        el('div',{class:'req'},el('strong',null,i===0?'Das solltest du mitbringen: ':'Das solltest du aus Stufe '+i+' sicher können: '),lv.req.replace(/^(Du bringst mit: |Aus Stufe \d solltest du sicher können: )/,''))),
+      el('button',{class:'btn',type:'button',onclick:function(){startLevel(opKey,i);}},'Starten')));
+  });
+}
+function startLevel(opKey,idx){
+  S.cur={op:opKey,idx:idx,taskNo:Math.floor(Math.random()*2)};
+  renderTask();
+}
+function renderTask(){
+  var cur=S.cur,op=OPS[cur.op],lvl=op.levels[cur.idx];
+  var task=lvl.gen(cur.taskNo);
+  if(!task) task=lvl.gen(cur.taskNo);
+  if(!task) task=lvl.gen(cur.taskNo+1);
+  cur.taskNo++;
+  app.innerHTML='';
+  var meter=el('div',null,starBar(cur.op));
+  app.append(el('div',{class:'nav'},
+    el('button',{class:'btn sec',type:'button',onclick:function(){showLevels(cur.op);}},'← Stufen'),
+    el('button',{class:'btn sec',type:'button',onclick:showHome},'Startseite'),
+    meter));
+  var card=el('div',{class:'card'});
+  var n=cur.idx+1;
+  card.append(el('div',{class:'taskhead'},
+    el('span',{class:'badge'},op.name+' · Stufe '+n),
+    el('span',null,'Diese Aufgabe: ',el('span',{class:'stars earn'},starsText(n)))));
+  var impl=KINDS[task.kind](task,card);
+  S.last={task:task,impl:impl,card:card};
+  var checkBtn=el('button',{class:'btn big',type:'button',disabled:true},'Prüfen');
+  var fb=el('div');
+  card.append(el('div',{class:'actions'},checkBtn),fb);
+  function refresh(){checkBtn.disabled=!impl.ready();}
+  card.addEventListener('input',refresh);
+  card.addEventListener('change',refresh);
+  checkBtn.addEventListener('click',function(){
+    if(!impl.ready()) return;
+    checkBtn.hidden=true;
+    impl.lock();
+    if(document.activeElement&&document.activeElement.blur) document.activeElement.blur();
+    var r=impl.evaluate();
+    showResult(task,r,fb,meter);
+  });
+  app.append(card);
+  window.scrollTo(0,0);
+  var firstInput=card.querySelector('input.est');
+  if(firstInput&&firstInput.focus) firstInput.focus();
+}
+function showResult(task,r,fb,meter){
+  var cur=S.cur,lvlNo=cur.idx+1,op=OPS[cur.op];
+  var gain=r.correct?lvlNo:0;
+  var st=store.add(cur.op,gain);
+  var box=el('div',{class:'fb '+(r.correct?'ok':'bad')},el('strong',null,r.headline));
+  if(gain>0) box.append(el('p',{class:'earn'},'+ ',el('span',{class:'stars'},starsText(gain))));
+  else box.append(el('p',{class:'small'},'Für diese Aufgabe gibt es keine Sterne. Bei der nächsten klappt es bestimmt!'));
+  (r.lines||[]).forEach(function(l){box.append(el('p',null,l));});
+  if(r.probe) box.append(el('p',{class:'small'},r.probe));
+  fb.append(box);
+  if(r.claim){
+    var txt=r.metaCustom||metaText(r.claim,r.correct);
+    fb.append(el('div',{class:'fb info'},el('p',null,txt),r.estimateLine?el('p',{class:'small'},r.estimateLine):null));
+  }
+  if(r.solution){
+    fb.append(el('div',{class:'solwrap'},el('p',null,el('strong',null,'So sieht die richtige Lösung aus:')),r.solution.el));
+  }
+  meter.innerHTML='';
+  var nb=starBar(cur.op);meter.append(nb);
+  var fills=nb.querySelectorAll('.s.f'),from=Math.min(st.before,STAR_GOAL),to=Math.min(st.after,STAR_GOAL);
+  for(var i=from;i<to;i++) if(fills[i]) fills[i].classList.add('pop');
+  /* Zähler: Aufgaben direkt hintereinander; nach einem Hinweis wird nicht von vorn gezählt */
+  var key=cur.op+'-'+cur.idx,cn=S.counters[key]=S.counters[key]||{right:0,wrong:0,all:0};
+  if(r.correct){cn.right++;cn.all++;cn.wrong=0;}else{cn.wrong++;cn.right=0;}
+  var hint=null;
+  if(!r.correct&&cn.wrong>=2) hint='down';
+  else if(r.correct){
+    if(lvlNo<5&&cn.right>=3) hint='up';
+    if(lvlNo===5&&!S.mastery[cur.op]&&(cn.all>=5||cn.right>=3)){hint='master';S.mastery[cur.op]=true;}
+  }
+  if(st.before<STAR_GOAL&&st.after>=STAR_GOAL){
+    var partner=OPS[PARTNER[cur.op]];
+    if(certDone(cur.op)) fb.append(el('div',{class:'hint'},el('strong',null,'🏅 Geschafft! Du hast bei '+CERT[cur.op]+' jeweils alle '+STAR_GOAL+' Sterne gesammelt.'),
+      el('p',null,'Zeige diesen Bildschirm deiner Lehrerin. Dafür bekommst du eine Urkunde. Du kannst natürlich gern weiterüben.')));
+    else fb.append(el('div',{class:'hint'},el('strong',null,'🎉 Du hast alle '+STAR_GOAL+' Sterne beim schriftlichen '+op.verb+' gesammelt!'),
+      el('p',null,'Sammle jetzt auch bei der '+partner.name+' '+STAR_GOAL+' Sterne. Dann bekommst du die Urkunde für '+CERT[cur.op]+'.')));
+  }
+  if(hint) fb.append(buildHint(hint,cur));
+  fb.append(el('div',{class:'actions'},
+    el('button',{class:'btn big',type:'button',onclick:renderTask},'Nächste Aufgabe →'),
+    el('button',{class:'btn sec',type:'button',onclick:function(){showLevels(cur.op);}},'Zur Stufenauswahl')));
+}
+function buildHint(kind,cur){
+  var op=OPS[cur.op],n=cur.idx+1,box=el('div',{class:'hint'}),btns=el('div',{class:'btns'});
+  function dismiss(){box.remove();}
+  if(kind==='up'){
+    box.append(el('strong',null,'🚀 Das läuft richtig gut!'),
+      el('p',null,'Du hast auf Stufe '+n+' mindestens drei Aufgaben hintereinander richtig gelöst. Du könntest jetzt Stufe '+(n+1)+' ausprobieren. Du entscheidest selbst.'));
+    btns.append(el('button',{class:'btn',type:'button',onclick:function(){startLevel(cur.op,cur.idx+1);}},'Zu Stufe '+(n+1)),
+                el('button',{class:'btn sec',type:'button',onclick:dismiss},'Ich bleibe auf Stufe '+n));
+  }else if(kind==='down'){
+    if(cur.idx>0){
+      box.append(el('strong',null,'Zwei Aufgaben hintereinander waren noch nicht richtig.'),
+        el('p',null,'Vielleicht hilft es dir, eine Stufe zurückzugehen und dort noch einmal zu üben. Du entscheidest selbst.'));
+      btns.append(el('button',{class:'btn',type:'button',onclick:function(){startLevel(cur.op,cur.idx-1);}},'Zurück zu Stufe '+(n-1)),
+                  el('button',{class:'btn sec',type:'button',onclick:dismiss},'Ich bleibe auf Stufe '+n));
+    }else{
+      box.append(el('strong',null,'Zwei Aufgaben hintereinander waren noch nicht richtig.'),
+        el('p',null,'Weiter zurück geht es nicht. Schau noch einmal in dein Heft oder frag jemanden um Hilfe – und übe dann weiter. Du schaffst das!'));
+      btns.append(el('button',{class:'btn sec',type:'button',onclick:dismiss},'Okay'));
+    }
+  }else{
+    box.append(el('strong',null,'🏆 Meisterhaft!'),
+      el('p',null,'Du beherrschst das schriftliche '+op.verb+' ganz sicher. Übe jetzt etwas anderes.'));
+    btns.append(el('button',{class:'btn',type:'button',onclick:showHome},'Andere Rechenart wählen'),
+                el('button',{class:'btn sec',type:'button',onclick:dismiss},'Ich übe hier noch weiter'));
+  }
+  box.append(btns);
+  return box;
+}
+
+initKeypad();
+showHome();
+if(window.__RW_TEST__) window.__rw={OPS:OPS,S:S,store:store,KINDS:KINDS,showHome:showHome,showLevels:showLevels,startLevel:startLevel,renderTask:renderTask,compute:compute,
+  genOperands:genOperands,genLuecke:genLuecke,genFehler:genFehler,genSymbol:genSymbol,firstBadColumn:firstBadColumn,checkAufstellung:checkAufstellung,
+  mulInfo:mulInfo,mulCarry1:mulCarry1,genMulAB:genMulAB,genMulLuecke:genMulLuecke,genMulFehler:genMulFehler,countMulSol:countMulSol,mulCellMap:mulCellMap,
+  divCompute:divCompute,divLayout:divLayout,genDivAB:genDivAB,genDivLuecke:genDivLuecke,genDivFehler:genDivFehler,estimateOk:estimateOk,estimateRange:estimateRange,estimateText:estimateText,divEstimate:divEstimate};
+})();
+</script>
+</body>
+</html>

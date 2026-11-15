@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Baumdiagramme und Pfadregeln</title>
+<style>
+:root{--ink:#061C63;--acc:#4A5F9E;--bg:#EEF2FA;--line:#C9D3EC;--ok:#1B6E3C;--okbg:#E4F4EA;--bad:#A3261C;--badbg:#FBE9E7;--tip:#FFF6DA;--tipb:#D9A400}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:Verdana,Geneva,sans-serif;color:var(--ink);background:var(--bg);font-size:17px;line-height:1.6}
+header{background:#fff;border-bottom:3px solid var(--acc);padding:10px 16px;position:sticky;top:0;z-index:20}
+.hrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;max-width:860px;margin:0 auto}
+h1{font-size:19px;margin:0;flex:1 1 220px}
+h2{font-size:21px;margin:2px 0 12px}
+.pbar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;max-width:860px;margin:8px auto 0}
+.pbar i{display:block;height:100%;background:var(--acc);width:0}
+button{font:inherit;color:var(--ink);background:#fff;border:2px solid var(--acc);border-radius:10px;padding:9px 14px;min-height:46px;cursor:pointer}
+button.pri{background:var(--ink);color:#fff;border-color:var(--ink)}
+button:disabled{opacity:.4;cursor:default}
+button.sm{min-height:40px;padding:5px 10px;font-size:15px}
+nav{max-width:860px;margin:12px auto 0;padding:0 12px;display:flex;gap:6px;flex-wrap:wrap}
+nav button{flex:1 1 120px;font-size:14px;padding:6px 6px;line-height:1.3}
+nav button.cur{background:var(--ink);color:#fff;border-color:var(--ink)}
+main{max-width:860px;margin:0 auto;padding:12px 12px 60px}
+.dots{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.dots button{min-height:38px;min-width:38px;padding:0 8px;border-radius:19px;font-size:14px}
+.dots button.cur{background:var(--acc);color:#fff}
+.dots button.dn{background:var(--okbg);border-color:var(--ok)}
+.dots button.cur.dn{background:var(--ok);color:#fff}
+.card{background:#fff;border-radius:14px;box-shadow:0 3px 12px rgba(6,28,99,.14);padding:18px 20px}
+.kick{font-size:14px;color:var(--acc);font-weight:bold}
+p{margin:8px 0;text-align:justify;hyphens:auto;-webkit-hyphens:auto}
+.abk{background:var(--bg);border-radius:8px;padding:6px 10px;display:inline-block;margin:4px 0;font-size:16px}
+.auf{font-weight:bold}
+.math{margin:12px 0;display:flex;align-items:center;flex-wrap:wrap;gap:6px;row-gap:12px}
+.fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.15;margin:0 3px;font-size:.95em}
+.fr span:first-child{border-bottom:2px solid currentColor;padding:0 4px}
+.fr span:last-child{padding:0 4px}
+.ov{text-decoration:overline}
+.fi{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;gap:0;margin:0 3px;background:#fff;border-radius:6px}
+.fi input{width:52px;height:30px;text-align:center;font:inherit;font-size:16px;color:var(--ink);border:2px solid var(--acc);border-radius:6px;padding:0;background:#F7F9FF}
+.fi i{display:block;width:58px;height:2px;background:var(--ink);margin:2px 0}
+.ni{width:76px;height:44px;text-align:center;font:inherit;color:var(--ink);border:2px solid var(--acc);border-radius:8px;background:#F7F9FF}
+.fi.bad input,.ni.bad{border-color:var(--bad);background:var(--badbg)}
+.fi.good input,.ni.good{border-color:var(--ok);background:var(--okbg)}
+.ch{display:flex;flex-direction:column;gap:8px;margin:8px 0}
+.ch.rowc{flex-direction:row;flex-wrap:wrap}
+.ch button{text-align:left}
+.ch button.on{background:var(--acc);color:#fff}
+.ch.bad{outline:3px solid var(--bad);outline-offset:3px;border-radius:10px}
+.ch.good button.on{background:var(--ok);border-color:var(--ok)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 4px}
+.fb{border-radius:10px;padding:10px 14px;margin:10px 0;font-weight:bold}
+.fb.g{background:var(--okbg);color:var(--ok)}
+.fb.b{background:var(--badbg);color:var(--bad)}
+.fb.n{background:var(--bg)}
+.tip{background:var(--tip);border-left:5px solid var(--tipb);border-radius:6px;padding:8px 12px;margin:8px 0}
+.sol{background:var(--bg);border-left:5px solid var(--acc);border-radius:6px;padding:8px 12px;margin:8px 0}
+.merk{border:3px solid var(--ink);border-radius:12px;padding:12px 16px;margin:10px 0;background:#F7F9FF}
+.merk b.t{display:block;font-size:18px;margin-bottom:4px}
+.note{background:var(--bg);border-radius:10px;padding:8px 12px;margin:10px 0}
+.tw{overflow-x:auto;margin:10px 0}
+.tree{position:relative;width:640px;margin:0 auto}
+.tree svg{position:absolute;left:0;top:0}
+.tree line{stroke:var(--acc);stroke-width:2.5}
+.tree line.on{stroke:#E08A00;stroke-width:6}
+.tn{position:absolute;transform:translate(-50%,-50%);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;border:2px solid #fff;box-shadow:0 0 0 1.5px var(--ink)}
+.tree.d3 .tn{width:30px;height:30px;font-size:15px}
+.troot{position:absolute;transform:translate(-50%,-50%);width:12px;height:12px;border-radius:50%;background:var(--ink)}
+.tl{position:absolute;transform:translate(-50%,-50%);background:#fff;padding:1px 2px;border-radius:5px;font-size:15px}
+.tree.d3 .tl{font-size:13px}
+.lf{position:absolute;transform:translateY(-50%);font:inherit;font-size:16px;white-space:nowrap}
+button.lf{min-height:40px;padding:2px 8px;border-radius:8px}
+button.lf.on{background:#FFE2A8;border-color:#E08A00;font-weight:bold}
+.tree.d3 .lf{font-size:14px}
+.sth{position:absolute;top:0;transform:translateX(-50%);font-size:14px;font-weight:bold;color:var(--acc)}
+.pk.bad{outline:3px solid var(--bad);border-radius:10px}
+.pk.good{outline:3px solid var(--ok);border-radius:10px}
+.urn{display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center;border:3px solid var(--ink);border-top:none;border-radius:0 0 18px 18px;padding:10px 14px;margin:6px 0;max-width:330px}
+.ball{width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;border:1.5px solid var(--ink)}
+.ball.gone{background:#fff!important;color:#999!important;border-style:dashed}
+.sim{border:2px dashed var(--acc);border-radius:12px;padding:12px 14px;margin:10px 0}
+.sim table{border-collapse:collapse;width:100%;margin-top:8px}
+.sim td{padding:5px 6px;border-bottom:1px solid var(--line);font-size:16px}
+.sim td.bar{width:32%}
+.sim td.bar i{display:block;height:16px;background:var(--acc);border-radius:3px;min-width:1px}
+.sim tr.sum td{font-weight:bold;border-top:2px solid var(--ink)}
+table.vgl{border-collapse:collapse;width:100%;margin:6px 0}
+table.vgl th,table.vgl td{border:1.5px solid var(--ink);padding:6px 8px;text-align:left;vertical-align:top;font-size:16px}
+.foot{display:flex;justify-content:space-between;gap:10px;margin-top:14px}
+.ov-bg{position:fixed;inset:0;background:rgba(6,28,99,.45);z-index:50;display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow:auto}
+.ov-bg[hidden]{display:none}
+.ov-box{background:#fff;border-radius:14px;padding:18px 20px;max-width:640px;width:100%}
+dl{margin:0}dt{font-weight:bold;margin-top:10px}dd{margin:0 0 0 0}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:8px 0}
+.stat{display:grid;grid-template-columns:1fr auto;gap:4px 14px;margin:8px 0}
+.stat b{text-align:right}
+</style>
+</head>
+<body>
+<header>
+  <div class="hrow">
+    <h1>Baumdiagramme und Pfadregeln</h1>
+    <button class="sm" data-act="gloss">📖 Glossar</button>
+    <button class="sm" data-act="askreset">Neu starten</button>
+  </div>
+  <div class="pbar"><i id="pb"></i></div>
+</header>
+<nav id="nav"></nav>
+<main id="main"></main>
+
+<div class="ov-bg" id="gloss" hidden><div class="ov-box">
+<h2>Glossar</h2>
+<dl>
+<dt>Zufallsexperiment</dt><dd>Ein Versuch, bei dem du das Ergebnis nicht vorher weißt. Beispiel: eine Kugel ziehen.</dd>
+<dt>Urne</dt><dd>Ein Gefäß mit Kugeln. Du ziehst, ohne hinzusehen.</dd>
+<dt>Ergebnis</dt><dd>Das, was bei einem Versuch herauskommt. Beispiel: (r|b) heißt „zuerst rot, dann blau“.</dd>
+<dt>Ereignis</dt><dd>Ein oder mehrere Ergebnisse zusammen. Beispiel: „beide Kugeln haben die gleiche Farbe“.</dd>
+<dt>Gegenereignis</dt><dd>Alle Ergebnisse, die <b>nicht</b> zum Ereignis gehören. Schreibweise: <span class="ov">E</span>.</dd>
+<dt>Wahrscheinlichkeit</dt><dd>Eine Zahl zwischen 0 und 1. Sie sagt, wie oft etwas auf lange Sicht passiert. Schreibweise: P(…).</dd>
+<dt>Baumdiagramm</dt><dd>Ein Bild für ein Zufallsexperiment mit mehreren Stufen.</dd>
+<dt>Stufe</dt><dd>Ein Teil des Experiments. Beispiel: 1. Zug, 2. Zug.</dd>
+<dt>Knoten</dt><dd>Ein Punkt im Baumdiagramm. Hier verzweigt sich der Baum.</dd>
+<dt>Ast</dt><dd>Eine Linie zwischen zwei Knoten. Am Ast steht eine Wahrscheinlichkeit.</dd>
+<dt>Pfad</dt><dd>Ein Weg durch den Baum von links nach rechts. Jeder Pfad gehört zu einem Ergebnis.</dd>
+<dt>mit Zurücklegen</dt><dd>Die gezogene Kugel kommt wieder in die Urne.</dd>
+<dt>ohne Zurücklegen</dt><dd>Die gezogene Kugel bleibt draußen. In der Urne liegt eine Kugel weniger.</dd>
+<dt>mindestens eine</dt><dd>Eine oder mehr als eine.</dd>
+<dt>genau eine</dt><dd>Eine, nicht mehr und nicht weniger.</dd>
+</dl>
+<div class="row"><button class="pri" data-act="closeov">Schließen</button></div>
+</div></div>
+
+<div class="ov-bg" id="reset" hidden><div class="ov-box">
+<h2>Wirklich neu starten?</h2>
+<p>Dein ganzer Fortschritt wird gelöscht.</p>
+<div class="row"><button data-act="closeov">Abbrechen</button><button class="pri" data-act="doreset">Ja, neu starten</button></div>
+</div></div>
+
+<script>
+"use strict";
+/* ---------- Hilfen für die Darstellung ---------- */
+const F=(n,d)=>`<span class="fr"><span>${n}</span><span>${d}</span></span>`;
+const OV=s=>`<span class="ov">${s}</span>`;
+const SYM={r:['r','#C62828','#fff'],b:['b','#1565C0','#fff'],g:['g','#2E7D32','#fff'],y:['g','#F2B90F','#061C63'],s:['s','#222222','#fff'],
+ W:['W','#4A5F9E','#fff'],Z:['Z','#9A5B00','#fff'],G:['G','#2E7D32','#fff'],N:['N','#6B7280','#fff'],x:['s','#4A5F9E','#fff'],k:['k','#6B7280','#fff'],
+ n:[OV('r'),'#6B7280','#fff'],o:['','#DDE3F3','#061C63']};
+const ball=(k,gone)=>`<span class="ball${gone?' gone':''}" style="background:${SYM[k][1]};color:${SYM[k][2]}">${SYM[k][0]}</span>`;
+function urn(list,gone){let h='',g=gone;list.forEach(([k,n])=>{for(let i=0;i<n;i++){if(g===k){h+=ball(k,true);g=null}else h+=ball(k)}});return `<div><span class="urn">${h}</span></div>`}
+const ABK=s=>`<div class="abk">${s}</div>`;
+const A=s=>`<p class="auf">${s}</p>`;
+const HEFT=s=>`<div class="note">✎ <b>Ins Heft:</b> ${s}</div>`;
+const PARTNER=s=>`<div class="note">👥 <b>Partner-Impuls:</b> ${s}</div>`;
+const ADDMSG='Du hast addiert. Entlang eines Pfades wird multipliziert.';
+function mulErr(a,b,more){return [[[a[0]*b[1]+b[0]*a[1],a[1]*b[1]],ADDMSG],[[a[0]+b[0],a[1]+b[1]],'Du hast Zähler und Nenner addiert. Entlang eines Pfades gilt: Zähler mal Zähler, Nenner mal Nenner.']].concat(more||[])}
+const fr=(s,e)=>({t:'f',s:s,e:e||[]});
+const nu=(s,e)=>({t:'n',s:s,e:e||[]});
+
+/* ---------- Baumdiagramm ---------- */
+function treeHTML(tid,sp){
+  const depth=sp.st.length;let hasIn=false,li=0;
+  (function w(ch){ch.forEach(c=>{if(typeof c[1]==='string')hasIn=true;if(c[2])w(c[2])})})(sp.ch);
+  const rh=depth===3?60:(hasIn?128:78),W=640,top=34;
+  let nl=0;(function w(ch){ch.forEach(c=>{if(c[2])w(c[2]);else nl++})})(sp.ch);
+  const H=top+nl*rh+8,step=(W-30-120)/depth,xs=l=>30+l*step;
+  function Y(c){if(c[2]){const ys=c[2].map(Y);c._y=(ys[0]+ys[ys.length-1])/2}else{c._y=top+(li++)*rh+rh/2}return c._y}
+  const ys=sp.ch.map(Y),ry=(ys[0]+ys[ys.length-1])/2;
+  let lines='',els=`<div class="troot" style="left:30px;top:${ry}px"></div>`;
+  sp.st.forEach((s,i)=>{els+=`<div class="sth" style="left:${xs(i+1)}px">${s}</div>`});
+  (function draw(ch,pre,lvl,px,py,names){ch.forEach((c,i)=>{
+    const id=pre+i,x=xs(lvl),y=c._y,sy=SYM[c[0]],nm=names.concat(sy[0]);
+    lines+=`<line data-p="${id}" x1="${px}" y1="${py}" x2="${x}" y2="${y}"/>`;
+    const t=0.58,lx=px+(x-px)*t,ly=py+(y-py)*t;
+    const lab=typeof c[1]==='string'?fracIn(tid+'.'+c[1]):F(c[1][0],c[1][1]);
+    els+=`<div class="tl" style="left:${lx}px;top:${ly}px">${lab}</div>`;
+    els+=`<div class="tn" style="left:${x}px;top:${y}px;background:${sy[1]};color:${sy[2]}">${sy[0]}</div>`;
+    if(c[2])draw(c[2],id+'-',lvl+1,x,y,nm);
+    else{const txt='('+nm.join('|')+')'+(sp.lp&&sp.lp[id]?` = ${F(sp.lp[id][0],sp.lp[id][1])}`:'');
+      els+=sp.pick?`<button type="button" class="lf" data-act="leaf" data-leaf="${id}" style="left:${x+26}px;top:${y}px">${txt}</button>`
+                  :`<span class="lf" style="left:${x+26}px;top:${y}px">${txt}</span>`}
+  })})(sp.ch,'',1,30,ry,[]);
+  return `<div class="tw"><div class="tree${depth===3?' d3':''}${sp.pick?' pk':''}"${sp.pick?` data-f="${tid}.${sp.pick}"`:''} style="height:${H}px"><svg width="${W}" height="${H}">${lines}</svg>${els}</div></div>`;
+}
+const fracIn=key=>`<span class="fi" data-f="${key}"><input type="text" inputmode="numeric" maxlength="4" aria-label="Zähler" autocomplete="off"><i></i><input type="text" inputmode="numeric" maxlength="4" aria-label="Nenner" autocomplete="off"></span>`;
+function widget(tid,k,fd){
+  const key=tid+'.'+k;
+  if(fd.t==='f')return fracIn(key);
+  if(fd.t==='n')return `<input class="ni" type="text" inputmode="decimal" maxlength="6" data-f="${key}" autocomplete="off">`;
+  if(fd.t==='c')return `<div class="ch${fd.row?' rowc':''}" data-f="${key}">${fd.o.map((o,i)=>`<button type="button" data-act="choose" data-i="${i}">${o}</button>`).join('')}</div>`;
+  return '';
+}
+/* zweistufiger Baum, kurz notiert */
+const T2=(a,b,pa,pb,aa,ab,ba,bb,pick,w)=>({st:w?['1. Wurf','2. Wurf']:['1. Zug','2. Zug'],pick:pick,ch:[[a,pa,[[a,aa],[b,ab]]],[b,pb,[[a,ba],[b,bb]]]]});
+function T3(a,b,P){ // P(level, vorherige) -> [pa,pb]
+  const mk=(hist)=>{const p=P(hist);return [[a,p[0],hist.length<2?mk(hist.concat(a)):undefined],[b,p[1],hist.length<2?mk(hist.concat(b)):undefined]].map(c=>c[2]?c:[c[0],c[1]])};
+  return {st:['1. Wurf','2. Wurf','3. Wurf'],ch:mk([])};
+}
+
+/* ---------- Inhalte ---------- */
+const U32=[['r',3],['b',2]];
+const TZ=T2('r','b',[3,5],[2,5],[3,5],[2,5],[3,5],[2,5]);           // mit Zurücklegen
+const TO=T2('r','b',[3,5],[2,5],[2,4],[2,4],[3,4],[1,4]);           // ohne Zurücklegen
+const INTRO_Z=`<p>Urne: 3 rote und 2 blaue Kugeln. Du ziehst zweimal <b>mit Zurücklegen</b>.</p>${ABK('r: rot &nbsp; b: blau')}`;
+const INTRO_O=`<p>Urne: 3 rote und 2 blaue Kugeln. Du ziehst zweimal <b>ohne Zurücklegen</b>.</p>${ABK('r: rot &nbsp; b: blau')}`;
+
+const MODS=[
+{name:'Start-Check',short:'Start',merk:0,sc:[
+ {id:'s0a',h:'Baumdiagramm lesen',
+  x:`<p>Eine Münze wird zweimal geworfen.</p>${ABK('W: Wappen &nbsp; Z: Zahl')}{{tree}}
+  ${A('Gib die Anzahl der Ergebnisse an.')}<div class="math">Anzahl: {{a}}</div>
+  ${A('Gib die Wahrscheinlichkeit für das Ergebnis (W|W) an.')}<div class="math">P(W|W) = {{b}}</div>`,
+  tree:T2('W','Z',[1,2],[1,2],[1,2],[1,2],[1,2],[1,2],undefined,true),
+  f:{a:nu(4,[[2,'Zähle die Pfade von links nach rechts, nicht die Äste am Anfang.'],[6,'Du hast die Äste gezählt. Zähle die Pfade von ganz links bis ganz rechts.']]),
+     b:fr([1,4],[[[1,2],'Das ist die Wahrscheinlichkeit für einen Wurf. Hier geht es um zwei Würfe.']])},
+  tips:['Jeder Pfad von links nach rechts ist ein Ergebnis. Zähle die Pfade.','Alle Ergebnisse sind gleich wahrscheinlich. Eines von vier Ergebnissen ist (W|W).'],
+  sol:`Es gibt 4 Ergebnisse: (W|W), (W|Z), (Z|W), (Z|Z). Alle sind gleich wahrscheinlich. Also: P(W|W) = ${F(1,4)}`},
+ {id:'s0b',h:'Brüche multiplizieren',
+  x:`${A('Berechne.')}<div class="math">${F(2,5)} · ${F(3,5)} = {{a}}</div><div class="math">${F(1,2)} · ${F(3,4)} = {{b}}</div>`,
+  f:{a:fr([6,25],[[[5,5],'Du hast addiert. Hier wird multipliziert.'],[[5,10],'Du hast addiert. Hier wird multipliziert: Zähler mal Zähler, Nenner mal Nenner.']]),b:fr([3,8],[[[5,4],'Du hast addiert. Hier wird multipliziert.'],[[4,6],'Du hast addiert. Hier wird multipliziert: Zähler mal Zähler, Nenner mal Nenner.']])},
+  tips:['Zähler mal Zähler. Nenner mal Nenner.',`Erste Aufgabe: 2 · 3 = 6 und 5 · 5 = 25.`],
+  sol:`<div class="math">${F(2,5)} · ${F(3,5)} = ${F('2 · 3','5 · 5')} = ${F(6,25)}</div><div class="math">${F(1,2)} · ${F(3,4)} = ${F('1 · 3','2 · 4')} = ${F(3,8)}</div>`},
+ {id:'s0c',h:'Brüche addieren',
+  x:`${A('Berechne.')}<div class="math">${F(3,10)} + ${F(4,10)} = {{a}}</div><div class="math">${F(1,4)} + ${F(3,8)} = {{b}}</div>`,
+  f:{a:fr([7,10],[[[7,20],'Der Nenner bleibt gleich. Addiere nur die Zähler.']]),
+     b:fr([5,8],[[[4,12],'Bringe die Brüche zuerst auf den gleichen Nenner.'],[[4,8],'Erweitere zuerst: Ein Viertel sind zwei Achtel.']])},
+  tips:['Gleicher Nenner: Addiere die Zähler. Der Nenner bleibt.',`Zweite Aufgabe: Erweitere ${F(1,4)} auf Achtel.`],
+  sol:`<div class="math">${F(3,10)} + ${F(4,10)} = ${F(7,10)}</div><div class="math">${F(1,4)} + ${F(3,8)} = ${F(2,8)} + ${F(3,8)} = ${F(5,8)}</div>`},
+ {id:'self0',type:'self',h:'Wie sicher bist du?',q:'Ich kann ein Baumdiagramm lesen und Brüche multiplizieren und addieren.'}
+]},
+{name:'Modul 1: Mit Zurücklegen',short:'1 Multiplizieren',merk:4,sc:[
+ {id:'s1a',h:'Die Urne',
+  x:`<p>In einer Urne liegen 3 rote und 2 blaue Kugeln.</p>${urn(U32)}${ABK('r: rot &nbsp; b: blau')}
+  <p>Du ziehst eine Kugel und notierst die Farbe. Dann legst du die Kugel <b>zurück</b> und ziehst noch einmal.</p>
+  <div class="note">Achtung: Rot und Blau sind hier <b>nicht</b> gleich wahrscheinlich.</div>
+  ${A('Gib die fehlenden Wahrscheinlichkeiten im Baumdiagramm an.')}{{tree}}`,
+  tree:T2('r','b',[3,5],'a','b','c','d','e'),
+  f:{a:fr([2,5],[[[1,2],'Zähle die Kugeln: 2 von 5 sind blau.'],[[3,5],'Das ist die Wahrscheinlichkeit für Rot.']]),
+     b:fr([3,5],[[[1,2],'Zähle die Kugeln: 3 von 5 sind rot.'],[[2,4],'Die Kugel wird zurückgelegt. Es liegen wieder 5 Kugeln in der Urne.']]),
+     c:fr([2,5],[[[1,2],'Zähle die Kugeln: 2 von 5 sind blau.']]),
+     d:fr([3,5],[[[1,2],'Zähle die Kugeln: 3 von 5 sind rot.'],[[3,4],'Die Kugel wird zurückgelegt. Es liegen wieder 5 Kugeln in der Urne.']]),
+     e:fr([2,5],[[[1,4],'Die Kugel wird zurückgelegt. Es liegen wieder 5 Kugeln in der Urne.']])},
+  tips:[`3 von 5 Kugeln sind rot. Deshalb steht am Ast zu r der Bruch ${F(3,5)}.`,'Die Kugel wird zurückgelegt. Beim 2. Zug liegen wieder 3 rote und 2 blaue Kugeln in der Urne.'],
+  sol:`An jedem Ast zu r steht ${F(3,5)}. An jedem Ast zu b steht ${F(2,5)}. Kontrolle: Die Äste an einem Knoten ergeben zusammen 1.`},
+ {id:'s1b',h:'Schätze zuerst',
+  x:`${INTRO_Z}${A('Entscheide: Wie groß ist die Wahrscheinlichkeit für zweimal Rot, also für (r|r)?')}{{a}}
+  ${PARTNER('Vergleicht eure Schätzungen. Begründet kurz.')}`,
+  f:{a:{t:'c',s:-1,row:true,o:[F(3,5),F(6,10),F(9,25),F(6,25)]}},
+  ok:'Deine Schätzung ist gespeichert. Im nächsten Schritt prüfst du sie.'},
+ {id:'s1c',h:'Probiere es aus',
+  x:`${INTRO_Z}${A('Untersuche mit der Simulation, wie oft (r|r) vorkommt. Ziehe mindestens 1000-mal. Vergleiche danach mit deiner Schätzung.')}{{sim}}`,
+  sim:{balls:U32,rep:true,cmp:{g:'s1b.a',opts:[[3,5],[6,10],[9,25],[6,25]],keys:['rr'],lab:'(r|r)'}}},
+ {id:'s1d',h:'Häufigkeiten deuten',
+  x:`${INTRO_Z}<p>Stell dir 1000 Versuche vor.</p>${A('Gib die fehlenden Zahlen an.')}
+  <div class="math">Etwa {{a}} Versuche beginnen mit Rot. &nbsp;(${F(3,5)} von 1000)</div>
+  <div class="math">Bei ${F(3,5)} von diesen ist auch die 2. Kugel rot: etwa {{b}} Versuche.</div>
+  <div class="math">Also sind {{d}} aller Versuche (r|r). Gekürzt: P(r|r) = {{c}}</div>`,
+  f:{a:nu(600,[[400,'Das sind die Versuche, die mit Blau beginnen.']]),
+     b:nu(360,[[600,'Nimm drei Fünftel von den 600 Versuchen.']]),
+     d:Object.assign(fr([360,1000],[[[360,600],'Gemeint ist der Anteil an allen 1000 Versuchen.']]),{nf:true}),
+     c:fr([9,25])},
+  tips:['1000 : 5 = 200. Drei Fünftel sind 3 · 200.','Drei Fünftel von 600: 600 : 5 = 120. Dann 3 · 120. Der Anteil ist dann: diese Zahl geteilt durch 1000.'],
+  sol:`600 Versuche beginnen mit Rot. Bei 360 davon ist auch die 2. Kugel rot. P(r|r) = ${F(360,1000)} = ${F(9,25)}`,
+  ok:`Richtig! „Drei Fünftel von drei Fünfteln“ heißt: ${F(3,5)} · ${F(3,5)} = ${F(9,25)}. Vergleiche mit deiner Simulation.`},
+ {id:'s1v',h:'Stelle eine Vermutung auf',
+  x:`${INTRO_Z}<p>Du weißt jetzt: P(r|r) = ${F(9,25)}</p>{{tree}}
+  ${A('Entscheide: Wie erhältst du diese Wahrscheinlichkeit aus den Brüchen am Pfad?')}{{a}}
+  ${PARTNER('Formuliert eure Vermutung in einem Satz.')}`,
+  tree:Object.assign(T2('r','b',[3,5],[2,5],[3,5],[2,5],[3,5],[2,5]),{lp:{'0-0':[9,25]}}),
+  f:{a:{t:'c',s:1,o:['Ich addiere die beiden Brüche am Pfad.','Ich multipliziere die beiden Brüche am Pfad.','Ich nehme nur den Bruch am 2. Ast.'],
+     m:[`Prüfe nach: ${F(3,5)} + ${F(3,5)} = ${F(6,5)}. Das ist größer als 1.`,'',`Am 2. Ast steht ${F(3,5)}. Das ist nicht ${F(9,25)}.`]}},
+  tips:['Vergleiche die Zähler und die Nenner: Aus 3 und 3 wird 9. Aus 5 und 5 wird 25.'],
+  sol:`Du multiplizierst die Brüche am Pfad: ${F(3,5)} · ${F(3,5)} = ${F(9,25)}`,
+  ok:'✓ Richtig vermutet! Im nächsten Schritt steht die Regel.'},
+ {id:'s1e',h:'Merke',
+  x:`<div class="merk"><b class="t">Pfadmultiplikationsregel</b>
+  <p>Die Wahrscheinlichkeit eines Ergebnisses erhältst du so: <b>Multipliziere</b> die Wahrscheinlichkeiten <b>entlang des Pfades</b>.</p>
+  <div class="math">Beispiel: P(r|r) = ${F(3,5)} · ${F(3,5)} = ${F(9,25)}</div></div>{{tree}}
+  ${HEFT('Übertrage den Merkkasten.')}`,tree:TZ},
+ {id:'s1f',h:'Jetzt mit Lücken',
+  x:`${INTRO_Z}{{tree}}${A('Berechne P(r|b). Gib die fehlenden Brüche an.')}
+  <div class="math">P(r|b) = ${F(3,5)} · {{a}} = {{b}}</div>`,tree:TZ,
+  f:{a:fr([2,5],[[[3,5],'Der 2. Ast führt zu b. Lies den Bruch an diesem Ast ab.']]),b:fr([6,25],mulErr([3,5],[2,5]))},
+  tips:['Folge dem Pfad: zuerst zu r, dann zu b. Lies den Bruch am 2. Ast ab.','Zähler mal Zähler: 3 · 2. Nenner mal Nenner: 5 · 5.'],
+  sol:`<div class="math">P(r|b) = ${F(3,5)} · ${F(2,5)} = ${F(6,25)}</div>`},
+ {id:'s1g',h:'Jetzt du allein',
+  x:`${INTRO_Z}{{tree}}${A('Berechne die Wahrscheinlichkeiten.')}
+  <div class="math">P(b|r) = {{a}}</div><div class="math">P(b|b) = {{b}}</div>
+  ${HEFT('Füge ein Bildschirmfoto des Baumdiagramms ein. Ergänze hinter jedem Ergebnis seine Wahrscheinlichkeit.')}`,tree:TZ,
+  f:{a:fr([6,25],mulErr([2,5],[3,5])),b:fr([4,25],mulErr([2,5],[2,5]))},
+  tips:['Suche den Pfad im Baumdiagramm. Lies die zwei Brüche an den Ästen ab.',`P(b|r) = ${F(2,5)} · ${F(3,5)}`],
+  sol:`<div class="math">P(b|r) = ${F(2,5)} · ${F(3,5)} = ${F(6,25)}</div><div class="math">P(b|b) = ${F(2,5)} · ${F(2,5)} = ${F(4,25)}</div>`},
+ {id:'self1',type:'self',h:'Wie sicher bist du?',q:'Ich kann die Wahrscheinlichkeit eines Pfades mit der Pfadmultiplikationsregel berechnen.'},
+ {id:'x1',cond:'self1',h:'Noch eine Aufgabe zur Sicherheit',
+  x:`<p>Urne: 4 rote und 1 blaue Kugel. Du ziehst zweimal mit Zurücklegen.</p>${urn([['r',4],['b',1]])}${ABK('r: rot &nbsp; b: blau')}{{tree}}
+  ${A('Berechne die Wahrscheinlichkeiten.')}<div class="math">P(r|r) = {{a}}</div><div class="math">P(r|b) = {{b}}</div>`,
+  tree:T2('r','b',[4,5],[1,5],[4,5],[1,5],[4,5],[1,5]),
+  f:{a:fr([16,25],mulErr([4,5],[4,5])),b:fr([4,25],mulErr([4,5],[1,5]))},
+  tips:['Folge dem Pfad von links nach rechts. Lies die beiden Brüche an den Ästen ab.',`Multipliziere die beiden Brüche: P(r|r) = ${F(4,5)} · ${F(4,5)}`],
+  sol:`<div class="math">P(r|r) = ${F(4,5)} · ${F(4,5)} = ${F(16,25)}</div><div class="math">P(r|b) = ${F(4,5)} · ${F(1,5)} = ${F(4,25)}</div>`}
+]},
+{name:'Modul 2: Mehrere Pfade',short:'2 Addieren',merk:5,sc:[
+ {id:'s2a',h:'Weißt du es noch?',
+  x:`${A('Entscheide: Wie berechnest du die Wahrscheinlichkeit eines Pfades?')}{{a}}
+  <p>Urne: 2 rote und 1 blaue Kugel. Du ziehst zweimal mit Zurücklegen.</p>${urn([['r',2],['b',1]])}${ABK('r: rot &nbsp; b: blau')}${A('Berechne.')}<div class="math">P(r|r) = {{b}}</div>`,
+  f:{a:{t:'c',s:0,o:['Die Brüche am Pfad multiplizieren','Die Brüche am Pfad addieren','Nur den letzten Bruch nehmen'],m:['',ADDMSG,'Beide Äste des Pfades zählen.']},
+     b:fr([4,9],mulErr([2,3],[2,3]))},
+  tips:['Denke an die Pfadmultiplikationsregel.',`2 von 3 Kugeln sind rot: P(r|r) = ${F(2,3)} · ${F(2,3)}`],
+  sol:`Du multiplizierst die Brüche am Pfad. P(r|r) = ${F(2,3)} · ${F(2,3)} = ${F(4,9)}`},
+ {id:'s2b',h:'Ein Ereignis mit zwei Pfaden',
+  x:`${INTRO_Z}${ABK('E: Beide Kugeln haben die gleiche Farbe.')}
+  ${A('Gib alle Pfade an, die zu E gehören. Tippe sie rechts im Baumdiagramm an.')}{{tree}}`,
+  tree:T2('r','b',[3,5],[2,5],[3,5],[2,5],[3,5],[2,5],'a'),
+  f:{a:{t:'p',s:['0-0','1-1']}},
+  tips:['Gleiche Farbe heißt: zweimal rot oder zweimal blau.'],
+  sol:'Zu E gehören die Pfade (r|r) und (b|b).'},
+ {id:'s2s',h:'Schätze zuerst',
+  x:`${INTRO_Z}${ABK('E: Beide Kugeln haben die gleiche Farbe.')}<p>Du weißt schon: P(r|r) = ${F(9,25)} und P(b|b) = ${F(4,25)}</p>
+  ${A('Entscheide: Wie groß ist P(E)?')}{{a}}${PARTNER('Vergleicht eure Schätzungen. Begründet kurz.')}`,
+  f:{a:{t:'c',s:-1,row:true,o:[F(9,25),F(13,25),F(36,625),F(4,25)]}},
+  ok:'Deine Schätzung ist gespeichert. Im nächsten Schritt prüfst du sie.'},
+ {id:'s2c',h:'Probiere es aus',
+  x:`${INTRO_Z}${A('Untersuche mit der Simulation, wie oft beide Kugeln die gleiche Farbe haben. Ziehe mindestens 1000-mal. Vergleiche danach mit deiner Schätzung.')}{{sim}}`,
+  sim:{balls:U32,rep:true,sum:['gleiche Farbe: (r|r) und (b|b)',['rr','bb']],cmp:{g:'s2s.a',opts:[[9,25],[13,25],[36,625],[4,25]],keys:['rr','bb'],lab:'E'}}},
+ {id:'s2d',h:'Häufigkeiten deuten',
+  x:`${INTRO_Z}${ABK('E: Beide Kugeln haben die gleiche Farbe.')}<p>Stell dir wieder 1000 Versuche vor. Etwa 360 Versuche ergeben (r|r). Etwa 160 Versuche ergeben (b|b).</p>
+  ${A('Gib die fehlenden Zahlen an.')}
+  <div class="math">Zusammen haben {{b}} Versuche die gleiche Farbe.</div>
+  <div class="math">Das sind {{d}} aller Versuche. Gekürzt: P(E) = {{c}}</div>`,
+  f:{b:nu(520,[[200,'Zähle die Versuche zusammen: 360 und 160.']]),d:Object.assign(fr([520,1000]),{nf:true}),c:fr([13,25])},
+  tips:['Zähle die Versuche mit (r|r) und (b|b) zusammen.','Der Anteil ist: Anzahl der Versuche mit gleicher Farbe geteilt durch 1000. Kürze dann mit 40.'],
+  sol:`Zusammen: 360 + 160 = 520 Versuche. P(E) = ${F(520,1000)} = ${F(13,25)}`,
+  ok:'✓ Richtig! Du hast die Häufigkeiten der beiden Pfade zusammengezählt.'},
+ {id:'s2v',h:'Stelle eine Vermutung auf',
+  x:`${INTRO_Z}${ABK('E: Beide Kugeln haben die gleiche Farbe.')}<p>Du weißt jetzt: P(E) = ${F(13,25)}</p>{{tree}}
+  ${A('Entscheide: Wie erhältst du P(E) aus den Wahrscheinlichkeiten der beiden Pfade?')}{{a}}
+  ${PARTNER('Formuliert eure Vermutung in einem Satz.')}`,
+  tree:Object.assign(T2('r','b',[3,5],[2,5],[3,5],[2,5],[3,5],[2,5]),{lp:{'0-0':[9,25],'1-1':[4,25]}}),
+  f:{a:{t:'c',s:1,o:['Ich multipliziere die beiden Pfadwahrscheinlichkeiten.','Ich addiere die beiden Pfadwahrscheinlichkeiten.','Ich nehme die größere Pfadwahrscheinlichkeit.'],
+     m:[`Prüfe nach: ${F(9,25)} · ${F(4,25)} = ${F(36,625)}. Das ist viel zu klein.`,'',`Die größere ist ${F(9,25)}. Das ist nicht ${F(13,25)}.`]}},
+  tips:['Vergleiche die Zähler: Aus 9 und 4 wird 13. Der Nenner bleibt 25.'],
+  sol:`Du addierst die Pfadwahrscheinlichkeiten: ${F(9,25)} + ${F(4,25)} = ${F(13,25)}`,
+  ok:'✓ Richtig vermutet! Im nächsten Schritt steht die Regel.'},
+ {id:'s2e',h:'Merke',
+  x:`<div class="merk"><b class="t">Pfadadditionsregel</b>
+  <p>Gehören zu einem Ereignis <b>mehrere Pfade</b>? Dann <b>addiere</b> die Wahrscheinlichkeiten dieser Pfade.</p>
+  <div class="math">Beispiel: P(E) = P(r|r) + P(b|b) = ${F(9,25)} + ${F(4,25)} = ${F(13,25)}</div></div>
+  ${HEFT('Übertrage den Merkkasten.')}`},
+ {id:'s2f',h:'Jetzt mit Lücken',
+  x:`${INTRO_Z}${ABK('F: Die Kugeln haben verschiedene Farben.')}{{tree}}${A('Berechne P(F). Gib die fehlenden Brüche an.')}
+  <div class="math">P(F) = P(r|b) + P(b|r) = {{a}} + {{b}} = {{c}}</div>`,tree:TZ,
+  f:{a:fr([6,25],mulErr([3,5],[2,5])),b:fr([6,25],mulErr([2,5],[3,5])),c:fr([12,25],[[[12,50],'Der Nenner bleibt beim Addieren gleich.'],[[36,625],'Die Pfade werden addiert, nicht multipliziert.']])},
+  tips:['Berechne zuerst jeden Pfad einzeln mit der Pfadmultiplikationsregel.',`P(r|b) = ${F(3,5)} · ${F(2,5)} = ${F(6,25)}. Der Pfad (b|r) hat denselben Wert.`],
+  sol:`<div class="math">P(F) = P(r|b) + P(b|r) = ${F(6,25)} + ${F(6,25)} = ${F(12,25)}</div>`},
+ {id:'s2g',h:'Die Kontrolle',
+  x:`${INTRO_Z}${A('Berechne die Summe aller vier Pfadwahrscheinlichkeiten.')}
+  <div class="math">P(r|r) + P(r|b) + P(b|r) + P(b|b) = ${F(9,25)} + ${F(6,25)} + ${F(6,25)} + ${F(4,25)} = {{a}}</div>`,
+  f:{a:fr([1,1])},
+  tips:['Addiere die Zähler. Der Nenner bleibt 25.'],
+  sol:`${F(9,25)} + ${F(6,25)} + ${F(6,25)} + ${F(4,25)} = ${F(25,25)} = 1`,
+  ok:'Richtig! Alle Pfade zusammen ergeben immer 1. So kannst du jedes Baumdiagramm kontrollieren.'},
+ {id:'s2h',h:'Jetzt du allein',
+  x:`${INTRO_Z}${ABK('G: Mindestens eine Kugel ist blau.')}
+  ${A('Gib alle Pfade an, die zu G gehören. Tippe sie an.')}{{tree}}
+  ${A('Berechne P(G).')}<div class="math">P(G) = {{b}}</div>`,
+  tree:T2('r','b',[3,5],[2,5],[3,5],[2,5],[3,5],[2,5],'a'),
+  f:{a:{t:'p',s:['0-1','1-0','1-1']},
+     b:fr([16,25],[[[12,25],'Auch (b|b) gehört dazu: Zwei blaue Kugeln sind auch „mindestens eine“.'],[[4,25],'Das ist nur der Pfad (b|b). Es gehören noch zwei Pfade dazu.']])},
+  tips:['„Mindestens eine“ heißt: eine oder zwei.','P(G) = P(r|b) + P(b|r) + P(b|b)'],
+  sol:`<div class="math">P(G) = P(r|b) + P(b|r) + P(b|b) = ${F(6,25)} + ${F(6,25)} + ${F(4,25)} = ${F(16,25)}</div>`},
+ {id:'self2',type:'self',h:'Wie sicher bist du?',q:'Ich kann die Pfade zu einem Ereignis finden und ihre Wahrscheinlichkeiten addieren.'},
+ {id:'x2',cond:'self2',h:'Noch eine Aufgabe zur Sicherheit',
+  x:`<p>Urne: 4 rote und 1 blaue Kugel. Du ziehst zweimal mit Zurücklegen.</p>${urn([['r',4],['b',1]])}${ABK('r: rot &nbsp; b: blau &nbsp; E: Beide Kugeln haben die gleiche Farbe.')}
+  ${A('Gib alle Pfade an, die zu E gehören. Tippe sie an.')}{{tree}}${A('Berechne P(E).')}<div class="math">P(E) = {{b}}</div>`,
+  tree:T2('r','b',[4,5],[1,5],[4,5],[1,5],[4,5],[1,5],'a'),
+  f:{a:{t:'p',s:['0-0','1-1']},b:fr([17,25],[[[16,25],'Es fehlt noch der Pfad (b|b).'],[[1,25],'Es fehlt noch der Pfad (r|r).'],[[16,625],'Die Pfade werden addiert, nicht multipliziert.']])},
+  tips:['Zu E gehören zwei Pfade: (r|r) und (b|b). Berechne zuerst jeden Pfad einzeln.',`P(r|r) = ${F(4,5)} · ${F(4,5)} = ${F(16,25)} &nbsp; und &nbsp; P(b|b) = ${F(1,5)} · ${F(1,5)} = ${F(1,25)}. Addiere die beiden Werte.`],
+  sol:`<div class="math">P(E) = P(r|r) + P(b|b) = ${F(16,25)} + ${F(1,25)} = ${F(17,25)}</div>`}
+]},
+{name:'Modul 3: Ohne Zurücklegen',short:'3 Ohne Zurücklegen',merk:6,sc:[
+ {id:'s3a',h:'Weißt du es noch?',
+  x:`${A('Entscheide: Zu einem Ereignis gehören drei Pfade. Wie berechnest du seine Wahrscheinlichkeit?')}{{a}}
+  ${INTRO_Z}${A('Berechne.')}<div class="math">P(r|b) = {{b}}</div>`,
+  f:{a:{t:'c',s:1,o:['Die drei Pfadwahrscheinlichkeiten multiplizieren','Die drei Pfadwahrscheinlichkeiten addieren','Die größte Pfadwahrscheinlichkeit nehmen'],m:['Multipliziert wird nur entlang eines Pfades. Mehrere Pfade werden addiert.','','Alle drei Pfade zählen.']},
+     b:fr([6,25],mulErr([3,5],[2,5]))},
+  tips:['Denke an die Pfadadditionsregel.',`P(r|b) = ${F(3,5)} · ${F(2,5)}`],
+  sol:`Du addierst die drei Pfadwahrscheinlichkeiten. P(r|b) = ${F(3,5)} · ${F(2,5)} = ${F(6,25)}`},
+ {id:'s3b',h:'Die Kugel bleibt draußen',
+  x:`<p>Wieder die Urne mit 3 roten und 2 blauen Kugeln. Jetzt legst du die 1. Kugel <b>nicht</b> zurück.</p>${ABK('r: rot &nbsp; b: blau')}
+  <p>Die 1. Kugel ist rot.</p>${urn(U32,'r')}
+  ${A('Gib an, welche Kugeln noch in der Urne liegen.')}
+  <div class="math">rote Kugeln: {{a}} &nbsp; blaue Kugeln: {{b}} &nbsp; zusammen: {{c}}</div>`,
+  f:{a:nu(2,[[3,'Eine rote Kugel ist schon gezogen.']]),b:nu(2),c:nu(4,[[5,'Eine Kugel fehlt jetzt.']])},
+  tips:['Eine rote Kugel fehlt. Zähle die Kugeln im Bild.'],
+  sol:'Es liegen noch 2 rote und 2 blaue Kugeln in der Urne. Zusammen sind das 4 Kugeln.'},
+ {id:'s3c',h:'Neue Brüche beim 2. Zug',
+  x:`${INTRO_O}<p>Aus Schritt 2: Ist die 1. Kugel rot, liegen noch <b>2 rote und 2 blaue</b> Kugeln in der Urne, zusammen <b>4</b>.</p>${urn(U32,'r')}
+  ${A('Gib die fehlenden Wahrscheinlichkeiten für den 2. Zug an.')}{{tree}}`,
+  tree:T2('r','b',[3,5],[2,5],'a','b','c','d'),
+  f:{a:fr([2,4],[[[3,5],'Das gilt mit Zurücklegen. Jetzt fehlt eine rote Kugel, und es sind nur noch 4 Kugeln.'],[[2,5],'Auch der Nenner ändert sich: Es sind nur noch 4 Kugeln.'],[[3,4],'Eine rote Kugel ist schon gezogen. Es sind nur noch 2 rote.']]),
+     b:fr([2,4],[[[2,5],'Der Nenner ändert sich: Es sind nur noch 4 Kugeln.'],[[1,4],'Die 1. Kugel war rot. Beide blauen Kugeln sind noch da.']]),
+     c:fr([3,4],[[[3,5],'Der Nenner ändert sich: Es sind nur noch 4 Kugeln.'],[[2,4],'Die 1. Kugel war blau. Alle 3 roten Kugeln sind noch da.']]),
+     d:fr([1,4],[[[2,5],'Das gilt mit Zurücklegen. Jetzt fehlt eine blaue Kugel, und es sind nur noch 4 Kugeln.'],[[1,5],'Auch der Nenner ändert sich: Es sind nur noch 4 Kugeln.'],[[2,4],'Eine blaue Kugel ist schon gezogen. Es ist nur noch 1 blaue da.']])},
+  tips:['Überlege an jedem Knoten: Welche Kugel fehlt? Wie viele Kugeln liegen noch in der Urne?','Nach Rot: 2 rote und 2 blaue Kugeln. Nach Blau: 3 rote und 1 blaue Kugel. Zusammen immer 4.'],
+  sol:`Nach r: ${F(2,4)} für r und ${F(2,4)} für b. Nach b: ${F(3,4)} für r und ${F(1,4)} für b. Kontrolle: Die Äste an einem Knoten ergeben zusammen 1.`},
+ {id:'s3d',h:'Schätze zuerst',
+  x:`${INTRO_O}<p>Mit Zurücklegen war P(r|r) = ${F(9,25)}.</p>${A('Entscheide: Wie ist P(r|r) ohne Zurücklegen?')}{{a}}
+  ${PARTNER('Vergleicht eure Schätzungen. Begründet kurz.')}`,
+  f:{a:{t:'c',s:-1,o:['kleiner als mit Zurücklegen','genauso groß','größer als mit Zurücklegen']}},
+  ok:'Deine Schätzung ist gespeichert. Im nächsten Schritt prüfst du sie.'},
+ {id:'s3e',h:'Probiere es aus',
+  x:`${INTRO_O}${A('Untersuche mit der Simulation, wie oft (r|r) vorkommt. Ziehe mindestens 1000-mal. Vergleiche danach mit deiner Schätzung.')}{{sim}}`,
+  sim:{balls:U32,rep:false,cmp:{g:'s3d.a',rel:[9,25],keys:['rr'],lab:'(r|r)'}}},
+ {id:'s3f',h:'Häufigkeiten deuten und rechnen',
+  x:`${INTRO_O}<p>Etwa 600 von 1000 Versuchen beginnen mit Rot. Danach sind 2 von 4 Kugeln rot.</p>
+  ${A('Gib die fehlende Zahl an. Berechne dann P(r|r).')}
+  <div class="math">Bei etwa {{a}} Versuchen ist auch die 2. Kugel rot.</div>
+  <div class="math">P(r|r) = ${F(3,5)} · ${F(2,4)} = {{b}}</div>`,
+  f:{a:nu(300,[[360,'Das gilt mit Zurücklegen. Jetzt sind nur 2 von 4 Kugeln rot, also die Hälfte.']]),
+     b:fr([6,20],mulErr([3,5],[2,4],[[[9,25],'Das ist der Wert mit Zurücklegen. Der 2. Bruch ist jetzt zwei Viertel.']]))},
+  tips:['2 von 4 ist die Hälfte. Nimm die Hälfte von 600.','Zähler mal Zähler: 3 · 2. Nenner mal Nenner: 5 · 4.'],
+  sol:`Die Hälfte von 600 sind 300 Versuche. P(r|r) = ${F(3,5)} · ${F(2,4)} = ${F(6,20)} = ${F(3,10)}`,
+  ok:`Richtig! ${F(6,20)} = ${F(3,10)} = 30&nbsp;%. Mit Zurücklegen waren es ${F(9,25)} = 36&nbsp;%. Ohne Zurücklegen ist (r|r) also weniger wahrscheinlich.`},
+ {id:'s3g',h:'Merke',
+  x:`<div class="merk"><b class="t">Mit und ohne Zurücklegen</b>
+  <table class="vgl"><tr><th>mit Zurücklegen</th><th>ohne Zurücklegen</th></tr>
+  <tr><td>Die Urne ist bei jedem Zug gleich.</td><td>In der Urne liegt bei jedem Zug eine Kugel weniger.</td></tr>
+  <tr><td>Die Brüche sind auf jeder Stufe gleich.</td><td>Der Nenner wird um 1 kleiner. Der Zähler hängt davon ab, was vorher gezogen wurde.</td></tr></table>
+  <p>Die Pfadmultiplikationsregel und die Pfadadditionsregel gelten in beiden Fällen.</p></div>{{tree}}
+  ${HEFT('Übertrage den Merkkasten. Das Baumdiagramm musst du nicht abzeichnen.')}`,tree:TO},
+ {id:'s3h',h:'Jetzt du allein',
+  x:`${INTRO_O}${ABK('E: Beide Kugeln haben die gleiche Farbe.')}{{tree}}${A('Berechne die Wahrscheinlichkeiten.')}
+  <div class="math">P(r|r) = {{c}}</div><div class="math">P(b|b) = {{a}}</div><div class="math">P(E) = {{b}}</div>`,tree:TO,
+  f:{c:fr([3,10],mulErr([3,5],[2,4],[[[9,25],'Du hast mit Zurücklegen gerechnet. Lies die Brüche am Baumdiagramm ab.']])),
+     a:fr([1,10],mulErr([2,5],[1,4],[[[4,25],'Du hast mit Zurücklegen gerechnet. Lies die Brüche am Baumdiagramm ab.']])),
+     b:fr([2,5],[[[13,25],'Du hast mit Zurücklegen gerechnet. Lies die Brüche am Baumdiagramm ab.'],[[3,10],'Es fehlt noch der Pfad (b|b).'],[[1,10],'Es fehlt noch der Pfad (r|r).']])},
+  tips:['Multipliziere entlang jedes Pfades. Zu E gehören die Pfade (r|r) und (b|b).',`P(r|r) = ${F(3,5)} · ${F(2,4)} = ${F(6,20)} &nbsp; und &nbsp; P(b|b) = ${F(2,5)} · ${F(1,4)}`],
+  sol:`<div class="math">P(r|r) = ${F(3,5)} · ${F(2,4)} = ${F(6,20)} = ${F(3,10)}</div><div class="math">P(b|b) = ${F(2,5)} · ${F(1,4)} = ${F(2,20)} = ${F(1,10)}</div><div class="math">P(E) = P(r|r) + P(b|b) = ${F(6,20)} + ${F(2,20)} = ${F(8,20)} = ${F(2,5)}</div>`},
+ {id:'self3',type:'self',h:'Wie sicher bist du?',q:'Ich kann Wahrscheinlichkeiten beim Ziehen ohne Zurücklegen berechnen.'},
+ {id:'x3',cond:'self3',h:'Noch eine Aufgabe zur Sicherheit',
+  x:`<p>Urne: 3 rote und 3 blaue Kugeln. Du ziehst zweimal ohne Zurücklegen.</p>${urn([['r',3],['b',3]])}${ABK('r: rot &nbsp; b: blau &nbsp; F: Die Kugeln haben verschiedene Farben.')}
+  ${A('Gib die fehlenden Wahrscheinlichkeiten an. Berechne dann P(r|r) und P(F).')}{{tree}}
+  <div class="math">P(r|r) = {{e}}</div><div class="math">P(F) = {{f}}</div>`,
+  tree:T2('r','b',[3,6],[3,6],'a','b','c','d'),
+  f:{a:fr([2,5],[[[3,6],'Ohne Zurücklegen: Eine rote Kugel fehlt, und es sind nur noch 5 Kugeln.'],[[2,6],'Auch der Nenner ändert sich: Es sind nur noch 5 Kugeln.']]),
+     b:fr([3,5],[[[2,5],'Die 1. Kugel war rot. Alle 3 blauen Kugeln sind noch da.']]),
+     c:fr([3,5],[[[2,5],'Die 1. Kugel war blau. Alle 3 roten Kugeln sind noch da.']]),
+     d:fr([2,5],[[[3,6],'Ohne Zurücklegen: Eine blaue Kugel fehlt, und es sind nur noch 5 Kugeln.'],[[2,6],'Auch der Nenner ändert sich: Es sind nur noch 5 Kugeln.']]),
+     e:fr([1,5],mulErr([3,6],[2,5],[[[1,4],'Du hast mit Zurücklegen gerechnet.']])),
+     f:fr([3,5],[[[3,10],'Das ist nur ein Pfad. Zu F gehören zwei Pfade.'],[[1,2],'Du hast mit Zurücklegen gerechnet.']])},
+  tips:['Nach dem 1. Zug liegen noch 5 Kugeln in der Urne. Überlege an jedem Knoten: Welche Kugel fehlt?',`P(r|r) = ${F(3,6)} · ${F(2,5)}. Zu F gehören die Pfade (r|b) und (b|r).`],
+  sol:`Nach r: ${F(2,5)} für r und ${F(3,5)} für b. Nach b: ${F(3,5)} für r und ${F(2,5)} für b.
+  <div class="math">P(r|r) = ${F(3,6)} · ${F(2,5)} = ${F(6,30)} = ${F(1,5)}</div>
+  <div class="math">P(F) = P(r|b) + P(b|r) = ${F(9,30)} + ${F(9,30)} = ${F(18,30)} = ${F(3,5)}</div>`}
+]},
+{name:'Modul 4: Üben',short:'4 Üben',free:true,sc:[
+ {id:'ueb',h:'So übst du',x:`<p>Bearbeite alle <b>Pflichtaufgaben</b> (P1 bis P8). Wähle danach mindestens zwei <b>Wahlaufgaben</b> (W1 bis W6).</p>
+  <p>Du kannst die Aufgaben oben in jeder Reihenfolge antippen.</p>
+  <div class="note">💡 Tipp = Hilfe in zwei Stufen &nbsp;·&nbsp; ✓ Lösungsweg = erst nach den Tipps &nbsp;·&nbsp; ✎ = ins Heft</div>
+  <div class="note">Bei großen Rechnungen: Rechne im Heft.</div>`},
+ {id:'p1',lab:'P1',h:'Pflicht 1: Kugeln mit Zurücklegen',
+  x:`<p>Urne: 1 rote und 3 grüne Kugeln. Du ziehst zweimal mit Zurücklegen.</p>${ABK('r: rot &nbsp; g: grün')}
+  ${A('Gib die fehlenden Wahrscheinlichkeiten an. Berechne dann P(g|g).')}{{tree}}<div class="math">P(g|g) = {{e}}</div>`,
+  tree:T2('r','g',[1,4],'a',[1,4],'b','c','d'),
+  f:{a:fr([3,4]),b:fr([3,4]),c:fr([1,4],[[[1,3],'Die Kugel wird zurückgelegt. Es liegen wieder 4 Kugeln in der Urne.']]),d:fr([3,4],[[[2,3],'Die Kugel wird zurückgelegt. Es liegen wieder 4 Kugeln in der Urne.']]),e:fr([9,16],mulErr([3,4],[3,4]))},
+  tips:['3 von 4 Kugeln sind grün. Mit Zurücklegen ändert sich die Urne nicht.',`P(g|g) = ${F(3,4)} · ${F(3,4)}`],
+  sol:`An jedem Ast zu g steht ${F(3,4)}, an jedem Ast zu r steht ${F(1,4)}. <div class="math">P(g|g) = ${F(3,4)} · ${F(3,4)} = ${F(9,16)}</div>`},
+ {id:'p2',lab:'P2',h:'Pflicht 2: Genau eine rote Kugel',
+  x:`<p>Urne: 1 rote und 3 grüne Kugeln. Du ziehst zweimal mit Zurücklegen.</p>${ABK('r: rot &nbsp; g: grün &nbsp; E: Genau eine Kugel ist rot.')}{{tree}}
+  ${A('Berechne P(E).')}<div class="math">P(E) = {{a}}</div>`,
+  tree:T2('r','g',[1,4],[3,4],[1,4],[3,4],[1,4],[3,4]),
+  f:{a:fr([3,8],[[[3,16],'Das ist nur ein Pfad. Es gibt zwei Pfade mit genau einer roten Kugel.'],[[7,16],'„Genau eine“ heißt: nicht zwei. Der Pfad (r|r) gehört nicht dazu.']])},
+  tips:['Zu E gehören zwei Pfade: (r|g) und (g|r).',`P(r|g) = ${F(1,4)} · ${F(3,4)} = ${F(3,16)}. Der Pfad (g|r) hat denselben Wert.`],
+  sol:`<div class="math">P(E) = P(r|g) + P(g|r) = ${F(3,16)} + ${F(3,16)} = ${F(6,16)} = ${F(3,8)}</div>`},
+ {id:'p3',lab:'P3',h:'Pflicht 3: Kugeln ohne Zurücklegen',
+  x:`<p>Urne: 4 gelbe und 2 schwarze Kugeln. Du ziehst zweimal ohne Zurücklegen.</p>${ABK('g: gelb &nbsp; s: schwarz')}
+  ${A('Gib die fehlenden Wahrscheinlichkeiten an. Berechne dann P(g|g).')}{{tree}}<div class="math">P(g|g) = {{e}}</div>`,
+  tree:T2('y','s',[4,6],[2,6],'a','b','c','d'),
+  f:{a:fr([3,5],[[[4,6],'Ohne Zurücklegen: Eine gelbe Kugel fehlt, und es sind nur noch 5 Kugeln.'],[[3,6],'Auch der Nenner ändert sich: Es sind nur noch 5 Kugeln.'],[[4,5],'Eine gelbe Kugel ist schon gezogen.']]),
+     b:fr([2,5],[[[2,6],'Der Nenner ändert sich: Es sind nur noch 5 Kugeln.']]),
+     c:fr([4,5],[[[4,6],'Der Nenner ändert sich: Es sind nur noch 5 Kugeln.'],[[3,5],'Die 1. Kugel war schwarz. Alle 4 gelben Kugeln sind noch da.']]),
+     d:fr([1,5],[[[2,6],'Ohne Zurücklegen: Eine schwarze Kugel fehlt, und es sind nur noch 5 Kugeln.'],[[2,5],'Eine schwarze Kugel ist schon gezogen.']]),
+     e:fr([2,5],mulErr([4,6],[3,5],[[[16,36],'Du hast mit Zurücklegen gerechnet.']]))},
+  tips:['Nach dem 1. Zug liegen noch 5 Kugeln in der Urne. Welche Kugel fehlt?',`P(g|g) = ${F(4,6)} · ${F(3,5)}`],
+  sol:`Nach g: ${F(3,5)} für g und ${F(2,5)} für s. Nach s: ${F(4,5)} für g und ${F(1,5)} für s.<div class="math">P(g|g) = ${F(4,6)} · ${F(3,5)} = ${F(12,30)} = ${F(2,5)}</div>`},
+ {id:'p4',lab:'P4',h:'Pflicht 4: Verschiedene Farben',
+  x:`<p>Urne: 4 gelbe und 2 schwarze Kugeln. Du ziehst zweimal ohne Zurücklegen.</p>${ABK('g: gelb &nbsp; s: schwarz &nbsp; F: Die Kugeln haben verschiedene Farben.')}{{tree}}
+  ${A('Berechne P(F).')}<div class="math">P(F) = {{a}}</div>`,
+  tree:T2('y','s',[4,6],[2,6],[3,5],[2,5],[4,5],[1,5]),
+  f:{a:fr([8,15],[[[4,15],'Das ist nur ein Pfad. Zu F gehören zwei Pfade.'],[[4,9],'Du hast mit Zurücklegen gerechnet.']])},
+  tips:['Zu F gehören zwei Pfade: (g|s) und (s|g).',`P(g|s) = ${F(4,6)} · ${F(2,5)} = ${F(8,30)} &nbsp; und &nbsp; P(s|g) = ${F(2,6)} · ${F(4,5)}`],
+  sol:`<div class="math">P(F) = P(g|s) + P(s|g) = ${F(8,30)} + ${F(8,30)} = ${F(16,30)} = ${F(8,15)}</div>`},
+ {id:'p5',lab:'P5',h:'Pflicht 5: Glücksrad',
+  x:`<p>Ein Glücksrad hat 5 gleich große Felder: 2 Gewinnfelder und 3 Nieten. Es wird zweimal gedreht.</p>${ABK('G: Gewinn &nbsp; N: Niete')}
+  ${A('Entscheide: Welches Urnenmodell passt?')}{{a}}
+  ${A('Berechne P(G|G). Gib das Ergebnis auch in Prozent an.')}<div class="math">P(G|G) = {{b}} = {{c}}&nbsp;%</div>`,
+  f:{a:{t:'c',s:0,o:['Ziehen mit Zurücklegen','Ziehen ohne Zurücklegen'],m:['','Das Rad ändert sich nicht. Beim 2. Drehen sind alle Felder wieder da.']},
+     b:fr([4,25],mulErr([2,5],[2,5],[[[1,10],'Du hast ohne Zurücklegen gerechnet. Das Rad bleibt aber gleich.']])),
+     c:nu(16,[[4,'Erweitere den Bruch auf den Nenner 100.']])},
+  tips:['Das Rad bleibt gleich. Beide Male ist die Wahrscheinlichkeit für G zwei Fünftel.',`P(G|G) = ${F(2,5)} · ${F(2,5)}. Erweitere dann auf Hundertstel.`],
+  sol:`Es passt das Ziehen mit Zurücklegen.<div class="math">P(G|G) = ${F(2,5)} · ${F(2,5)} = ${F(4,25)} = ${F(16,100)} = 16&nbsp;%</div>`},
+ {id:'p6',lab:'P6',h:'Pflicht 6: Lose',
+  x:`<p>In einer Lostrommel liegen 10 Lose: 3 Gewinne und 7 Nieten. Du ziehst nacheinander 2 Lose.</p>${ABK('G: Gewinn &nbsp; N: Niete')}
+  ${A('Berechne die Wahrscheinlichkeiten.')}<div class="math">P(G|G) = {{a}}</div><div class="math">P(N|N) = {{b}}</div>
+  ${HEFT('Zeichne zuerst das Baumdiagramm.')}`,
+  f:{a:fr([1,15],mulErr([3,10],[2,9],[[[9,100],'Du hast mit Zurücklegen gerechnet. Ein gezogenes Los bleibt aber draußen.']])),
+     b:fr([7,15],mulErr([7,10],[6,9],[[[49,100],'Du hast mit Zurücklegen gerechnet. Ein gezogenes Los bleibt aber draußen.']]))},
+  tips:['Ein gezogenes Los bleibt draußen: Das ist Ziehen ohne Zurücklegen. Beim 2. Zug sind noch 9 Lose da.',`P(G|G) = ${F(3,10)} · ${F(2,9)}`],
+  sol:`<div class="math">P(G|G) = ${F(3,10)} · ${F(2,9)} = ${F(6,90)} = ${F(1,15)}</div><div class="math">P(N|N) = ${F(7,10)} · ${F(6,9)} = ${F(42,90)} = ${F(7,15)}</div>`},
+ {id:'p7',lab:'P7',h:'Pflicht 7: Würfel',
+  x:`<p>Ein Würfel wird zweimal geworfen.</p>${ABK('s: Sechs &nbsp; k: keine Sechs &nbsp; E: Genau eine Sechs.')}{{tree}}
+  ${A('Berechne P(E).')}<div class="math">P(E) = {{a}}</div>`,
+  tree:T2('x','k',[1,6],[5,6],[1,6],[5,6],[1,6],[5,6],undefined,true),
+  f:{a:fr([5,18],[[[5,36],'Das ist nur ein Pfad. Es gibt zwei Pfade mit genau einer Sechs.'],[[11,36],'„Genau eine“ heißt: nicht zwei. Der Pfad (s|s) gehört nicht dazu.']])},
+  tips:['Zu E gehören zwei Pfade: (s|k) und (k|s).',`P(s|k) = ${F(1,6)} · ${F(5,6)} = ${F(5,36)}. Der Pfad (k|s) hat denselben Wert.`],
+  sol:`<div class="math">P(E) = P(s|k) + P(k|s) = ${F(5,36)} + ${F(5,36)} = ${F(10,36)} = ${F(5,18)}</div>`},
+ {id:'p8',lab:'P8',h:'Pflicht 8: Finde den Fehler',
+  x:`<p>Urne: 5 rote und 3 blaue Kugeln. Es wird zweimal ohne Zurücklegen gezogen.</p>${ABK('r: rot &nbsp; b: blau')}
+  <div class="math">Tim rechnet: P(b|b) = ${F(3,8)} · ${F(3,8)} = ${F(9,64)}</div>
+  ${A('Gib Tims Fehler an.')}{{a}}
+  ${A('Berechne die richtige Wahrscheinlichkeit.')}<div class="math">P(b|b) = {{b}}</div>`,
+  f:{a:{t:'c',s:1,o:['Tim hätte die Brüche addieren müssen.','Tim hat beim 2. Zug so gerechnet, als läge die Kugel wieder in der Urne.','Tim hat beim 1. Zug den falschen Bruch genommen.'],m:['Entlang eines Pfades wird multipliziert. Das hat Tim richtig gemacht.','','Beim 1. Zug sind 3 von 8 Kugeln blau. Das stimmt.']},
+     b:fr([3,28],mulErr([3,8],[2,7],[[[9,64],'Das ist Tims falsches Ergebnis.'],[[9,56],'Auch der Zähler ändert sich: Es sind nur noch 2 blaue Kugeln.'],[[6,64],'Auch der Nenner ändert sich: Es sind nur noch 7 Kugeln.']]))},
+  tips:['Nach dem 1. Zug fehlt eine blaue Kugel. Wie viele Kugeln sind noch da?',`Beim 2. Zug sind 2 von 7 Kugeln blau: P(b|b) = ${F(3,8)} · ${F(2,7)}`],
+  sol:`Tim hat den 2. Bruch nicht angepasst.<div class="math">P(b|b) = ${F(3,8)} · ${F(2,7)} = ${F(6,56)} = ${F(3,28)}</div>`},
+ {id:'w1',lab:'W1',h:'Wahl 1: Drei Münzwürfe',
+  x:`<p>Eine Münze wird dreimal geworfen.</p>${ABK('W: Wappen &nbsp; Z: Zahl &nbsp; E: Genau zweimal Wappen.')}
+  ${A('Gib alle Pfade an, die zu E gehören. Tippe sie an. Berechne dann P(E).')}{{tree}}<div class="math">P(E) = {{b}}</div>`,
+  tree:Object.assign(T3('W','Z',()=>[[1,2],[1,2]]),{pick:'a'}),
+  f:{a:{t:'p',s:['0-0-1','0-1-0','1-0-0']},b:fr([3,8],[[[1,8],'Das ist nur ein Pfad. Zu E gehören drei Pfade.'],[[1,2],'(W|W|W) gehört nicht dazu: Das ist dreimal Wappen.']])},
+  tips:['Suche alle Pfade mit zweimal W und einmal Z.',`Jeder Pfad hat die Wahrscheinlichkeit ${F(1,2)} · ${F(1,2)} · ${F(1,2)} = ${F(1,8)}.`],
+  sol:`<div class="math">P(E) = P(W|W|Z) + P(W|Z|W) + P(Z|W|W) = ${F(1,8)} + ${F(1,8)} + ${F(1,8)} = ${F(3,8)}</div>`},
+ {id:'w2',lab:'W2',h:'Wahl 2: Dreimal ohne Zurücklegen',
+  x:`<p>Urne: 3 rote und 2 blaue Kugeln. Du ziehst dreimal ohne Zurücklegen.</p>${ABK('r: rot &nbsp; b: blau')}
+  ${A('Berechne die Wahrscheinlichkeiten.')}<div class="math">P(r|r|r) = {{a}}</div><div class="math">P(b|b|b) = {{b}}</div>
+  ${HEFT('Zeichne ein Baumdiagramm.')}`,
+  f:{a:fr([1,10],[[[27,125],'Du hast mit Zurücklegen gerechnet.'],[[3,10],'Es fehlt noch der 3. Zug.']]),b:fr([0,1],[[[8,125],'Du hast mit Zurücklegen gerechnet. Wie viele blaue Kugeln gibt es?']])},
+  tips:['Nach jedem Zug liegt eine Kugel weniger in der Urne. Die Nenner sind 5, dann 4, dann 3.',`P(r|r|r) = ${F(3,5)} · ${F(2,4)} · ${F(1,3)}. Für (b|b|b): Wie viele blaue Kugeln gibt es?`],
+  sol:`<div class="math">P(r|r|r) = ${F(3,5)} · ${F(2,4)} · ${F(1,3)} = ${F(6,60)} = ${F(1,10)}</div><div class="math">P(b|b|b) = ${F(2,5)} · ${F(1,4)} · ${F(0,3)} = 0</div>Es gibt nur 2 blaue Kugeln. Drei blaue Kugeln kannst du nicht ziehen.`},
+ {id:'w3',lab:'W3',h:'Wahl 3: Mindestens eine Sechs',
+  x:`<p>Ein Würfel wird dreimal geworfen.</p>${ABK(`s: Sechs &nbsp; k: keine Sechs &nbsp; E: Mindestens eine Sechs. &nbsp; ${OV('E')}: Keine Sechs.`)}
+  <div class="note">Zu E gehören 7 Pfade. Zum Gegenereignis ${OV('E')} gehört nur 1 Pfad. Es gilt: P(E) = 1 − P(${OV('E')})</div>
+  ${A('Berechne zuerst P(' + OV('E') + '), dann P(E).')}
+  <div class="math">P(${OV('E')}) = P(k|k|k) = {{a}}</div><div class="math">P(E) = 1 − P(${OV('E')}) = {{b}}</div>`,
+  f:{a:fr([125,216],[[[5,2],ADDMSG],[[5,6],'Das ist nur ein Wurf. Es sind drei Würfe.']]),b:fr([91,216],[[[125,216],'Das ist P(' + OV('E') + '). Ziehe diesen Wert von 1 ab.']])},
+  tips:[`Der Pfad (k|k|k): ${F(5,6)} · ${F(5,6)} · ${F(5,6)}`,`1 = ${F(216,216)}. Ziehe davon ${F(125,216)} ab.`],
+  sol:`<div class="math">P(${OV('E')}) = P(k|k|k) = ${F(5,6)} · ${F(5,6)} · ${F(5,6)} = ${F(125,216)}</div><div class="math">P(E) = 1 − ${F(125,216)} = ${F(91,216)}</div>`},
+ {id:'w4',lab:'W4',h:'Wahl 4: Mindestens ein Gewinn',
+  x:`<p>Lostrommel: 10 Lose, davon 3 Gewinne und 7 Nieten. Du ziehst nacheinander 2 Lose.</p>${ABK(`G: Gewinn &nbsp; N: Niete &nbsp; E: Mindestens ein Gewinn. &nbsp; ${OV('E')}: Kein Gewinn.`)}
+  ${A('Berechne zuerst P(' + OV('E') + '), dann P(E).')}
+  <div class="math">P(${OV('E')}) = P(N|N) = {{a}}</div><div class="math">P(E) = 1 − P(${OV('E')}) = {{b}}</div>`,
+  f:{a:fr([7,15],mulErr([7,10],[6,9],[[[49,100],'Du hast mit Zurücklegen gerechnet.']])),b:fr([8,15],[[[7,15],'Das ist P(' + OV('E') + '). Ziehe diesen Wert von 1 ab.']])},
+  tips:[`Ohne Zurücklegen: P(N|N) = ${F(7,10)} · ${F(6,9)}`,`1 = ${F(15,15)}. Ziehe davon P(${OV('E')}) ab.`],
+  sol:`<div class="math">P(${OV('E')}) = P(N|N) = ${F(7,10)} · ${F(6,9)} = ${F(42,90)} = ${F(7,15)}</div><div class="math">P(E) = 1 − ${F(7,15)} = ${F(8,15)}</div>`},
+ {id:'w5',lab:'W5',h:'Wahl 5: Verkürztes Baumdiagramm',
+  x:`<p>Urne: 2 rote, 3 blaue und 5 grüne Kugeln. Du ziehst zweimal ohne Zurücklegen. Nur Rot ist wichtig.</p>${ABK(`r: rot &nbsp; ${OV('r')}: nicht rot &nbsp; E: Genau eine Kugel ist rot.`)}
+  ${A('Gib die fehlenden Wahrscheinlichkeiten an. Berechne dann P(r|r) und P(E).')}{{tree}}
+  <div class="math">P(r|r) = {{e}}</div><div class="math">P(E) = {{f}}</div>`,
+  tree:T2('r','n',[2,10],[8,10],'a','b','c','d'),
+  f:{a:fr([1,9],[[[2,10],'Ohne Zurücklegen: Eine rote Kugel fehlt, und es sind nur noch 9 Kugeln.'],[[2,9],'Eine rote Kugel ist schon gezogen.']]),
+     b:fr([8,9],[[[8,10],'Es sind nur noch 9 Kugeln.'],[[7,9],'Die 1. Kugel war rot. Alle 8 anderen Kugeln sind noch da.']]),
+     c:fr([2,9],[[[2,10],'Es sind nur noch 9 Kugeln.'],[[1,9],'Die 1. Kugel war nicht rot. Beide roten Kugeln sind noch da.']]),
+     d:fr([7,9],[[[8,10],'Es sind nur noch 9 Kugeln.'],[[8,9],'Eine nicht rote Kugel ist schon gezogen.']]),
+     e:fr([1,45],mulErr([2,10],[1,9],[[[1,25],'Du hast mit Zurücklegen gerechnet.']])),
+     f:fr([16,45],[[[8,45],'Das ist nur ein Pfad. Zu E gehören zwei Pfade.'],[[8,25],'Du hast mit Zurücklegen gerechnet.']])},
+  tips:['Fasse Blau und Grün zusammen: 8 Kugeln sind nicht rot. Nach dem 1. Zug sind noch 9 Kugeln da.',`Zu E gehören die Pfade (r|${OV('r')}) und (${OV('r')}|r).`],
+  sol:`Nach r: ${F(1,9)} und ${F(8,9)}. Nach ${OV('r')}: ${F(2,9)} und ${F(7,9)}.
+  <div class="math">P(r|r) = ${F(2,10)} · ${F(1,9)} = ${F(2,90)} = ${F(1,45)}</div>
+  <div class="math">P(E) = P(r|${OV('r')}) + P(${OV('r')}|r) = ${F(16,90)} + ${F(16,90)} = ${F(32,90)} = ${F(16,45)}</div>`},
+ {id:'w6',lab:'W6',h:'Wahl 6: Rückwärts gedacht',
+  x:`<p>In einer Urne liegen 10 Kugeln. Einige davon sind rot. Du ziehst zweimal mit Zurücklegen.</p>${ABK('r: rot')}
+  <div class="math">Es gilt: P(r|r) = ${F(4,25)}</div>
+  ${A('Bestimme die Anzahl der roten Kugeln.')}<div class="math">Anzahl der roten Kugeln: {{a}}</div>
+  ${PARTNER('Begründet euch gegenseitig eure Lösung.')}`,
+  f:{a:nu(4,[[2,'Zwei Fünftel stimmt. In der Urne liegen aber 10 Kugeln: Erweitere den Bruch.'],[16,'Welcher Bruch ergibt mit sich selbst multipliziert vier Fünfundzwanzigstel?']])},
+  tips:[`Welcher Bruch ergibt mit sich selbst multipliziert ${F(4,25)}?`,`${F(2,5)} · ${F(2,5)} = ${F(4,25)}. Erweitere ${F(2,5)} auf den Nenner 10.`],
+  sol:`${F(2,5)} · ${F(2,5)} = ${F(4,25)}. Die Wahrscheinlichkeit für Rot ist also ${F(2,5)} = ${F(4,10)}. In der Urne liegen 4 rote Kugeln.`}
+]},
+{name:'Modul 5: Selbsttest',short:'5 Selbsttest',free:true,sc:[
+ {id:'ti',h:'Dein Selbsttest',x:`<p>Jetzt zeigst du, was du kannst: 5 Aufgaben wie in der Klassenarbeit.</p>
+  <p>Es gibt <b>keine Tipps</b>. Du hast für jede Aufgabe <b>einen Versuch</b>. Rechne im Heft und zeichne dort die Baumdiagramme.</p>`},
+ {id:'t1',lab:'T1',test:true,h:'Test 1',
+  x:`<p>Urne: 2 rote und 4 blaue Kugeln. Du ziehst zweimal <b>mit</b> Zurücklegen.</p>${ABK('r: rot &nbsp; b: blau')}${A('Berechne P(r|r).')}<div class="math">P(r|r) = {{a}}</div>`,
+  f:{a:fr([1,9])},sol:`<div class="math">P(r|r) = ${F(2,6)} · ${F(2,6)} = ${F(4,36)} = ${F(1,9)}</div>`},
+ {id:'t2',lab:'T2',test:true,h:'Test 2',
+  x:`<p>Urne: 2 rote und 4 blaue Kugeln. Du ziehst zweimal <b>mit</b> Zurücklegen.</p>${ABK('r: rot &nbsp; b: blau &nbsp; F: Die Kugeln haben verschiedene Farben.')}${A('Berechne P(F).')}<div class="math">P(F) = {{a}}</div>`,
+  f:{a:fr([4,9])},sol:`<div class="math">P(F) = P(r|b) + P(b|r) = ${F(8,36)} + ${F(8,36)} = ${F(16,36)} = ${F(4,9)}</div>`},
+ {id:'t3',lab:'T3',test:true,h:'Test 3',
+  x:`<p>Urne: 2 rote und 4 blaue Kugeln. Du ziehst zweimal <b>ohne</b> Zurücklegen.</p>${ABK('r: rot &nbsp; b: blau')}${A('Berechne P(b|b).')}<div class="math">P(b|b) = {{a}}</div>`,
+  f:{a:fr([2,5])},sol:`<div class="math">P(b|b) = ${F(4,6)} · ${F(3,5)} = ${F(12,30)} = ${F(2,5)}</div>`},
+ {id:'t4',lab:'T4',test:true,h:'Test 4',
+  x:`<p>Urne: 2 rote und 4 blaue Kugeln. Du ziehst zweimal <b>ohne</b> Zurücklegen.</p>${ABK('r: rot &nbsp; b: blau &nbsp; E: Beide Kugeln haben die gleiche Farbe.')}${A('Berechne P(E).')}<div class="math">P(E) = {{a}}</div>`,
+  f:{a:fr([7,15])},sol:`<div class="math">P(r|r) = ${F(2,6)} · ${F(1,5)} = ${F(2,30)} &nbsp; und &nbsp; P(b|b) = ${F(4,6)} · ${F(3,5)} = ${F(12,30)}</div><div class="math">P(E) = P(r|r) + P(b|b) = ${F(2,30)} + ${F(12,30)} = ${F(14,30)} = ${F(7,15)}</div>`},
+ {id:'t5',lab:'T5',test:true,h:'Test 5',
+  x:`<p>Ein Glücksrad hat 4 gleich große Felder: 1 Gewinnfeld und 3 Nieten. Es wird zweimal gedreht.</p>${ABK('G: Gewinn &nbsp; N: Niete &nbsp; E: Mindestens ein Gewinn.')}${A('Berechne P(E).')}<div class="math">P(E) = {{a}}</div>`,
+  f:{a:fr([7,16])},sol:`<div class="math">P(E) = P(G|G) + P(G|N) + P(N|G) = ${F(1,16)} + ${F(3,16)} + ${F(3,16)} = ${F(7,16)}</div>`},
+ {id:'end',type:'end',h:'Geschafft!'}
+]}
+];
+
+/* ---------- Zustand ---------- */
+const KEY='baum9_v2';
+let S={m:0,s:0,done:{},vals:{},self:{},sim:{},test:{}};
+try{const t=JSON.parse(localStorage.getItem(KEY));if(t&&t.done)S=Object.assign(S,t)}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const SIM={};let tipLv=0;
+const gcd=(a,b)=>b?gcd(b,a%b):Math.abs(a);
+const scr=M=>M.sc.filter(sc=>!sc.cond||S.self[sc.cond]>0);
+MODS.forEach(M=>M.sc.forEach(sc=>{if(sc.tree&&sc.f)(function w(ch){ch.forEach(c=>{if(typeof c[1]==='string'&&sc.f[c[1]])sc.f[c[1]].nf=true;if(c[2])w(c[2])})})(sc.tree.ch)}));
+
+const scored=sc=>sc.f&&Object.values(sc.f).some(fd=>!(fd.t==='c'&&fd.s<0));
+function isDone(sc){
+  if(sc.type==='self')return S.self[sc.id]!==undefined;
+  if(sc.type==='end')return true;
+  if(sc.sim)return !!S.sim[sc.id];
+  if(sc.f)return !!S.done[sc.id];
+  return !!S.done[sc.id];
+}
+function firstOpen(M){const L=scr(M);for(let i=0;i<L.length;i++)if(!isDone(L[i]))return i;return L.length-1}
+
+/* ---------- Prüfen ---------- */
+function fracVal(v){if(!v||v[0]==='')return null;const n=Number(v[0]),d=v[1]===''?1:Number(v[1]);if(!Number.isInteger(n)||!Number.isInteger(d)||d===0)return null;return [n,d]}
+const numVal=v=>parseFloat(String(v).replace(',','.'));
+function judge(fd,v){
+  if(fd.t==='f'){const q=fracVal(v);return !!q&&q[0]*fd.s[1]===q[1]*fd.s[0]}
+  if(fd.t==='n')return Math.abs(numVal(v)-fd.s)<1e-9;
+  if(fd.t==='c')return fd.s<0?v!=='':v===fd.s;
+  if(fd.t==='p')return JSON.stringify(v)===JSON.stringify(fd.s.slice().sort());
+  return false;
+}
+function hint(fd,v){
+  if(fd.t==='f'){if(!v||v[0]==='')return 'Fülle alle Felder aus.';const q=fracVal(v);if(!q)return 'Trage oben den Zähler und unten den Nenner ein. Nur ganze Zahlen.';
+    for(const e of fd.e)if(q[0]*e[0][1]===q[1]*e[0][0])return e[1];return ''}
+  if(fd.t==='n'){if(v==='')return 'Fülle alle Felder aus.';for(const e of fd.e)if(Math.abs(numVal(v)-e[0])<1e-9)return e[1];return ''}
+  if(fd.t==='c'){if(v==='')return 'Wähle eine Antwort aus.';return (fd.m&&fd.m[v])||''}
+  if(fd.t==='p'){if(!v.length)return 'Tippe die passenden Pfade rechts im Baumdiagramm an.';
+    if(v.some(x=>fd.s.indexOf(x)<0))return 'Ein markierter Pfad gehört nicht zum Ereignis.';return 'Es fehlt noch mindestens ein Pfad.'}
+  return '';
+}
+
+/* ---------- Seite ---------- */
+if(typeof document!=='undefined'){
+const $=s=>document.querySelector(s),main=$('#main');
+const cur=()=>scr(MODS[S.m])[S.s];
+const fEl=key=>main.querySelector(`[data-f="${key}"]`);
+function readF(el,fd){
+  if(fd.t==='f'){const i=el.querySelectorAll('input');return [i[0].value.trim(),i[1].value.trim()]}
+  if(fd.t==='n')return el.value.trim();
+  if(fd.t==='c')return el.dataset.sel===undefined?'':Number(el.dataset.sel);
+  return Array.from(el.querySelectorAll('.lf.on')).map(e=>e.dataset.leaf).sort();
+}
+function paintTree(tr){const on=Array.from(tr.querySelectorAll('.lf.on')).map(e=>e.dataset.leaf);
+  tr.querySelectorAll('line').forEach(l=>{const p=l.dataset.p;l.classList.toggle('on',on.some(x=>x===p||x.indexOf(p+'-')===0))})}
+function fill(sc){
+  Object.keys(sc.f).forEach(k=>{const v=S.vals[sc.id+'.'+k],fd=sc.f[k],el=fEl(sc.id+'.'+k);if(v===undefined||!el)return;
+    if(fd.t==='f'){const i=el.querySelectorAll('input');i[0].value=v[0];i[1].value=v[1]}
+    else if(fd.t==='n')el.value=v;
+    else if(fd.t==='c'){if(v!==''){el.dataset.sel=v;el.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on',i===v))}}
+    else{el.querySelectorAll('.lf').forEach(b=>b.classList.toggle('on',v.indexOf(b.dataset.leaf)>=0));paintTree(el)}
+  });
+}
+function lock(){main.querySelectorAll('.card input,.card .ch button,.card button.lf,[data-act="check"]').forEach(e=>e.disabled=true)}
+
+function simHTML(sc){return `<div class="sim">${urn(sc.sim.balls)}<div>${sc.sim.rep?'mit Zurücklegen':'ohne Zurücklegen'}</div>
+ <div class="row"><button data-act="draw" data-n="1">1-mal ziehen</button><button class="pri" data-act="draw" data-n="1000">1000-mal ziehen</button><button data-act="simreset">Zurücksetzen</button></div>
+ <div id="simout"></div></div>`}
+function simShow(sc){
+  const st=SIM[sc.id],out=$('#simout');if(!out)return;
+  if(!st||!st.n){out.innerHTML='<p>Noch kein Versuch.</p>';return}
+  const ks=sc.sim.balls.map(b=>b[0]);let h=`<p>Letzter Versuch: ${ball(st.last[0])} ${ball(st.last[1])} &nbsp; Versuche insgesamt: <b>${st.n}</b></p><table>`;
+  const row=(lab,c,cls)=>`<tr class="${cls||''}"><td>${lab}</td><td><b>${c}</b>-mal</td><td>${F(c,st.n)}</td><td>= ${(c/st.n*100).toFixed(1).replace('.',',')}&nbsp;%</td><td class="bar"><i style="width:${c/st.n*100}%"></i></td></tr>`;
+  ks.forEach(a=>ks.forEach(b=>{h+=row(`(${SYM[a][0]}|${SYM[b][0]})`,st.c[a+b]||0)}));
+  if(sc.sim.sum)h+=row(sc.sim.sum[0],sc.sim.sum[1].reduce((s,k)=>s+(st.c[k]||0),0),'sum');
+  h+='</table>'+(st.n<1000?`<p>Ziehe noch ${1000-st.n}-mal oder öfter.</p>`:'');
+  const c=sc.sim.cmp,gv=c?S.vals[c.g]:undefined;
+  if(c&&st.n>=1000&&gv!==undefined&&gv!==''){
+    const cnt=c.keys.reduce((a,k)=>a+(st.c[k]||0),0),p=cnt/st.n*100,pc=x=>x.toFixed(1).replace('.',',')+'&nbsp;%';let gt;
+    if(c.opts){const o=c.opts[gv],gp=o[0]/o[1]*100;gt=`${F(o[0],o[1])} = ${pc(gp)}`;st.fits=Math.abs(gp-p)<=4}
+    else{const rp=c.rel[0]/c.rel[1]*100;gt=['kleiner als','genauso groß wie','größer als'][gv]+` ${F(c.rel[0],c.rel[1])} = ${pc(rp)}`;st.fits=gv===0?p<rp-2:gv===1?Math.abs(p-rp)<=2:p>rp+2}
+    h+=`<div class="note"><div class="math">Deine Schätzung für ${c.lab}: ${gt}</div><div class="math">Simulation: ${c.lab} bei ${F(cnt,st.n)} = ${pc(p)}</div></div>${A('Vergleiche: Passt deine Schätzung zur Simulation?')}<div class="ch rowc"><button data-act="cmp" data-i="1">Ja, sie passt ungefähr.</button><button data-act="cmp" data-i="0">Nein, sie passt nicht.</button></div><div id="cmpfb">${st.cmpfb||''}</div>`;
+  }
+  out.innerHTML=h;
+}
+function simCmp(sc,ans){
+  const st=SIM[sc.id];if(!st)return;
+  if(ans===st.fits){st.cmpfb=st.fits?'<div class="fb g">✓ Genau. Deine Schätzung passt zur Simulation.</div>':'<div class="fb g">✓ Richtig erkannt: Deine Schätzung passt nicht zur Simulation. In den nächsten Schritten findest du heraus, wie du richtig rechnest.</div>';S.sim[sc.id]=true;save();renderNav();renderFoot()}
+  else st.cmpfb='<div class="fb b">✗ Vergleiche die beiden Prozentzahlen noch einmal.</div>';
+  $('#cmpfb').innerHTML=st.cmpfb;
+}
+function simDraw(sc,times){
+  const st=SIM[sc.id]||(SIM[sc.id]={n:0,c:{},last:null});
+  for(let t=0;t<times;t++){const pool=[];sc.sim.balls.forEach(([k,n])=>{for(let i=0;i<n;i++)pool.push(k)});
+    const i=Math.floor(Math.random()*pool.length),a=pool[i];if(!sc.sim.rep)pool.splice(i,1);
+    const b=pool[Math.floor(Math.random()*pool.length)];st.c[a+b]=(st.c[a+b]||0)+1;st.n++;st.last=[a,b]}
+  simShow(sc);
+  const c=sc.sim.cmp;
+  if(st.n>=1000&&!S.sim[sc.id]&&(!c||S.vals[c.g]===undefined||S.vals[c.g]==='')){S.sim[sc.id]=true;save();renderNav();renderFoot()}
+}
+
+function stats(){
+  const r={erT:0,erOk:0,erSol:0,pT:0,pOk:0,wT:0,wOk:0,tT:0,tOk:0};
+  MODS.forEach((M,mi)=>scr(M).forEach(sc=>{if(!scored(sc))return;const d=S.done[sc.id];
+    if(sc.test){r.tT++;if(S.test[sc.id])r.tOk++}
+    else if(mi===4){if(sc.lab[0]==='P'){r.pT++;if(d)r.pOk++}else{r.wT++;if(d)r.wOk++}}
+    else{r.erT++;if(d==='ok')r.erOk++;if(d==='sol')r.erSol++}}));
+  return r;
+}
+const SELF=['✓ Das kann ich sicher.','~ Das geht so.','✗ Da bin ich noch unsicher.'];
+
+function renderNav(){
+  $('#nav').innerHTML=MODS.map((M,i)=>`<button data-act="mod" data-i="${i}" class="${i===S.m?'cur':''}">${scr(M).every(isDone)?'✓ ':''}${M.short}</button>`).join('');
+  let all=0,dn=0;MODS.forEach(M=>scr(M).forEach(sc=>{if(sc.type==='end')return;all++;if(isDone(sc))dn++}));
+  $('#pb').style.width=(dn/all*100)+'%';
+}
+function renderFoot(){
+  const M=MODS[S.m],L=scr(M),sc=cur(),last=S.s===L.length-1,ok=M.free||isDone(sc);
+  let nx='';
+  if(!last)nx=`<button class="pri" data-act="next" ${ok?'':'disabled'}>Weiter ›</button>`;
+  else if(S.m<MODS.length-1)nx=`<button class="pri" data-act="nextmod" ${ok?'':'disabled'}>Weiter zu ${MODS[S.m+1].name} ›</button>`;
+  $('#foot').innerHTML=`<button data-act="prev" ${S.s===0?'disabled':''}>‹ Zurück</button>${nx}`;
+  const fo=firstOpen(M);
+  $('#dots').innerHTML=L.map((x,i)=>`<button data-act="dot" data-i="${i}" class="${i===S.s?'cur ':''}${isDone(x)&&(x.f||x.sim||x.type==='self')?'dn':''}" ${M.free||i<=fo||isDone(x)?'':'disabled'}>${x.lab||(i+1)}</button>`).join('');
+}
+function render(){
+  const M=MODS[S.m];if(S.s>=scr(M).length)S.s=0;const sc=cur();tipLv=0;
+  if(!sc.f&&!sc.sim&&!sc.type)S.done[sc.id]='ok';
+  save();
+  let h=`<div class="dots" id="dots"></div><div class="card"><div class="kick">${M.name}</div><h2>${sc.h}</h2>`;
+  if(sc.type==='self'){
+    h+=`<p>${sc.q}</p><div class="ch" id="selfch">${SELF.map((t,i)=>`<button data-act="self" data-i="${i}" class="${S.self[sc.id]===i?'on':''}">${t}</button>`).join('')}</div><div id="selffb"></div>`;
+  }else if(sc.type==='end'){
+    const r=stats(),d=new Date();
+    h+=`<p>Du hast die Lernumgebung bearbeitet. Zeige diese Seite deiner Lehrerin.</p>
+    <div class="stat"><span>Erarbeitung: Aufgaben selbst gelöst</span><b>${r.erOk} von ${r.erT}</b>
+    <span>Erarbeitung: mit Lösungsweg gelöst</span><b>${r.erSol}</b>
+    <span>Pflichtaufgaben bearbeitet</span><b>${r.pOk} von ${r.pT}</b>
+    <span>Wahlaufgaben bearbeitet</span><b>${r.wOk} von ${r.wT}</b>
+    <span>Selbsttest: richtig</span><b>${r.tOk} von ${r.tT}</b></div>
+    <p><b>Deine Selbsteinschätzung:</b></p>${MODS.slice(0,4).map((m,i)=>`<div>${m.short}: ${S.self['self'+i]!==undefined?SELF[S.self['self'+i]]:'noch offen'}</div>`).join('')}
+    <div class="note">${r.tOk>=4?'Stark! Du bist gut vorbereitet. Wähle zum Üben noch eine Wahlaufgabe.':r.tOk>=2?'Schon gut. Schau dir die Lösungswege der falschen Testaufgaben an. Wiederhole dann das passende Modul.':'Wiederhole die Merkkästen in Modul 1 bis 3. Bearbeite dann die Pflichtaufgaben noch einmal. Frage nach, wenn etwas unklar bleibt.'}</div>
+    <p>Stand: ${d.toLocaleDateString('de-DE')}, ${d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})} Uhr</p>`;
+  }else{
+    h+=sc.x.replace(/\{\{(\w+)\}\}/g,(m,k)=>k==='tree'?treeHTML(sc.id,sc.tree):k==='sim'?simHTML(sc):widget(sc.id,k,sc.f[k]));
+    if(sc.f){
+      const guess=!scored(sc);
+      h+=`<div class="row"><button class="pri" data-act="check">${sc.test?'Abgeben':guess?'Schätzung speichern':'Prüfen'}</button>${sc.tips?`<button data-act="help" id="helpb">💡 Tipp 1</button>`:''}</div><div id="fb"></div><div id="tips"></div><div id="sol"></div>`;
+    }
+  }
+  h+=`</div><div class="foot" id="foot"></div>`;
+  main.innerHTML=h;
+  if(sc.f){fill(sc);const d=S.done[sc.id];
+    if(d){if(sc.test){$('#fb').innerHTML=S.test[sc.id]?'<div class="fb g">✓ Richtig.</div>':'<div class="fb b">✗ Leider falsch. Vergleiche mit dem Lösungsweg.</div>';showSol(sc);lock()}
+      else if(scored(sc)){$('#fb').innerHTML=`<div class="fb n">${d==='ok'?'✓ Diese Aufgabe hast du schon gelöst.':'Diese Aufgabe hast du mit dem Lösungsweg bearbeitet.'}</div>`;showSol(sc)}
+      else $('#fb').innerHTML=`<div class="fb n">${sc.ok}</div>`}}
+  if(sc.sim)simShow(sc);
+  if(sc.type==='self'&&S.self[sc.id]!==undefined)selfFb(sc);
+  renderNav();renderFoot();window.scrollTo(0,0);
+}
+function showSol(sc){if(sc.sol)$('#sol').innerHTML=`<div class="sol"><b>✓ Lösungsweg</b><br>${sc.sol}</div>`}
+function selfFb(sc){
+  const v=S.self[sc.id];
+  const t=v===0?'Prima. Weiter geht es.':S.m===0?['','Schau dir die Lösungswege noch einmal an. Dann geht es weiter.','Bearbeite die Aufgaben noch einmal mit den Tipps. Frage nach, bevor du weitermachst.'][v]:'Du bekommst jetzt noch eine Aufgabe mit Tipps. Tippe auf „Weiter“.';
+  $('#selffb').innerHTML=`<div class="fb n">${t}</div>`;
+}
+function check(){
+  const sc=cur();let all=true,msg='',kz='';
+  Object.keys(sc.f).forEach(k=>{const fd=sc.f[k],el=fEl(sc.id+'.'+k),v=readF(el,fd);S.vals[sc.id+'.'+k]=v;
+    const ok=judge(fd,v);el.classList.toggle('bad',!ok);el.classList.toggle('good',ok);
+    if(ok&&fd.t==='f'&&!fd.nf){const q=fracVal(v),g=gcd(q[0],q[1]);if(g>1&&q[0]!==0)kz+=`<div class="math">${F(q[0],q[1])} = ${q[1]/g===1?q[0]/g:F(q[0]/g,q[1]/g)}</div>`}
+    if(!ok){all=false;if(!msg)msg=hint(fd,v)}});
+  const fb=$('#fb');
+  if(sc.test&&Object.keys(sc.f).some(k=>{const v=S.vals[sc.id+'.'+k];return v[0]===''})){fb.innerHTML='<div class="fb b">Fülle zuerst das Feld aus.</div>';return}
+  if(sc.test){S.test[sc.id]=all;S.done[sc.id]=all?'ok':'sol';fb.innerHTML=all?'<div class="fb g">✓ Richtig.</div>':'<div class="fb b">✗ Leider falsch. Vergleiche mit dem Lösungsweg.</div>';showSol(sc);lock()}
+  else if(all){if(!S.done[sc.id])S.done[sc.id]='ok';fb.innerHTML=`<div class="fb g">${sc.ok||'✓ Richtig!'}</div>`;if(scored(sc))showSol(sc)}
+  else fb.innerHTML=`<div class="fb b">✗ ${msg||'Noch nicht richtig. Prüfe die rot markierten Felder.'}</div>`;
+  if(all&&kz)fb.insertAdjacentHTML('beforeend',`<div class="fb n" id="kz">✂ Denke daran: Kürze dein Ergebnis.${kz}</div>`);
+  save();renderNav();renderFoot();
+}
+function help(){
+  const sc=cur(),tp=$('#tips'),b=$('#helpb');
+  if(tipLv<sc.tips.length){tp.insertAdjacentHTML('beforeend',`<div class="tip">💡 <b>Tipp ${tipLv+1}:</b> ${sc.tips[tipLv]}</div>`);tipLv++;
+    b.textContent=tipLv<sc.tips.length?`💡 Tipp ${tipLv+1}`:'✓ Lösungsweg zeigen'}
+  else{showSol(sc);if(!S.done[sc.id])S.done[sc.id]='sol';b.disabled=true;save();renderNav();renderFoot()}
+}
+document.addEventListener('click',ev=>{
+  const b=ev.target.closest('[data-act]');if(!b||b.disabled)return;const a=b.dataset.act,M=MODS[S.m];
+  if(a==='mod'){S.m=Number(b.dataset.i);S.s=MODS[S.m].free?0:firstOpen(MODS[S.m]);render()}
+  else if(a==='dot'){S.s=Number(b.dataset.i);render()}
+  else if(a==='next'){S.s++;render()}
+  else if(a==='prev'){S.s--;render()}
+  else if(a==='nextmod'){S.m++;S.s=0;render()}
+  else if(a==='check')check();
+  else if(a==='help')help();
+  else if(a==='choose'){const c=b.parentNode;c.dataset.sel=b.dataset.i;c.classList.remove('bad','good');c.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))}
+  else if(a==='leaf'){b.classList.toggle('on');const tr=b.closest('.tree');tr.classList.remove('bad','good');paintTree(tr)}
+  else if(a==='draw')simDraw(cur(),Number(b.dataset.n));
+  else if(a==='simreset'){delete SIM[cur().id];simShow(cur())}
+  else if(a==='self'){S.self[cur().id]=Number(b.dataset.i);save();document.querySelectorAll('#selfch button').forEach(x=>x.classList.toggle('on',x===b));selfFb(cur());renderNav();renderFoot()}
+  else if(a==='cmp')simCmp(cur(),b.dataset.i==='1');
+  else if(a==='gloss')$('#gloss').hidden=false;
+  else if(a==='askreset')$('#reset').hidden=false;
+  else if(a==='closeov'){$('#gloss').hidden=true;$('#reset').hidden=true}
+  else if(a==='doreset'){S={m:0,s:0,done:{},vals:{},self:{},sim:{},test:{}};Object.keys(SIM).forEach(k=>delete SIM[k]);$('#reset').hidden=true;render()}
+});
+document.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&ev.target.tagName==='INPUT'&&cur().f){ev.preventDefault();check()}});
+render();
+}
+</script>
+</body>
+</html>

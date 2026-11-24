@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Schriftlich rechnen – Training</title>
+<style>
+:root{--blau:#061C63;--blau2:#4A5F9E;--hell:#eef2fa;--res:#1f4fc4;--gruen:#1d7a46;--gruenhell:#e5f4ea;--rot:#a8261d;--rothell:#fbeceb;}
+*{box-sizing:border-box}
+body{margin:0;font-family:Verdana,Geneva,sans-serif;background:var(--hell);color:var(--blau);-webkit-text-size-adjust:100%;}
+header{background:var(--blau);color:#fff;padding:14px 20px;}
+header h1{margin:0;font-size:1.3rem;font-weight:bold;}
+main{max-width:860px;margin:0 auto;padding:20px 16px 48px;}
+.card{background:#fff;border-radius:12px;box-shadow:0 3px 12px rgba(6,28,99,.13);padding:20px 22px;margin-bottom:18px;}
+h2{margin:0 0 12px;font-size:1.15rem;}
+p{line-height:1.5;margin:.4em 0;}
+.ops{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
+.op{background:#fff;border:2px solid var(--blau2);border-radius:12px;box-shadow:0 3px 10px rgba(6,28,99,.12);padding:20px 12px;cursor:pointer;font-family:inherit;color:var(--blau);text-align:center;transition:transform .1s, background .1s;}
+.op:hover,.op:focus{background:#f3f6fd;transform:translateY(-2px);outline:none;}
+.op .sym{display:block;font-size:2.6rem;font-weight:bold;line-height:1.1;}
+.op .name{display:block;font-size:1.05rem;margin-top:6px;}
+.startrow{margin-top:18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.95rem;}
+select{font-family:inherit;font-size:1rem;padding:4px 8px;border:1px solid var(--blau2);border-radius:6px;color:var(--blau);background:#fff;}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.btn{font-family:inherit;font-size:1.05rem;padding:10px 20px;border-radius:8px;border:2px solid var(--blau);background:var(--blau);color:#fff;cursor:pointer;}
+.btn:hover{background:#0c2a85;}
+.btn.sec{background:#fff;color:var(--blau);}
+.btn.sec:hover{background:#f3f6fd;}
+.btn:disabled{opacity:.45;cursor:default;}
+.level{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.dots{display:flex;gap:5px;}
+.dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--blau2);background:#fff;}
+.dot.on{background:var(--blau2);}
+.dot.cur{background:var(--blau);border-color:var(--blau);}
+.stats{font-size:.9rem;color:var(--blau2);}
+.task{font-size:2.1rem;font-weight:bold;text-align:center;padding:22px 6px 10px;letter-spacing:.02em;word-break:break-word;}
+.hint{text-align:center;color:var(--blau2);font-size:.95rem;margin-bottom:14px;}
+form.answer{display:flex;justify-content:center;align-items:flex-end;gap:12px;flex-wrap:wrap;}
+.field{display:flex;flex-direction:column;gap:4px;font-size:.9rem;}
+.field input{font-family:inherit;font-size:1.6rem;width:11em;padding:8px 10px;border:2px solid var(--blau2);border-radius:8px;color:var(--blau);text-align:right;}
+.field input.rest{width:4em;}
+.inrow{display:flex;align-items:center;gap:10px;}
+.restgrp{display:inline-flex;align-items:center;gap:10px;}
+.rlabel{font-size:1.6rem;font-weight:bold;}
+.field input:focus{outline:none;border-color:var(--blau);box-shadow:0 0 0 3px rgba(74,95,158,.25);}
+.fb{margin-top:16px;padding:12px 16px;border-radius:8px;display:none;line-height:1.5;}
+.fb.ok{display:block;background:var(--gruenhell);color:var(--gruen);border:1px solid #9fd0b0;}
+.fb.no{display:block;background:var(--rothell);color:var(--rot);border:1px solid #e5b1ad;}
+.fb.info{display:block;background:#f3f6fd;color:var(--blau);border:1px solid #c5cfe8;}
+.next{text-align:center;margin-top:14px;display:none;}
+.solution{display:none;}
+.solwrap{overflow-x:auto;padding:8px 2px 4px;}
+.sgrid{display:inline-grid;font-size:1.35rem;font-weight:normal;}
+.cell{width:100%;height:100%;display:flex;align-items:center;justify-content:center;white-space:nowrap;}
+.box{border:1px dotted #b8b8b8;}
+.carry{font-size:.7em;color:var(--blau2);}
+.res{font-weight:bold;color:var(--res);}
+.ul{box-shadow:inset 0 -2px 0 var(--blau);}
+.ol{box-shadow:inset 0 2px 0 var(--blau);}
+.left{justify-content:flex-start;padding-left:.2em;}
+.hidden{display:none !important;}
+@media (max-width:520px){.ops{grid-template-columns:1fr;}.task{font-size:1.6rem;}.field input{width:9em;}}
+</style>
+</head>
+<body>
+<header><h1>Schriftlich rechnen – Training</h1></header>
+<main>
+
+<!-- Startbildschirm -->
+<section id="start">
+  <div class="card">
+    <h2>Was möchtest du üben?</h2>
+    <p>Du bekommst eine Aufgabe nach der anderen. Rechne sie schriftlich auf deinem Papier und gib dann dein Ergebnis ein. Rechnest du richtig, wird die nächste Aufgabe etwas schwieriger.</p>
+  </div>
+  <div class="ops">
+    <button class="op" data-op="add"><span class="sym">+</span><span class="name">Addition</span></button>
+    <button class="op" data-op="sub"><span class="sym">−</span><span class="name">Subtraktion</span></button>
+    <button class="op" data-op="mul"><span class="sym">·</span><span class="name">Multiplikation</span></button>
+    <button class="op" data-op="div"><span class="sym">:</span><span class="name">Division</span></button>
+  </div>
+  <div class="startrow">
+    <label for="startLevel">Beginnen auf Stufe</label>
+    <select id="startLevel"></select>
+    <span class="stats">(Stufe 1 ist die leichteste, Stufe 10 die schwierigste.)</span>
+  </div>
+</section>
+
+<!-- Trainingsbildschirm -->
+<section id="train" class="hidden">
+  <div class="card">
+    <div class="topbar">
+      <button class="btn sec" id="back">← Rechenart wählen</button>
+      <div class="level"><strong id="opName"></strong> <span id="levelText"></span> <div class="dots" id="dots"></div></div>
+    </div>
+    <p class="stats" id="stats" style="margin-top:12px"></p>
+  </div>
+
+  <div class="card">
+    <div class="task" id="task"></div>
+    <div class="hint">Rechne schriftlich auf deinem Papier.</div>
+    <form class="answer" id="form" autocomplete="off">
+      <div class="field"><label for="inQ">Ergebnis</label>
+        <div class="inrow"><input id="inQ" inputmode="numeric" autocomplete="off"><span id="restField" class="restgrp"><span class="rlabel">R</span><input id="inR" class="rest" inputmode="numeric" autocomplete="off" aria-label="Rest"></span></div>
+      </div>
+      <button class="btn" id="checkBtn" type="submit">Prüfen</button>
+    </form>
+    <div class="fb" id="fb"></div>
+    <div class="next" id="nextWrap"><button class="btn" id="nextBtn">Nächste Aufgabe →</button></div>
+  </div>
+
+  <div class="card solution" id="solution">
+    <h2>So wird gerechnet</h2>
+    <div class="solwrap" id="solGrid"></div>
+    <p id="solText"></p>
+  </div>
+</section>
+</main>
+
+<script>
+/* ---------- Hilfsfunktionen ---------- */
+const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const nd=n=>ri(10**(n-1),10**n-1);
+const digitAt=(n,p)=>Math.floor(n/10**p)%10;
+const len=n=>String(n).length;
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=ri(0,i);[a[i],a[j]]=[a[j],a[i]];}return a;};
+const NB=' ';
+function fmt(n){const s=String(n);if(s.length<5)return s;return s.replace(/\B(?=(\d{3})+(?!\d))/g,NB);}
+function numDigits(n,noZero){let s=String(ri(1,9));for(let i=1;i<n;i++)s+=noZero?ri(1,9):ri(0,9);return +s;}
+function withInnerZero(n){ // n-stellige Zahl mit mindestens einer Null im Inneren
+  for(;;){let s=String(ri(1,9));for(let i=1;i<n;i++)s+=(i<n-1&&Math.random()<.45)?0:ri(0,9);if(s.slice(1,-1).includes('0'))return +s;}
+}
+
+function carriesAdd(nums,W){const c=new Array(W+1).fill(0);let carry=0;
+  for(let p=0;p<W;p++){let s=carry;nums.forEach(n=>s+=digitAt(n,p));carry=Math.floor(s/10);c[p+1]=carry;}return c;}
+function carriesSub(m,subs,W){const c=new Array(W+1).fill(0);let carry=0;
+  for(let p=0;p<W;p++){let s=carry;subs.forEach(n=>s+=digitAt(n,p));const md=digitAt(m,p);const r=((md-s)%10+10)%10;carry=(s+r-md)/10;c[p+1]=carry;}return c;}
+
+/* ---------- Stufen ---------- */
+const ADD=[{s:[3,3],nc:1},{s:[3,3],c:1},{s:[4,3],c:1},{s:[4,4],c:1},{s:[5,4],c:1},
+           {s:[4,3,3],c:1},{s:[5,4,4],c:1},{s:[5,5,4,3],mix:1},{s:[6,5,5,4],mix:1},{s:[7,6,5,4,3],mix:1}];
+const SUB=[{m:3,s:[3],nc:1},{m:3,s:[2],c:1},{m:4,s:[3],c:1},{m:4,s:[4],c:1,z:1},{m:5,s:[4],c:1},
+           {m:4,s:[3,3],c:1},{m:5,s:[4,4],c:1},{m:6,s:[5],c:1,z:1},{m:6,s:[5,4,4]},{m:7,s:[6,5,4]}];
+const MUL=[{a:2,b:1},{a:3,b:1},{a:4,b:1},{a:2,b:2},{a:3,b:2},{a:3,b:2,z:1},{a:4,b:2},{a:3,b:3},{a:4,b:3},{a:5,b:3,z:1}];
+const DIV=[{dl:2,dh:9,N:[2,2],r:0},{dl:2,dh:9,N:[3,3],r:0},{dl:3,dh:9,N:[4,4],r:0},{dl:3,dh:9,N:[4,4],r:0,z:1},{dl:3,dh:9,N:[3,4],r:1},
+           {dl:11,dh:19,N:[3,3],r:0},{dl:11,dh:49,N:[4,4],r:0},{dl:12,dh:69,N:[4,4],r:1},{dl:12,dh:99,N:[5,5],r:2},{dl:21,dh:99,N:[5,6],r:2,z:1}];
+
+function genAdd(L){const cfg=ADD[L-1];
+  if(cfg.nc){let a='',b='';const n=cfg.s[0];
+    for(let i=0;i<n;i++){const x=i===0?ri(1,8):ri(0,9);const y=i===0?ri(1,9-x):ri(0,9-x);a+=x;b+=y;}
+    const nums=[+a,+b];return {op:'add',nums,res:nums[0]+nums[1]};}
+  for(let t=0;t<1000;t++){let nums=cfg.s.map(nd);const res=nums.reduce((x,y)=>x+y,0);
+    if(cfg.c&&!carriesAdd(nums,len(res)).some(v=>v))continue;
+    if(cfg.mix)shuffle(nums);
+    return {op:'add',nums,res};}
+}
+function genSub(L){const cfg=SUB[L-1];
+  if(cfg.nc){let a='',b='';const n=cfg.m;
+    for(let i=0;i<n;i++){const x=i===0?ri(2,9):ri(0,9);const y=i===0?ri(1,x-1):ri(0,x);a+=x;b+=y;}
+    return {op:'sub',nums:[+a,+b],res:+a-+b};}
+  for(let t=0;t<5000;t++){const m=cfg.z?withInnerZero(cfg.m):nd(cfg.m);const subs=cfg.s.map(nd);
+    const sum=subs.reduce((x,y)=>x+y,0);if(sum>=m)continue;const res=m-sum;if(res<10)continue;
+    if(cfg.c&&!carriesSub(m,subs,len(m)).some(v=>v))continue;
+    if(subs.length>1)shuffle(subs);
+    return {op:'sub',nums:[m,...subs],res};}
+}
+function genMul(L){const cfg=MUL[L-1];
+  const a=cfg.z?withInnerZero(cfg.a):numDigits(cfg.a,true);
+  let b;if(cfg.b===1)b=ri(L===1?3:2,9);else{let s='';for(let i=0;i<cfg.b;i++)s+=ri(2,9);b=+s;}
+  return {op:'mul',nums:[a,b],res:a*b};
+}
+function genDiv(L){const cfg=DIV[L-1];
+  for(let t=0;t<5000;t++){const d=ri(cfg.dl,cfg.dh);if(d>=10&&d%10===0)continue;
+    const n=ri(cfg.N[0],cfg.N[1]);const lo=10**(n-1),hi=10**n-1;
+    const qlo=Math.max(Math.ceil(lo/d),2),qhi=Math.floor(hi/d);if(qlo>qhi)continue;
+    const q=ri(qlo,qhi);
+    const r=cfg.r===0?0:cfg.r===1?ri(1,d-1):(Math.random()<.35?0:ri(1,d-1));
+    const N=q*d+r;if(len(N)!==n)continue;
+    const z=String(q).slice(1).includes('0');
+    if(cfg.z&&!z)continue;
+    if(!cfg.z&&L<9&&z)continue;
+    if(L>1&&q<10)continue;
+    return {op:'div',nums:[N,d],res:q,rest:r};}
+}
+const GEN={add:genAdd,sub:genSub,mul:genMul,div:genDiv};
+
+/* ---------- Lösungsweg (Raster) ---------- */
+function renderGrid(cells,nCols,rowH){
+  const g=document.createElement('div');g.className='sgrid';
+  g.style.gridTemplateColumns=`repeat(${nCols},1.5em)`;
+  g.style.gridTemplateRows=rowH.map(h=>h==='half'?'0.9em':'1.6em').join(' ');
+  cells.forEach(c=>{const d=document.createElement('div');d.className='cell '+(c.cls||'');d.textContent=c.t??'';
+    d.style.gridRow=String(c.r+1);d.style.gridColumn=(c.c+1)+(c.span?` / span ${c.span}`:'');g.appendChild(d);});
+  return g;
+}
+function buildAddSub(t){
+  const isAdd=t.op==='add';const strs=t.nums.map(String);const rs=String(t.res);
+  const W=Math.max(...strs.map(s=>s.length),rs.length);const cols=W+1;const cells=[],rowH=[];let r=0;
+  strs.forEach((s,i)=>{rowH.push('full');if(i>0)cells.push({r,c:0,t:isAdd?'+':'−'});
+    for(let k=0;k<s.length;k++)cells.push({r,c:cols-s.length+k,t:s[k],cls:'box'});r++;});
+  const car=isAdd?carriesAdd(t.nums,W):carriesSub(t.nums[0],t.nums.slice(1),W);
+  rowH.push('half');
+  for(let p=0;p<W;p++)cells.push({r,c:cols-1-p,t:car[p]?String(car[p]):'',cls:'box carry'});
+  r++;rowH.push('full');
+  for(let c=0;c<cols;c++){const p=cols-1-c;const tx=p<rs.length?rs[rs.length-1-p]:'';cells.push({r,c,t:tx,cls:(tx?'box res ':'')+'ol'});}
+  return renderGrid(cells,cols,rowH);
+}
+function buildMul(t){
+  const [a,b]=t.nums;const as=String(a),bs=String(b),L1=as.length,n2=bs.length,res=a*b,rs=String(res);
+  const lastCol=L1+n2;
+  const parts=[...bs].map((d,k)=>({s:String(a*+d),end:L1+1+k}));
+  let minStart=0;parts.forEach(p=>minStart=Math.min(minStart,p.end-p.s.length+1));minStart=Math.min(minStart,lastCol-rs.length+1);
+  const off=-minStart,cols=lastCol+1+off;const cells=[],rowH=[];let r=0;
+  rowH.push('full');
+  for(let c=0;c<off;c++)cells.push({r,c,t:'',cls:'ul'});
+  for(let k=0;k<L1;k++)cells.push({r,c:off+k,t:as[k],cls:'box ul'});
+  cells.push({r,c:off+L1,t:'·',cls:'ul'});
+  for(let k=0;k<n2;k++)cells.push({r,c:off+L1+1+k,t:bs[k],cls:'box ul'});
+  r++;
+  if(n2===1){rowH.push('full');for(let k=0;k<rs.length;k++)cells.push({r,c:cols-rs.length+k,t:rs[k],cls:'box res'});r++;
+    return renderGrid(cells,cols,rowH);}
+  parts.forEach(p=>{rowH.push('full');const e=p.end+off;for(let k=0;k<p.s.length;k++)cells.push({r,c:e-p.s.length+1+k,t:p.s[k],cls:'box'});r++;});
+  // Überträge beim Addieren der Teilprodukte
+  const dAt=(p,c)=>{const e=p.end+off;const idx=p.s.length-1-(e-c);return idx>=0&&idx<p.s.length?+p.s[idx]:0;};
+  const car=new Array(cols).fill(0);let carry=0;
+  for(let c=cols-1;c>=0;c--){let s=carry;parts.forEach(p=>s+=dAt(p,c));carry=Math.floor(s/10);if(c>0)car[c-1]=carry;}
+  rowH.push('half');
+  const firstCol=cols-rs.length;
+  for(let c=firstCol;c<cols;c++)cells.push({r,c,t:car[c]?String(car[c]):'',cls:'box carry'});
+  r++;rowH.push('full');
+  for(let c=0;c<cols;c++){const i=c-firstCol;const tx=i>=0?rs[i]:'';cells.push({r,c,t:tx,cls:(tx?'box res ':'')+'ol'});}
+  return renderGrid(cells,cols,rowH);
+}
+function divSteps(N,d){
+  const s=String(N);let i=0,part=0;const steps=[];
+  while(i<s.length){part=part*10+ +s[i];if(part>=d)break;i++;}
+  if(i>=s.length)i=s.length-1;
+  for(;;){const qd=Math.floor(part/d),prod=qd*d,rem=part-prod;steps.push({end:i,part,prod,rem});
+    if(i===s.length-1)break;i++;part=rem*10+ +s[i];}
+  return steps;
+}
+function buildDiv(t){
+  const [N,d]=t.nums;const ns=String(N),L=ns.length,ds=String(d),qs=String(t.res);
+  const steps=divSteps(N,d);const cells=[],rowH=[];let r=0;
+  // Kopfzeile: Dividend : Divisor = Quotient (Rest)
+  rowH.push('full');
+  for(let k=0;k<L;k++)cells.push({r,c:1+k,t:ns[k],cls:'box'});
+  let c=L+1;cells.push({r,c:c++,t:':'});
+  for(const ch of ds)cells.push({r,c:c++,t:ch,cls:'box'});
+  cells.push({r,c:c++,t:'='});
+  for(const ch of qs)cells.push({r,c:c++,t:ch,cls:'box res'});
+  if(t.rest>0){cells.push({r,c:c,t:'R '+t.rest,cls:'res left',span:3});c+=3;}
+  const cols=c;r++;
+  steps.forEach((st,k)=>{
+    const ps=String(st.prod),end=st.end+1,start=end-ps.length+1;
+    rowH.push('full');
+    cells.push({r,c:start-1,t:'−',cls:'ul'});
+    for(let j=0;j<ps.length;j++)cells.push({r,c:start+j,t:ps[j],cls:'box ul'});
+    r++;rowH.push('full');
+    const last=k===steps.length-1;
+    const s=last?String(st.rem):String(steps[k+1].part);const e=last?end:end+1;
+    for(let j=0;j<s.length;j++)cells.push({r,c:e-s.length+1+j,t:s[j],cls:'box'+(last?' res':'')});
+    r++;
+  });
+  return renderGrid(cells,cols,rowH);
+}
+const BUILD={add:buildAddSub,sub:buildAddSub,mul:buildMul,div:buildDiv};
+
+/* ---------- Anzeige der Aufgabe ---------- */
+const OPS={add:{name:'Addition',sym:' + '},sub:{name:'Subtraktion',sym:' − '},mul:{name:'Multiplikation',sym:' · '},div:{name:'Division',sym:' : '}};
+function taskText(t){return t.nums.map(fmt).join(OPS[t.op].sym);}
+function resultText(t){let s=taskText(t)+' = '+fmt(t.res);if(t.op==='div'&&t.rest>0)s+=' R '+t.rest;return s;}
+const HINTS={
+  add:'Prüfe, ob alle Zahlen stellengerecht untereinander stehen (Einer unter Einer) und ob du jeden Übertrag mitgerechnet hast.',
+  sub:'Prüfe, ob alle Zahlen stellengerecht untereinander stehen und ob du jeden Übertrag beachtet hast.',
+  mul:'Prüfe jedes Teilprodukt und ob du es richtig eingerückt hast. Kontrolliere dann die Addition der Teilprodukte.',
+  div:'Prüfe jeden Schritt: Wie oft passt der Teiler hinein? Malnehmen, abziehen, nächste Ziffer herunterholen.'};
+
+/* ---------- Ablauf ---------- */
+const $=id=>document.getElementById(id);
+const st={op:null,level:1,attempt:0,task:null,done:false,total:0,first:0,streak:0};
+for(let i=1;i<=10;i++){const o=document.createElement('option');o.value=i;o.textContent=i;$('startLevel').appendChild(o);}
+
+document.querySelectorAll('.op').forEach(b=>b.addEventListener('click',()=>{
+  st.op=b.dataset.op;st.level=+$('startLevel').value;st.total=0;st.first=0;st.streak=0;
+  $('start').classList.add('hidden');$('train').classList.remove('hidden');$('opName').textContent=OPS[st.op].name;
+  newTask();
+}));
+$('back').addEventListener('click',()=>{$('train').classList.add('hidden');$('start').classList.remove('hidden');});
+
+function updateTop(){
+  $('levelText').textContent='– Stufe '+st.level+' von 10';
+  const dots=$('dots');dots.innerHTML='';
+  for(let i=1;i<=10;i++){const d=document.createElement('span');d.className='dot'+(i<st.level?' on':i===st.level?' cur':'');dots.appendChild(d);}
+  $('stats').textContent=st.total?`Gelöste Aufgaben: ${st.total} – davon im ersten Versuch richtig: ${st.first}`+(st.streak>1?` – ${st.streak} richtig in Folge!`:''):'Los geht’s!';
+}
+function newTask(){
+  st.task=GEN[st.op](st.level);st.attempt=0;st.done=false;
+  $('task').textContent=taskText(st.task)+' = ?';
+  const showRest=st.op==='div'&&st.level>=5;
+  $('restField').classList.toggle('hidden',!showRest);
+  $('inQ').value='';$('inR').value='';$('inQ').disabled=false;$('inR').disabled=false;$('checkBtn').disabled=false;
+  $('fb').className='fb';$('fb').innerHTML='';$('nextWrap').style.display='none';
+  $('solution').style.display='none';
+  updateTop();
+  setTimeout(()=>$('inQ').focus(),50);
+}
+const parseNum=s=>{const c=s.replace(/[\s.  ']/g,'');return /^\d+$/.test(c)?+c:null;};
+
+$('form').addEventListener('submit',e=>{e.preventDefault();if(st.done){newTask();return;}check();});
+$('nextBtn').addEventListener('click',newTask);
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&st.done&&document.activeElement!==$('nextBtn')){e.preventDefault();newTask();}});
+
+function check(){
+  const t=st.task,q=parseNum($('inQ').value);
+  const restShown=!$('restField').classList.contains('hidden');
+  let r=0;
+  if(restShown){const rv=$('inR').value.trim();if(rv!==''){r=parseNum(rv);if(r===null){feedback('info','Im Feld hinter dem R dürfen nur Ziffern stehen.');return;}}}
+  if(q===null){feedback('info','Gib dein Ergebnis bitte nur mit Ziffern ein.');$('inQ').focus();return;}
+  const qOk=q===t.res,rOk=t.op!=='div'||r===(t.rest||0);
+  if(qOk&&rOk){
+    st.total++;st.streak++;
+    let msg;
+    if(st.attempt===0){st.first++;
+      if(st.level<10){st.level++;msg=`<strong>Richtig!</strong> Super gerechnet. Die nächste Aufgabe wird etwas schwieriger (Stufe ${st.level}).`;}
+      else msg='<strong>Richtig!</strong> Du rechnest auf der höchsten Stufe – stark!';}
+    else msg=`<strong>Richtig!</strong> Gut, dass du noch einmal nachgerechnet hast. Du bleibst auf Stufe ${st.level}.`;
+    finish('ok',msg);return;
+  }
+  if(st.attempt===0){
+    st.attempt=1;
+    let extra='';
+    if(t.op==='div'&&restShown){if(qOk&&!rOk)extra=' Dein Ergebnis stimmt schon, aber der Rest nicht.';else if(!qOk&&rOk&&t.rest>0)extra=' Dein Rest stimmt, aber das Ergebnis nicht.';}
+    feedback('no',`<strong>Leider noch nicht richtig.</strong>${extra} ${HINTS[t.op]} Du hast noch einen Versuch!`);
+    $('inQ').select();return;
+  }
+  st.total++;st.streak=0;
+  let msg=`<strong>Leider wieder nicht richtig.</strong> Unten siehst du den Lösungsweg. Vergleiche ihn Schritt für Schritt mit deiner Rechnung und finde deinen Fehler.`;
+  if(st.level>1){st.level--;msg+=` Die nächste Aufgabe ist etwas leichter (Stufe ${st.level}).`;}
+  finish('no',msg);
+  const g=$('solGrid');g.innerHTML='';g.appendChild(BUILD[t.op](t));
+  $('solText').innerHTML='<strong>Ergebnis:</strong> '+resultText(t);
+  $('solution').style.display='block';
+}
+function feedback(type,html){$('fb').className='fb '+type;$('fb').innerHTML=html;}
+function finish(type,html){
+  st.done=true;feedback(type,html);
+  $('inQ').disabled=true;$('inR').disabled=true;$('checkBtn').disabled=true;
+  $('nextWrap').style.display='block';updateTop();
+  setTimeout(()=>$('nextBtn').focus(),50);
+}
+</script>
+</body>
+</html>

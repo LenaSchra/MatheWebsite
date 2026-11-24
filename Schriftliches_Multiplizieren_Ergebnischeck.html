@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ergebnischeck Multiplizieren</title>
+<style>
+/*
+VOICE: freundlich, ruhig, für Fünftklässler
+IDEA: ein Kontrollzettel, den man der Lehrerin hinhält
+PICTURE: die Eingabekarte selbst, groß und mittig
+COLOUR and TYPE: Weiß/Dunkelblau #061C63, Akzent #4A5F9E; Verdana
+LAYOUT: eine Spalte, Karte mit Schatten, Rückmeldung darunter
+*/
+:root{color-scheme:light dark;
+--bg:light-dark(#eef1f8,#0b1230);--card:light-dark(#ffffff,#141d45);
+--ink:light-dark(#061C63,#e6ebff);--soft:light-dark(#4A5F9E,#a9b6e6);
+--line:light-dark(#c9d1ea,#34407a);
+--ok:light-dark(#1d6b3a,#8fe0ac);--okbg:light-dark(#e5f5ea,#173a26);
+--no:light-dark(#9a1c1c,#ffb1b1);--nobg:light-dark(#fbe9e9,#3d1a1a)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 Verdana,Geneva,sans-serif;overflow-x:clip;min-height:100vh}
+main{max-width:560px;margin:0 auto;padding:clamp(24px,5vw,56px) 16px}
+h1{font-size:clamp(24px,5vw,32px);line-height:1.15;margin:0 0 6px;text-wrap:balance}
+.sub{margin:0 0 24px;color:var(--soft);font-size:15px}
+.card{background:var(--card);border-radius:4px;box-shadow:0 6px 24px rgba(6,28,99,.14);padding:clamp(20px,4vw,32px)}
+label{display:block;font-weight:bold;margin:0 0 6px;font-size:16px}
+input{width:100%;font:inherit;font-size:22px;padding:10px 14px;border:2px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);min-height:52px}
+input:focus{outline:3px solid #4A5F9E;outline-offset:1px;border-color:#4A5F9E}
+.row{margin-bottom:18px}
+.task{min-height:32px;margin:-8px 0 16px;font-size:20px;color:var(--soft)}
+.task b{color:var(--ink);font-size:26px;letter-spacing:.02em}
+button{width:100%;font:inherit;font-weight:bold;font-size:18px;min-height:52px;border:0;border-radius:4px;background:#061C63;color:#fff;cursor:pointer}
+:root[data-theme=dark] button{background:#4A5F9E}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) button{background:#4A5F9E}}
+button:hover{filter:brightness(1.15)}button:focus-visible{outline:3px solid #4A5F9E;outline-offset:3px}
+.msg{margin-top:20px;padding:16px 18px;border-radius:4px;font-weight:bold;font-size:18px;display:none}
+.msg.ok{display:block;background:var(--okbg);color:var(--ok);border-left:6px solid var(--ok)}
+.msg.no{display:block;background:var(--nobg);color:var(--no);border-left:6px solid var(--no)}
+.msg.hint{display:block;background:transparent;color:var(--soft);font-weight:normal;font-size:16px;padding:0}
+@media(prefers-reduced-motion:no-preference){.msg.ok,.msg.no{animation:pop .25s ease-out}@keyframes pop{from{transform:scale(.96);opacity:0}}}
+foot{display:block;margin-top:20px;font-size:13px;color:var(--soft);text-align:center}
+</style>
+</head>
+<body>
+<main>
+<h1>Schriftliches Multiplizieren – Ergebnischeck</h1>
+<p class="sub">Gib die Nummer deiner Aufgabe und dein Ergebnis ein.</p>
+<form class="card" id="f" autocomplete="off">
+  <div class="row">
+    <label for="nr">Nummer der Aufgabe (1 bis 100)</label>
+    <input id="nr" inputmode="numeric" pattern="[0-9]*" maxlength="3">
+  </div>
+  <div class="task" id="task" aria-live="polite"></div>
+  <div class="row">
+    <label for="erg">Dein Ergebnis</label>
+    <input id="erg" inputmode="numeric" maxlength="12">
+  </div>
+  <button type="submit">Überprüfen</button>
+  <div class="msg" id="msg" role="status" aria-live="polite"></div>
+</form>
+<foot>Sr</foot>
+</main>
+<script>
+{
+const T=[[82,74],[59,95],[14,17],[59,12],[65,73],[73,39],[56,48],[43,98],[76,46],[53,27],
+[76,57],[87,98],[65,86],[38,45],[84,38],[73,37],[87,43],[95,17],[67,54],[68,48],
+[96,43],[78,82],[26,64],[83,37],[67,83],[53,62],[27,68],[86,82],[56,57],[63,12],
+[37,544],[385,27],[46,885],[58,287],[46,314],[818,69],[29,287],[82,957],[24,775],[179,45],
+[498,25],[573,85],[54,768],[92,702],[62,826],[39,594],[94,958],[93,537],[12,437],[118,68],
+[527,79],[82,704],[59,635],[86,938],[13,127],[16,153],[17,304],[107,47],[36,105],[34,567],
+[989,749],[105,872],[573,495],[497,659],[159,902],[477,878],[399,265],[146,588],[986,585],[675,673],
+[897,949],[337,497],[722,103],[599,446],[142,865],[317,817],[202,388],[788,427],[909,424],[914,393],
+[408,776],[835,422],[737,428],[617,375],[825,596],[212,482],[446,536],[828,329],[806,339],[966,644],
+[2513,9395],[7883,4557],[9927,4697],[8309,5205],[1382,2908],[8616,1683],[1274,2858],[3024,5078],[4166,4333],[6222,5296]];
+const nr=document.getElementById('nr'),erg=document.getElementById('erg'),
+task=document.getElementById('task'),msg=document.getElementById('msg'),f=document.getElementById('f');
+const clean=s=>s.replace(/[\s.  ']/g,'');
+const get=()=>{const n=Number(clean(nr.value));return Number.isInteger(n)&&n>=1&&n<=100?n:0};
+const show=(cls,t)=>{msg.className='msg';void msg.offsetWidth;msg.className='msg '+cls;msg.textContent=t};
+nr.addEventListener('input',()=>{const n=get();msg.className='msg';
+  task.innerHTML=n?'Aufgabe '+n+': <b>'+T[n-1][0]+' · '+T[n-1][1]+'</b>':''});
+erg.addEventListener('input',()=>{msg.className='msg'});
+nr.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();erg.focus()}});
+f.addEventListener('submit',e=>{e.preventDefault();
+  const n=get();
+  if(!n){show('hint','Bitte gib eine Aufgabennummer von 1 bis 100 ein.');nr.focus();return}
+  const v=clean(erg.value);
+  if(!/^\d+$/.test(v)){show('hint','Bitte gib dein Ergebnis als Zahl ein.');erg.focus();return}
+  if(Number(v)===T[n-1][0]*T[n-1][1]){
+    show('ok','Richtig, schnapp dir die nächste Aufgabe.');
+  }else{
+    show('no','Schade, das war leider noch nicht richtig!');
+  }
+});
+}
+</script>
+</body>
+</html>

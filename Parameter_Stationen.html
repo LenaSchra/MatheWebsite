@@ -1,0 +1,1075 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body>
+<title>Parameter-Stationen</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: Kopfkasten wie auf den Arbeitsblättern, Reiter für fünf Stationen; je Station links Zeichenfläche + Regler, rechts Arbeitsauftrag, darunter Zusammenfassung und Quiz; Fußzeile mit Kürzel */
+:root{
+  --bg:#F3F5FA; --surface:#FFFFFF; --ink:#1A2130; --muted:#566079; --line:#D5DBE8;
+  --navy:#061C63; --navy-mid:#4A5F9E;
+  --curve:#D24A12; --accent:#061C63; --on-accent:#FFFFFF; --good:#2C7A51; --warn:#A86A12;
+  --tint:#E9EDF6; --curve-soft:#FBE7DC;
+  --sky:#DCEAF5; --water:#8DB6D6; --ground:#9BAE7C; --stone:#8B8378; --steel:#3E5468; --target:#6C8FB3;
+  --bar:#B4CAE0; --bar-edge:#5E87B0; --ghost:#9AA6B4;
+  --mark-green:#1F8A4C; --mark-blue:#1E7FC2; --mark-red:#C62828;
+  --f-body:Verdana, "DejaVu Sans", Geneva, Tahoma, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0E131C; --surface:#161D28; --ink:#E4E9F2; --muted:#9AA6BA; --line:#2B3547;
+  --navy:#B3C2F2; --navy-mid:#7F93D0;
+  --curve:#FF8C55; --accent:#B3C2F2; --on-accent:#0E131C; --good:#5BC08A; --warn:#E2B04C;
+  --tint:#1D2535; --curve-soft:#3A2419;
+  --sky:#1A2735; --water:#24435E; --ground:#3D4A30; --stone:#8F877C; --steel:#9DB4C9; --target:#6F93B8;
+  --bar:#324B66; --bar-edge:#80A7CE; --ghost:#5D6A7A;
+  --mark-green:#4CC27E; --mark-blue:#5AB0EE; --mark-red:#F26B6B; color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#0E131C; --surface:#161D28; --ink:#E4E9F2; --muted:#9AA6BA; --line:#2B3547;
+  --navy:#B3C2F2; --navy-mid:#7F93D0;
+  --curve:#FF8C55; --accent:#B3C2F2; --on-accent:#0E131C; --good:#5BC08A; --warn:#E2B04C;
+  --tint:#1D2535; --curve-soft:#3A2419;
+  --sky:#1A2735; --water:#24435E; --ground:#3D4A30; --stone:#8F877C; --steel:#9DB4C9; --target:#6F93B8;
+  --bar:#324B66; --bar-edge:#80A7CE; --ghost:#5D6A7A;
+  --mark-green:#4CC27E; --mark-blue:#5AB0EE; --mark-red:#F26B6B; color-scheme:dark; }
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg); color:var(--ink); font-family:var(--f-body); font-size:14px; line-height:1.55;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:20px 28px}
+.wrap{max-width:1240px; margin:0 auto; display:flex; flex-direction:column; gap:18px}
+h1,h2,h3{font-family:var(--f-body); text-wrap:balance; margin:0; color:var(--navy)}
+h2{font-size:1.15rem; font-weight:700} h3{font-size:1rem; font-weight:700}
+p{margin:0}
+.lead{color:var(--muted); max-width:80ch}
+/* Blocksatz mit Silbentrennung für längere Texte */
+.lead, .task p, .task li, .info p, details p, .why, .result li, .result p, .ovintro p, .sol{ text-align:justify; -webkit-hyphens:auto; hyphens:auto }
+.num{font-family:var(--f-mono); font-variant-numeric:tabular-nums}
+
+/* Kopfkasten */
+.kopf{display:grid; grid-template-columns:minmax(0,1fr) clamp(5rem, 22%, 10rem); border:1px solid var(--navy-mid); background:var(--surface); min-height:3.4rem}
+.kopf h1{display:flex; align-items:center; justify-content:center; text-align:center; font-size:1.45rem; font-weight:700; padding:6px 12px; border-right:1px solid var(--navy-mid)}
+.foot{border-top:1px dashed var(--navy-mid); padding-top:6px; font-size:.72rem; color:var(--navy)}
+
+.tabs{display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:8px}
+.tab{font:inherit; font-weight:700; color:var(--navy); padding:9px 14px; border-radius:6px; border:1.5px solid var(--line); background:var(--surface); cursor:pointer; display:flex; flex-direction:column; align-items:flex-start; text-align:left}
+.tab small{font-weight:400; color:var(--muted); font-size:.8rem; line-height:1.3}
+.tab[aria-selected="true"]{border-color:var(--navy-mid); background:var(--tint); box-shadow:inset 0 -3px 0 var(--navy)}
+.station{display:flex; flex-direction:column; gap:18px}
+.grid{display:grid; grid-template-columns:minmax(0,1.55fr) minmax(0,1fr); gap:18px; align-items:start}
+@media (max-width:900px){ .grid{grid-template-columns:minmax(0,1fr)} }
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:16px; display:flex; flex-direction:column; gap:14px; min-width:0}
+.eyebrow{font-size:.72rem; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); font-weight:700}
+.chips{display:flex; flex-wrap:wrap; gap:8px}
+.chip{font:inherit; font-size:.85rem; padding:6px 12px; border-radius:999px; border:1.5px solid var(--line); background:var(--bg); color:var(--ink); cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--accent); background:var(--accent); color:var(--on-accent)}
+.chip .ok{color:var(--good); font-weight:700}
+.chip[aria-pressed="true"] .ok{color:var(--on-accent)}
+.chartbox{position:relative; width:100%; max-width:100%; min-height:200px}
+canvas{position:absolute; inset:0; width:100%; height:100%; display:block; border-radius:4px}
+.term{font-family:var(--f-mono); font-size:1.05rem; background:var(--tint); border-radius:6px; padding:10px 12px; display:flex; flex-wrap:wrap; align-items:center; gap:4px; overflow-x:auto}
+.va{color:var(--curve); font-weight:500}
+/* Brüche */
+.frac{display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; line-height:1.25; margin:0 .15em}
+.frac > span:first-child{border-bottom:1.5px solid currentColor; padding:0 .25em}
+.frac > span:last-child{padding:0 .25em}
+sup .frac{font-size:.85em; line-height:1.15}
+sup{line-height:0}
+/* Wurzel: Haken als Maske, Balken über dem ganzen Radikanten */
+.sqrt{display:inline-flex; position:relative; padding-left:.66em; margin:0 .08em; vertical-align:middle; line-height:1.3}
+.sqrt::before{content:""; position:absolute; left:0; top:0; bottom:0; width:.68em; background:currentColor;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 20' preserveAspectRatio='none'%3E%3Cpolygon points='0,11.6 2.4,10.2 5.3,16.6 9.1,0 10,0 10,1.5 5.7,20 4.8,20 1.9,12.6 0.5,13.4'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+          mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 20' preserveAspectRatio='none'%3E%3Cpolygon points='0,11.6 2.4,10.2 5.3,16.6 9.1,0 10,0 10,1.5 5.7,20 4.8,20 1.9,12.6 0.5,13.4'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat}
+.sqrt > .rc{border-top:1.5px solid currentColor; padding:.06em .14em 0 .1em}
+.big{font-size:1.3em}
+.sliders{display:flex; flex-direction:column; gap:12px}
+.sl{display:grid; grid-template-columns:2.2em minmax(0,1fr) 6.5em; gap:4px 10px; align-items:center}
+.sl .name{font-family:var(--f-mono); font-size:1.15rem; font-weight:500; color:var(--curve)}
+.sl .desc{grid-column:2 / 4; font-size:.76rem; color:var(--muted)}
+.sl.locked{opacity:.45}
+input[type=range]{width:100%; accent-color:var(--curve)}
+input[type=text]{font-family:var(--f-mono); font-size:1rem; width:100%; padding:6px 8px; border:1px solid var(--line); border-radius:5px; background:var(--bg); color:var(--ink)}
+textarea{font:inherit; font-size:.88rem; width:100%; min-height:4.6em; padding:6px 8px; border:1px solid var(--line); border-radius:5px; background:var(--surface); color:var(--ink); resize:vertical}
+input:focus-visible, button:focus-visible, summary:focus-visible, textarea:focus-visible{outline:2px solid var(--navy-mid); outline-offset:2px}
+.check{display:inline-flex; gap:6px; align-items:center; font-size:.86rem; cursor:pointer}
+.fit{display:flex; flex-direction:column; gap:5px}
+.fithead{display:flex; justify-content:space-between; font-size:.84rem}
+.meter{height:10px; background:var(--tint); border-radius:5px; overflow:hidden}
+.meter > i{display:block; height:100%; width:0; background:var(--warn); transition:width .15s}
+.readouts{display:flex; flex-wrap:wrap; align-items:center; gap:4px 18px; font-size:.84rem; color:var(--muted)}
+.btns{display:flex; flex-wrap:wrap; gap:8px}
+.btn{font:inherit; font-weight:700; font-size:.86rem; padding:8px 14px; border-radius:6px; border:1px solid var(--accent); background:var(--accent); color:var(--on-accent); cursor:pointer}
+.btn.ghost{background:transparent; color:var(--accent)}
+.btn.small{font-size:.78rem; padding:4px 9px}
+.success{border:2px solid var(--good); border-radius:6px; padding:10px 12px; color:var(--ink); display:flex; flex-direction:column; gap:6px}
+.success strong{color:var(--good)}
+/* Aufgaben ohne Kasten, Überschrift „Aufgabe N“ */
+.task{display:flex; flex-direction:column; gap:6px; padding-top:4px}
+.task h3{color:var(--navy)}
+ol.abc{margin:0; padding:0; list-style:none; counter-reset:t; display:flex; flex-direction:column; gap:6px}
+ol.abc > li{counter-increment:t; display:grid; grid-template-columns:1.6em minmax(0,1fr)}
+ol.abc > li::before{content:counter(t, lower-alpha) ")"; font-weight:700; color:var(--navy)}
+.hint{font-size:.84rem; color:var(--muted)}
+.info{background:var(--tint); border-radius:6px; padding:10px 12px; font-size:.9rem; display:flex; flex-direction:column; gap:6px}
+details{border:1px solid var(--line); border-radius:6px; padding:8px 12px; font-size:.9rem}
+summary{cursor:pointer; font-weight:700; color:var(--accent)}
+details[open] summary{margin-bottom:6px}
+.guide{position:sticky; top:calc(env(safe-area-inset-top, 0px) + 12px)}
+@media (max-width:900px){ .guide{position:static} }
+
+/* Quiz */
+.quiz{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap:14px}
+.q{border:1px solid var(--line); border-radius:8px; padding:14px; display:flex; flex-direction:column; gap:10px; background:var(--surface)}
+.q .qn{font-weight:700; font-size:.86rem; color:var(--navy)}
+.q fieldset{border:0; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; min-width:0}
+.q legend{margin-bottom:8px; padding:0}
+.opt{display:flex; gap:8px; align-items:center; padding:7px 10px; border:1.5px solid var(--line); border-radius:6px; cursor:pointer; font-size:.9rem}
+.opt input{accent-color:var(--navy-mid); flex:none}
+.opt.right{border-color:var(--good); background:color-mix(in srgb, var(--good) 12%, transparent)}
+.opt.wrong{border-color:var(--warn); background:color-mix(in srgb, var(--warn) 12%, transparent)}
+.why{font-size:.86rem; color:var(--muted)}
+.why.ok b{color:var(--good)} .why.bad b{color:var(--warn)}
+.quizhead{display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px}
+.score{font-family:var(--f-mono); font-size:1rem}
+
+/* Zusammenfassung im Buchstil */
+.overview{display:flex; flex-direction:column; gap:14px; border:2px solid var(--mark-red); border-radius:10px; padding:16px; background:var(--surface)}
+.ovgrid{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.25fr); gap:18px; align-items:center}
+.ovintro{display:flex; flex-direction:column; gap:10px}
+@media (max-width:800px){ .ovgrid{grid-template-columns:minmax(0,1fr)} }
+.ovlist{margin:0; padding:0; list-style:none; display:flex; flex-direction:column}
+.ovlist li{display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:12px; padding:9px 0; border-bottom:1px solid var(--line); align-items:center}
+.ovlist li:last-child{border-bottom:0}
+@media (max-width:560px){ .ovlist li{grid-template-columns:minmax(0,1fr); gap:2px} }
+.ovlist .v{font-family:var(--f-mono); display:flex; flex-wrap:wrap; align-items:center; gap:3px}
+.g{color:var(--mark-green)} .b{color:var(--mark-blue)} .r{color:var(--mark-red)}
+
+/* Tabellen */
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse; width:100%; font-size:.86rem}
+th,td{padding:8px 10px; border:1px solid var(--navy-mid); vertical-align:top}
+th{font-weight:700; color:var(--navy); text-align:left; background:var(--tint)}
+.cmp-table{min-width:1000px}
+.cmp-table td:first-child{font-weight:700; color:var(--navy); width:13%}
+.cmp-table td.mine{background:var(--curve-soft); width:27%}
+.cmp-table th.mine{background:var(--curve-soft)}
+.cmp-table .sol{margin-top:6px; font-size:.84rem; border-left:3px solid var(--good); padding-left:8px}
+.cmp-table th .f{display:block; font-family:var(--f-mono); font-weight:400; font-size:.8rem; color:var(--muted); margin-top:2px}
+
+/* Gauß-Station */
+.distrow{display:flex; flex-wrap:wrap; gap:10px 16px; align-items:flex-end}
+.field{display:flex; flex-direction:column; gap:3px}
+.field label{font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); font-weight:700}
+.field input[type=text]{width:6.5em}
+.kv{font-size:.84rem; color:var(--muted)}
+.legend{display:flex; flex-wrap:wrap; gap:6px 18px; font-size:.84rem; color:var(--muted); align-items:center}
+.sw{display:inline-block; width:14px; height:10px; vertical-align:middle; margin-right:6px; border-radius:2px}
+.sw.bar{background:var(--bar); border:1px solid var(--bar-edge)}
+.sw.line{height:3px; background:var(--curve)}
+.toolbar{display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; justify-content:space-between}
+.seg{display:inline-flex; border:1px solid var(--line); border-radius:6px; overflow:hidden}
+.seg button{border:0; background:var(--bg); color:var(--ink); font:inherit; font-size:.8rem; padding:5px 10px; cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent); color:var(--on-accent)}
+.toast{font-size:.84rem; color:var(--good); min-height:1.3em}
+.stepnav{display:flex; gap:6px; flex-wrap:wrap}
+.dot{width:32px; height:32px; border-radius:50%; border:1.5px solid var(--line); background:var(--bg); color:var(--muted); font-family:var(--f-mono); font-weight:500; cursor:pointer}
+.dot[aria-current="step"]{border-color:var(--navy); color:var(--navy); background:var(--tint)}
+.stepbody{display:flex; flex-direction:column; gap:12px}
+.navbtns{display:flex; justify-content:space-between; gap:8px}
+.fill{display:flex; flex-wrap:wrap; align-items:center; gap:6px; font-family:var(--f-mono); font-size:1.1rem; background:var(--tint); padding:12px; border-radius:6px}
+.slot{display:inline-flex; align-items:center; justify-content:center; min-width:1.8em; min-height:1.6em; padding:0 .25em; border:1.5px dashed var(--navy-mid); border-radius:4px; color:var(--curve)}
+.choices{display:flex; flex-direction:column; gap:8px}
+.choicerow{display:flex; flex-wrap:wrap; align-items:center; gap:6px}
+.choicerow > span{font-family:var(--f-mono); width:2.6em; font-weight:500}
+.choicerow .chip{font-family:var(--f-mono); font-size:.95rem; display:inline-flex; align-items:center; min-height:2.4em}
+.chip.ok{border-color:var(--good); background:color-mix(in srgb, var(--good) 15%, transparent); color:var(--ink)}
+.chip.bad{border-color:var(--warn); background:color-mix(in srgb, var(--warn) 15%, transparent); color:var(--ink)}
+.feedback{font-size:.88rem}
+.feedback.ok{color:var(--good)} .feedback.bad{color:var(--warn)}
+.result{border:2px solid var(--curve); border-radius:8px; padding:14px; display:flex; flex-direction:column; gap:10px; background:var(--surface)}
+.result .term{background:var(--curve-soft); font-size:1.15rem}
+.result ul{margin:0; padding-left:1.2em; display:flex; flex-direction:column; gap:6px}
+.gtable{min-width:600px}
+.gtable th, .gtable td{text-align:right; white-space:nowrap; vertical-align:middle}
+.gtable th:first-child, .gtable td:first-child{text-align:left}
+.gtable td{font-family:var(--f-mono); font-variant-numeric:tabular-nums}
+.cmpcol{background:var(--curve-soft)}
+.del{background:none; border:0; color:var(--muted); cursor:pointer; font-size:1rem; padding:2px 6px}
+.del:hover{color:var(--warn)}
+.empty{color:var(--muted); font-size:.9rem; padding:6px 0}
+.tablehead{display:flex; flex-wrap:wrap; gap:10px; justify-content:space-between; align-items:center}
+@media (prefers-reduced-motion: reduce){ .meter > i{transition:none} }
+</style>
+
+<div class="wrap" lang="de">
+  <div class="kopf"><h1>Parametervariation</h1><div aria-hidden="true"></div></div>
+  <p class="lead">In fünf Stationen untersuchst du, wie Parameter den Graphen einer Funktion verändern: erst bei Parabeln, Exponential- und Sinusfunktionen, dann allgemein für beliebige Funktionen f. Zum Schluss nutzt du dein Wissen, um die Gaußsche Glockenkurve herzuleiten.</p>
+  <div class="tabs" role="tablist" id="tabs"></div>
+
+  <!-- ================= STATION 1: Parabeln ================= -->
+  <section class="station" id="st-parabel" role="tabpanel">
+    <div class="grid">
+      <div class="panel">
+        <div class="chips" id="bridgeChips"></div>
+        <div class="chartbox" id="pBox"><canvas id="pCv" role="img" aria-label="Brückenbild mit Koordinatensystem und Parabel"></canvas></div>
+        <div class="term" id="pTerm"></div>
+        <div class="sliders">
+          <div class="sl"><span class="name">a</span><input type="range" id="p-r-a" min="-1.5" max="1.5" step="0.01"><input type="text" id="p-t-a" inputmode="decimal" aria-label="Wert von a"><span class="desc">Öffnung und Streckung</span></div>
+          <div class="sl"><span class="name">d</span><input type="range" id="p-r-d" min="-12" max="12" step="0.1"><input type="text" id="p-t-d" inputmode="decimal" aria-label="Wert von d"><span class="desc">Verschiebung in x-Richtung</span></div>
+          <div class="sl"><span class="name">e</span><input type="range" id="p-r-e" min="-2" max="10" step="0.1"><input type="text" id="p-t-e" inputmode="decimal" aria-label="Wert von e"><span class="desc">Verschiebung in y-Richtung</span></div>
+        </div>
+        <div class="fit"><div class="fithead"><span>Passgenauigkeit</span><span class="num" id="pFit"></span></div><div class="meter"><i id="pBar"></i></div></div>
+        <div class="readouts"><span>Scheitelpunkt S(<span class="num" id="pS"></span>)</span></div>
+        <div id="pSuccess"></div>
+        <div class="btns"><button class="btn ghost" type="button" id="pReset">Zurück zur Normalparabel</button></div>
+      </div>
+      <aside class="panel guide">
+        <p class="eyebrow">Station 1 · Teil A</p>
+        <h2>Brückenbögen modellieren</h2>
+        <div class="info"><p>Wir verwenden die <strong>Scheitelpunktform</strong></p>
+          <div class="term" style="background:var(--surface)">f(x) = a · (x − d)² + e</div>
+          <p>Zu Beginn ist a = 1, d = 0 und e = 0. Das ist die Normalparabel.</p></div>
+        <div class="task" id="bridgeTask"></div>
+        <details><summary>Erinnerung: Was bewirken die Parameter?</summary>
+          <ul style="margin:0; padding-left:1.2em; display:flex; flex-direction:column; gap:4px">
+            <li><strong>a &gt; 0:</strong> nach oben geöffnet, <strong>a &lt; 0:</strong> nach unten geöffnet</li>
+            <li><strong>|a| &gt; 1:</strong> gestreckt (schmaler), <strong>0 &lt; |a| &lt; 1:</strong> gestaucht (breiter)</li>
+            <li><strong>d:</strong> Verschiebung in x-Richtung, bei d &gt; 0 nach rechts</li>
+            <li><strong>e:</strong> Verschiebung in y-Richtung, bei e &gt; 0 nach oben</li>
+            <li>Der Scheitelpunkt ist S(d | e).</li>
+          </ul></details>
+        <details><summary>Tipp zum Vorgehen</summary><p>Stelle zuerst mit d und e den Scheitelpunkt ein. Lies ihn dafür am Gitter ab. Verändere danach nur a, bis die Parabel durch die Fußpunkte des Bogens läuft.</p></details>
+      </aside>
+    </div>
+    <section class="panel" id="quiz-par"></section>
+  </section>
+
+  <!-- ================= STATION 2: Exponentialfunktion ================= -->
+  <section class="station" id="st-exponential" role="tabpanel" hidden></section>
+
+  <!-- ================= STATION 3: Sinus ================= -->
+  <section class="station" id="st-sinus" role="tabpanel" hidden></section>
+
+  <!-- ================= STATION 4: Vergleich ================= -->
+  <section class="station" id="st-uebersicht" role="tabpanel" hidden>
+    <section class="panel">
+      <div><p class="eyebrow">Station 4</p><h2>Alle Funktionen im Vergleich</h2></div>
+      <p class="lead">Bei Parabeln, Exponential- und Sinusfunktionen hast du Parameter kennengelernt, die den Graphen strecken, spiegeln und verschieben. Die Buchstaben heißen jeweils anders, die Wirkung ist aber oft dieselbe.</p>
+      <div class="task"><h3>Aufgabe</h3>
+        <p class="hint">Abkürzungen: f ist eine beliebige Ausgangsfunktion, g ist die veränderte Funktion g(x) = a · f(b · (x − c)) + d.</p>
+        <ol class="abc">
+        <li><span>Beschreibe, welche Parameter in den Spalten der drei Funktionsarten dieselbe Wirkung haben.</span></li>
+        <li><span>Beschreibe in der letzten Spalte für eine beliebige Funktion f, wie die Parameter a, b, c und d den Graphen von f verändern.</span></li>
+        <li><span>Untersuche deine Regeln unten mit dem Funktionsplotter an weiteren Funktionen. Blende die Lösung erst danach ein.</span></li></ol></div>
+      <div class="tablewrap"><table class="cmp-table" id="cmpTable"></table></div>
+    </section>
+    <section class="panel">
+      <div><p class="eyebrow">Station 4 · Regeln testen</p><h2>Funktionsplotter für g(x) = a · f(b · (x − c)) + d</h2></div>
+      <div class="grid">
+        <div style="display:flex; flex-direction:column; gap:12px; min-width:0">
+          <div class="chips" id="xChips"></div>
+          <div class="chartbox" style="aspect-ratio:16/10"><canvas id="xCv" role="img" aria-label="Graph von f (grau) und g (orange)"></canvas></div>
+          <div class="term" id="xTerm"></div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px; min-width:0">
+          <div class="sliders">
+            <div class="sl"><span class="name">a</span><input type="range" id="x-r-a" min="-3" max="3" step="0.1"><input type="text" id="x-t-a" inputmode="decimal" aria-label="Wert von a"><span class="desc">Faktor vor f</span></div>
+            <div class="sl"><span class="name">b</span><input type="range" id="x-r-b" min="-3" max="3" step="0.1"><input type="text" id="x-t-b" inputmode="decimal" aria-label="Wert von b"><span class="desc">Faktor vor (x − c)</span></div>
+            <div class="sl"><span class="name">c</span><input type="range" id="x-r-c" min="-5" max="5" step="0.1"><input type="text" id="x-t-c" inputmode="decimal" aria-label="Wert von c"><span class="desc">Zahl, die von x abgezogen wird</span></div>
+            <div class="sl"><span class="name">d</span><input type="range" id="x-r-d" min="-5" max="5" step="0.1"><input type="text" id="x-t-d" inputmode="decimal" aria-label="Wert von d"><span class="desc">Zahl, die addiert wird</span></div>
+          </div>
+          <div class="info"><p>Grau: Graph von f. Orange: Graph von g.</p><p>Der Punkt <strong>P(1 | f(1))</strong> wird zu <strong>P′</strong>: <span class="num" id="xP"></span></p></div>
+          <div class="btns"><button class="btn ghost" type="button" id="xReset">Alle Parameter zurücksetzen</button></div>
+        </div>
+      </div>
+    </section>
+  </section>
+
+  <!-- ================= STATION 5: Gauß ================= -->
+  <section class="station" id="st-gauss" role="tabpanel" hidden>
+    <div class="grid">
+      <section class="panel" aria-label="Arbeitsfläche">
+        <div class="distrow">
+          <div class="field"><label for="g-inN">n (Anzahl)</label><input id="g-inN" type="text" inputmode="numeric" value="20"></div>
+          <div class="field"><label for="g-inP">p (Trefferwahrsch.)</label><input id="g-inP" type="text" inputmode="decimal" value="0,5"></div>
+          <button class="btn" id="g-apply" type="button">Verteilung zeichnen</button>
+          <div class="field" style="gap:5px"><label>Beispiele</label><div class="chips" id="g-presets"></div></div>
+        </div>
+        <p class="kv" id="g-distInfo"></p>
+        <div class="toolbar">
+          <div class="legend"><span><span class="sw bar"></span>Histogramm P(X = k)</span><span><span class="sw line"></span>Graph von f</span></div>
+          <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center">
+            <label class="check"><input type="checkbox" id="g-chkInfl"> Wendestellen anzeigen</label>
+            <div class="seg" role="group" aria-label="Ausschnitt"><button type="button" id="g-zoomAll" aria-pressed="true">Gesamt</button><button type="button" id="g-zoomHist" aria-pressed="false">Nur Histogramm</button></div>
+          </div>
+        </div>
+        <div class="chartbox" style="aspect-ratio:16/9; min-height:240px"><canvas id="g-cv" role="img" aria-label="Histogramm der Binomialverteilung mit angepasster Glockenkurve"></canvas></div>
+        <div class="term" id="g-term" aria-live="polite"></div>
+        <div class="sliders">
+          <div class="sl"><span class="name">c</span><input type="range" id="g-rc"><input type="text" id="g-nc" inputmode="decimal" aria-label="Wert von c"><span class="desc">Verschiebung in x-Richtung</span></div>
+          <div class="sl"><span class="name">b</span><input type="range" id="g-rb"><input type="text" id="g-nb" inputmode="decimal" aria-label="Wert von b"><span class="desc">Streckung in x-Richtung</span></div>
+          <div class="sl"><span class="name">a</span><input type="range" id="g-ra"><input type="text" id="g-na" inputmode="decimal" aria-label="Wert von a"><span class="desc">Streckung in y-Richtung</span></div>
+        </div>
+        <div class="fit">
+          <div class="fithead"><span>Passgenauigkeit</span><span class="num" id="g-fitVal"></span></div>
+          <div class="meter"><i id="g-fitBar"></i></div>
+          <span class="kv">a · b = <span class="num" id="g-abVal"></span></span>
+        </div>
+        <div class="btns">
+          <button class="btn" type="button" id="g-addRow">Werte in Messreihe übernehmen</button>
+          <button class="btn ghost" type="button" id="g-resetStd">Zurück zu φ (a = 1, b = 1, c = 0)</button>
+        </div>
+        <div class="toast" id="g-toast" aria-live="polite"></div>
+      </section>
+      <aside class="panel guide" aria-label="Leitfaden">
+        <p class="eyebrow">Station 5 · Gaußsche Glockenkurve</p>
+        <nav class="stepnav" id="g-stepnav" aria-label="Schritte"></nav>
+        <div class="stepbody" id="g-stepbody"></div>
+        <div class="navbtns">
+          <button class="btn ghost" type="button" id="g-prev">Zurück</button>
+          <button class="btn" type="button" id="g-next">Weiter</button>
+        </div>
+      </aside>
+    </div>
+    <section class="panel" aria-label="Messreihe">
+      <div class="tablehead">
+        <h2>Messreihe</h2>
+        <div class="btns">
+          <button class="btn ghost" type="button" id="g-toggleCmp">Vergleichsspalten μ und σ einblenden</button>
+          <button class="btn ghost" type="button" id="g-clearRows">Messreihe leeren</button>
+        </div>
+      </div>
+      <div class="tablewrap" id="g-tablewrap"></div>
+    </section>
+  </section>
+
+  <footer class="foot">Sr · Gymnasium Ernestinum Celle</footer>
+</div>
+
+<script>
+(function(){
+const $ = id => document.getElementById(id);
+const PI = Math.PI;
+const fmt = (x, d=2) => { let s=(Math.round(x*10**d)/10**d).toFixed(d); if (d>0) s=s.replace(/\.?0+$/,''); if (s==='-0') s='0'; return s.replace('.', ',').replace('-', '−'); };
+const fr = (n,d) => `<span class="frac"><span>${n}</span><span>${d}</span></span>`;
+const rt = x => `<span class="sqrt"><span class="rc">${x}</span></span>`;
+function parseVal(s){
+  s=String(s).trim().toLowerCase().replace(/,/g,'.').replace(/−/g,'-').replace(/pi/g,'π').replace(/\s+/g,'');
+  const m=s.match(/^([-+]?)(\d*\.?\d*)(π?)(?:\/(\d+\.?\d*))?$/);
+  if (!m || (!m[2] && !m[3])) return NaN;
+  let v = m[2] ? parseFloat(m[2]) : 1; if (m[3]) v*=PI; if (m[4]) v/=parseFloat(m[4]); if (m[1]==='-') v=-v; return v;
+}
+function piFrac(v){
+  for (const m of [1,2,3,4,6]){ const k=v*m/PI, r=Math.round(k); if (r!==0 && Math.abs(k-r)<0.006){ const num=(r===1?'':r===-1?'−':fmt(r,0))+'π'; return m===1?num:`${num}/${m}`; } }
+  return null;
+}
+function fracHTML(v){ const s=piFrac(v); if(!s) return fmt(v,2); if(!s.includes('/')) return s; const [n,d]=s.split('/'); return fr(n,d); }
+function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+const plus=(v,dec=2)=> v>=0?` + <span class="va">${fmt(v,dec)}</span>`:` − <span class="va">${fmt(-v,dec)}</span>`;
+
+/* ---------- Speicher ---------- */
+const KEY='parameter-stationen-v2';
+let store={pSolved:[], fit:{exp:[], sin:[]}, quiz:{}, table:{}, g:{rows:[], reveal:false, step:0}};
+try{ const s=JSON.parse(localStorage.getItem(KEY)||'null'); if(s){ store=Object.assign(store,s); store.fit=Object.assign({exp:[],sin:[]},s.fit||{}); store.g=Object.assign({rows:[],reveal:false,step:0},s.g||{}); } }catch(e){}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){} }
+
+/* ---------- Zeichen-Hilfen ---------- */
+function prep(cv){
+  if(!cv) return null;
+  const W=cv.clientWidth, H=cv.clientHeight, dpr=window.devicePixelRatio||1;
+  if(!W||!H) return null;
+  cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr);
+  const ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
+  return {ctx,W,H};
+}
+function mapper(W,H,v,pad){
+  const p=Object.assign({l:8,r:8,t:8,b:8},pad||{});
+  const pw=W-p.l-p.r, ph=H-p.t-p.b;
+  return { X:x=>p.l+(x-v.x0)/(v.x1-v.x0)*pw, Y:y=>p.t+ph-(y-v.y0)/(v.y1-v.y0)*ph, sx:pw/(v.x1-v.x0), sy:ph/(v.y1-v.y0), p, pw, ph };
+}
+const FONT_UI='"Verdana", "DejaVu Sans", Arial, sans-serif';
+function gridAxes(ctx,M,v,opt){
+  opt=opt||{};
+  const C={line:css('--line'), ink:css('--ink'), muted:css('--muted')};
+  const xs=opt.xs||1, ys=opt.ys||1;
+  ctx.save(); ctx.globalAlpha=opt.gridAlpha??0.6; ctx.strokeStyle=opt.gridColor||C.line; ctx.lineWidth=1;
+  for(let x=Math.ceil(v.x0/xs)*xs; x<=v.x1+1e-9; x+=xs){ ctx.beginPath(); ctx.moveTo(M.X(x)+.5,M.Y(v.y0)); ctx.lineTo(M.X(x)+.5,M.Y(v.y1)); ctx.stroke(); }
+  for(let y=Math.ceil(v.y0/ys)*ys; y<=v.y1+1e-9; y+=ys){ ctx.beginPath(); ctx.moveTo(M.X(v.x0),M.Y(y)+.5); ctx.lineTo(M.X(v.x1),M.Y(y)+.5); ctx.stroke(); }
+  ctx.restore();
+  ctx.strokeStyle=opt.axisColor||C.ink; ctx.lineWidth=1.3;
+  ctx.beginPath(); ctx.moveTo(M.X(v.x0),M.Y(0)+.5); ctx.lineTo(M.X(v.x1),M.Y(0)+.5); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(M.X(0)+.5,M.Y(v.y0)); ctx.lineTo(M.X(0)+.5,M.Y(v.y1)); ctx.stroke();
+  ctx.font='11px "IBM Plex Mono", ui-monospace, monospace'; ctx.fillStyle=opt.labelColor||C.muted;
+  const lx=opt.lxs||xs, ly=opt.lys||ys;
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  for(let x=Math.ceil(v.x0/lx)*lx; x<=v.x1; x+=lx){ if(Math.abs(x)<1e-9) continue; ctx.fillText(fmt(x,1), M.X(x), M.Y(0)+3); }
+  ctx.textAlign='right'; ctx.textBaseline='middle';
+  for(let y=Math.ceil(v.y0/ly)*ly; y<=v.y1; y+=ly){ if(Math.abs(y)<1e-9) continue; ctx.fillText(fmt(y,1), M.X(0)-4, M.Y(y)); }
+  ctx.textAlign='left'; ctx.textBaseline='top'; ctx.fillText('x', M.X(v.x1)-10, M.Y(0)+3); ctx.fillText('y', M.X(0)+5, M.Y(v.y1)+2);
+}
+function plotFn(ctx,M,v,fn,color,width,x0,x1){
+  x0=x0??v.x0; x1=x1??v.x1; const N=800; let pen=false;
+  ctx.strokeStyle=color; ctx.lineWidth=width; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.beginPath();
+  for(let i=0;i<=N;i++){ const x=x0+(x1-x0)*i/N, y=fn(x); if(!isFinite(y)){ pen=false; continue; }
+    const px=M.X(x), py=Math.max(-5000,Math.min(5000,M.Y(y))); pen?ctx.lineTo(px,py):ctx.moveTo(px,py); pen=true; }
+  ctx.stroke();
+}
+function setMeter(barEl, txtEl, score){
+  const pct=Math.max(0,Math.min(100,score*100));
+  txtEl.textContent=fmt(pct,0)+' %'; barEl.style.width=pct.toFixed(1)+'%';
+  barEl.style.background = pct>=97?'var(--good)':pct>=80?'var(--navy-mid)':'var(--warn)';
+}
+function bindPair(r, t, state, key, onChange, parser){
+  r.addEventListener('input', ()=>{ state[key]=parseFloat(r.value); onChange(); });
+  t.addEventListener('change', ()=>{ let v=(parser||parseVal)(t.value); if(isNaN(v)) v=state[key]; v=Math.min(+r.max,Math.max(+r.min,v)); state[key]=v; onChange(); });
+  t.addEventListener('keydown', e=>{ if(e.key==='Enter') t.dispatchEvent(new Event('change')); });
+}
+function dashLine(ctx,x0,y0,x1,y1,color,w){ ctx.save(); ctx.setLineDash([6,4]); ctx.strokeStyle=color; ctx.lineWidth=w||1.6; ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke(); ctx.restore(); }
+/* Beschriftung mit optionalem Exponenten: lbl = "Text" oder {t:"a·e", s:"−bc"} */
+function label(ctx,lbl,x,y,color,align,base,size){
+  size=size||13; const t=typeof lbl==='string'?lbl:lbl.t, s=typeof lbl==='string'?'':lbl.s;
+  ctx.save(); ctx.fillStyle=color; ctx.textBaseline=base||'middle';
+  ctx.font=`bold ${size}px ${FONT_UI}`; const wt=ctx.measureText(t).width;
+  ctx.font=`bold ${Math.round(size*0.72)}px ${FONT_UI}`; const ws=s?ctx.measureText(s).width:0;
+  const w=wt+ws+(s?1:0); let x0=x; if((align||'left')==='right') x0=x-w; else if(align==='center') x0=x-w/2;
+  ctx.textAlign='left'; ctx.font=`bold ${size}px ${FONT_UI}`; ctx.fillText(t,x0,y);
+  if(s){ ctx.font=`bold ${Math.round(size*0.72)}px ${FONT_UI}`; ctx.fillText(s,x0+wt+1,y-size*0.42); }
+  ctx.restore();
+}
+function brace(ctx,x,ya,yb,color,lbl){
+  const top=Math.min(ya,yb), bot=Math.max(ya,yb); if(bot-top<6) return;
+  const w=Math.min(8,(bot-top)/4), mid=(top+bot)/2;
+  ctx.save(); ctx.strokeStyle=color; ctx.lineWidth=1.8; ctx.beginPath();
+  ctx.moveTo(x+w,top); ctx.quadraticCurveTo(x,top,x,top+w); ctx.lineTo(x,mid-w); ctx.quadraticCurveTo(x,mid,x-w,mid);
+  ctx.quadraticCurveTo(x,mid,x,mid+w); ctx.lineTo(x,bot-w); ctx.quadraticCurveTo(x,bot,x+w,bot); ctx.stroke(); ctx.restore();
+  if(lbl) label(ctx,lbl,x-w-4,mid,color,'right','middle',14);
+}
+function hArrow(ctx,xa,xb,y,color,lbl){
+  ctx.save(); ctx.strokeStyle=color; ctx.fillStyle=color; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(xa,y); ctx.lineTo(xb,y); ctx.stroke();
+  [[xa,1],[xb,-1]].forEach(([x,dir])=>{ ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+dir*8,y-4); ctx.lineTo(x+dir*8,y+4); ctx.closePath(); ctx.fill(); });
+  ctx.restore(); label(ctx,lbl,(xa+xb)/2,y+3,color,'center','top',14);
+}
+function dotAt(ctx,x,y,color,r){ ctx.fillStyle=color; ctx.beginPath(); ctx.arc(x,y,r||5,0,2*PI); ctx.fill(); }
+
+/* ---------- Quiz ---------- */
+function makeQuiz(root, key, QS, eyebrow){
+  root.innerHTML=`<div class="quizhead"><div><p class="eyebrow">${eyebrow}</p><h2>Parameter festigen</h2></div>
+    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap"><span class="score"></span><button class="btn ghost" type="button" data-act="qreset">Quiz neu starten</button></div></div>
+    <p class="lead">Entscheide jeweils, welche Antwort richtig ist. Du bekommst sofort eine Rückmeldung mit Begründung.</p><div class="quiz"></div>`;
+  const list=root.querySelector('.quiz'), score=root.querySelector('.score');
+  function render(){
+    const A=store.quiz[key]||{};
+    list.innerHTML=QS.map((Q,i)=>{
+      const ans=A[i];
+      const opts=Q.o.map((o,j)=>{ let cls=''; if(ans!==undefined){ if(j===Q.c && ans===Q.c) cls='right'; else if(j===ans) cls='wrong'; }
+        return `<label class="opt ${cls}"><input type="radio" name="${key}-q${i}" value="${j}" ${ans===j?'checked':''}> <span>${o}</span></label>`; }).join('');
+      const why = ans===undefined?'':(ans===Q.c?`<p class="why ok"><b>Richtig.</b> ${Q.w}</p>`:`<p class="why bad"><b>Noch nicht.</b> Überlege noch einmal und entscheide dich für eine andere Antwort.</p>`);
+      return `<div class="q"><span class="qn">Aufgabe ${i+1}</span><fieldset><legend>${Q.q}</legend>${opts}</fieldset>${why}</div>`;
+    }).join('');
+    score.textContent=`${QS.filter((Q,i)=>A[i]===Q.c).length} von ${QS.length} richtig`;
+  }
+  root.addEventListener('change',e=>{ const m=e.target.name&&e.target.name.match(new RegExp('^'+key+'-q(\\d+)$')); if(!m) return;
+    store.quiz[key]=store.quiz[key]||{}; store.quiz[key][+m[1]]=+e.target.value; save(); render();
+    const el=root.querySelector(`input[name="${key}-q${m[1]}"][value="${e.target.value}"]`); el&&el.focus(); });
+  root.addEventListener('click',e=>{ if(e.target.closest('[data-act="qreset"]')){ store.quiz[key]={}; save(); render(); } });
+  render();
+}
+const abc = items => `<ol class="abc">${items.map(t=>`<li><span>${t}</span></li>`).join('')}</ol>`;
+
+/* ================= STATION 1: Brücken ================= */
+const BRIDGES=[
+  { name:'Bogenbrücke über ein Tal', short:'Talbrücke', kind:'valley', a:-0.2, d:5, e:5, span:[0,10], view:{x0:-2,x1:12,y0:-1.5,y1:8},
+    text:'Eine Bogenbrücke überspannt ein Tal. Der Bogen beginnt und endet am Talrand.' },
+  { name:'Hängebrücke', short:'Hängebrücke', kind:'suspension', a:0.05, d:0, e:1, span:[-10,10], view:{x0:-12,x1:12,y0:-1.5,y1:8},
+    text:'Bei einer Hängebrücke hängt das Tragseil zwischen den beiden Pylonen durch.' },
+  { name:'Stahlbogen über einen Fluss', short:'Flussbrücke', kind:'tied', a:-0.5, d:-2, e:8, span:[-6,2], view:{x0:-9,x1:5,y0:-1.5,y1:10},
+    text:'Ein Stahlbogen trägt die Fahrbahn über einen Fluss. Die Fahrbahn hängt an Seilen unter dem Bogen.' }
+];
+const PS={a:1,d:0,e:0,i:0};
+const pf=x=>PS.a*(x-PS.d)**2+PS.e;
+function renderBridgeChips(){
+  $('bridgeChips').innerHTML=BRIDGES.map((b,i)=>`<button type="button" class="chip" data-i="${i}" aria-pressed="${i===PS.i}">Brücke ${i+1}: ${b.short} ${store.pSolved.includes(i)?'<span class="ok">✓</span>':''}</button>`).join('');
+}
+$('bridgeChips').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return; PS.i=+b.dataset.i; PS.a=1; PS.d=0; PS.e=0; setupBridge(); });
+function setupBridge(){
+  const B=BRIDGES[PS.i], v=B.view;
+  $('pBox').style.aspectRatio=`${v.x1-v.x0} / ${(v.y1-v.y0)}`;
+  const obj=B.kind==='suspension'?'Seil':'Bogen', objG=B.kind==='suspension'?'Seils':'Bogens';
+  $('bridgeTask').innerHTML=`<h3>Aufgabe ${PS.i+1}: ${B.name}</h3><p>${B.text}</p>`+abc([
+    `Gib die Koordinaten des Scheitelpunkts des ${objG} an.`,
+    `Bestimme mithilfe der Regler die Parameter a, d und e so, dass die Parabel genau auf dem ${obj} liegt.`,
+    `Gib die Funktionsgleichung an und begründe das Vorzeichen von a.`]);
+  renderBridgeChips(); pUpdate();
+}
+function plotRaw(ctx,M,fn,color,w,x0,x1){ const N=300; ctx.strokeStyle=color; ctx.lineWidth=w; ctx.lineJoin='round'; ctx.lineCap='butt'; ctx.beginPath(); for(let i=0;i<=N;i++){const x=x0+(x1-x0)*i/N; i?ctx.lineTo(M.X(x),M.Y(fn(x))):ctx.moveTo(M.X(x),M.Y(fn(x)));} ctx.stroke(); }
+function drawBridge(ctx,M,B){
+  const v=B.view, C={sky:css('--sky'),water:css('--water'),ground:css('--ground'),stone:css('--stone'),steel:css('--steel')};
+  const tf=x=>B.a*(x-B.d)**2+B.e, X=M.X, Y=M.Y, u=M.sx;
+  ctx.fillStyle=C.sky; ctx.fillRect(X(v.x0),Y(v.y1),X(v.x1)-X(v.x0),Y(v.y0)-Y(v.y1));
+  const poly=(pts,color)=>{ ctx.fillStyle=color; ctx.beginPath(); pts.forEach(([x,y],i)=>i?ctx.lineTo(X(x),Y(y)):ctx.moveTo(X(x),Y(y))); ctx.closePath(); ctx.fill(); };
+  const deck=(y,x0,x1)=>{ ctx.fillStyle=C.steel; ctx.fillRect(X(x0),Y(y+0.35),X(x1)-X(x0),Y(y)-Y(y+0.35)); };
+  const line=(x0,y0,x1,y1,w,c)=>{ ctx.strokeStyle=c; ctx.lineWidth=w; ctx.beginPath(); ctx.moveTo(X(x0),Y(y0)); ctx.lineTo(X(x1),Y(y1)); ctx.stroke(); };
+  if(B.kind==='valley'){
+    poly([[v.x0,v.y0],[v.x0,0],[0,0],[1.2,-0.8],[8.8,-0.8],[10,0],[v.x1,0],[v.x1,v.y0]],C.ground);
+    poly([[4,-0.8],[6,-0.8],[5.6,-1.5],[4.4,-1.5]],C.water);
+    for(let x=0.5;x<=9.5;x+=1) line(x,tf(x),x,6,Math.max(2,0.18*u),C.stone);
+    line(-0.2,0,-0.2,6,Math.max(3,0.4*u),C.stone); line(10.2,0,10.2,6,Math.max(3,0.4*u),C.stone);
+    plotRaw(ctx,M,tf,C.stone,Math.max(4,0.45*u),0,10);
+    deck(6,v.x0,v.x1);
+  }
+  if(B.kind==='suspension'){
+    poly([[v.x0,v.y0],[v.x0,0],[v.x1,0],[v.x1,v.y0]],C.water);
+    poly([[v.x0,v.y0],[v.x0,0.2],[-11.3,0.2],[-11,0],[-11,v.y0]],C.ground); poly([[v.x1,v.y0],[v.x1,0.2],[11.3,0.2],[11,0],[11,v.y0]],C.ground);
+    for(let x=-9;x<=9;x+=1) line(x,tf(x),x,0.85,Math.max(1,0.07*u),C.steel);
+    plotRaw(ctx,M,tf,C.steel,Math.max(2.5,0.16*u),-10,10);
+    line(-10,6,-12,1.2,Math.max(2,0.14*u),C.steel); line(10,6,12,1.2,Math.max(2,0.14*u),C.steel);
+    [-10,10].forEach(x=>{ ctx.fillStyle=C.stone; ctx.fillRect(X(x-0.35),Y(7),X(x+0.35)-X(x-0.35),Y(-1.5)-Y(7)); });
+    deck(0.5,v.x0,v.x1);
+  }
+  if(B.kind==='tied'){
+    poly([[v.x0,v.y0],[v.x0,0],[v.x1,0],[v.x1,v.y0]],C.water);
+    poly([[v.x0,v.y0],[v.x0,1.6],[-6.6,1.6],[-6.6,0],[-6,0],[-6,v.y0]],C.ground);
+    poly([[v.x1,v.y0],[v.x1,1.6],[2.6,1.6],[2.6,0],[2,0],[2,v.y0]],C.ground);
+    for(let x=-5.5;x<=1.5;x+=0.5){ if(tf(x)>2.1) line(x,tf(x),x,1.9,Math.max(1,0.07*u),C.steel); }
+    plotRaw(ctx,M,tf,C.steel,Math.max(4,0.35*u),-6,2);
+    deck(1.6,v.x0,v.x1);
+  }
+}
+function pDraw(){
+  const r=prep($('pCv')); if(!r) return; const {ctx,W,H}=r; const B=BRIDGES[PS.i], v=B.view;
+  const M=mapper(W,H,v,{l:0,r:0,t:0,b:0});
+  drawBridge(ctx,M,B);
+  gridAxes(ctx,M,v,{xs:1,ys:1,lxs:B.kind==='suspension'?2:1,lys:1,gridAlpha:.45,gridColor:css('--ink'),labelColor:css('--ink')});
+  plotFn(ctx,M,v,pf,css('--curve'),3);
+  dotAt(ctx,M.X(PS.d),M.Y(PS.e),css('--curve'),4.5);
+}
+function pUpdate(){
+  ['a','d','e'].forEach(k=>{ $(`p-r-${k}`).value=PS[k]; $(`p-t-${k}`).value=fmt(PS[k], k==='a'?2:1); });
+  const dS = PS.d>=0?`x − <span class="va">${fmt(PS.d,1)}</span>`:`x + <span class="va">${fmt(-PS.d,1)}</span>`;
+  $('pTerm').innerHTML=`f(x) = <span class="va">${fmt(PS.a,2)}</span> · (${dS})²${plus(PS.e,1)}`;
+  $('pS').textContent=`${fmt(PS.d,1)} | ${fmt(PS.e,1)}`;
+  const B=BRIDGES[PS.i], tf=x=>B.a*(x-B.d)**2+B.e;
+  let s=0,N=60; for(let i=0;i<=N;i++){ const x=B.span[0]+(B.span[1]-B.span[0])*i/N; s+=(pf(x)-tf(x))**2; } const rms=Math.sqrt(s/(N+1));
+  setMeter($('pBar'),$('pFit'),1-rms/3);
+  if(rms<0.08){
+    if(!store.pSolved.includes(PS.i)){ store.pSolved.push(PS.i); save(); renderBridgeChips(); }
+    const bT = B.d>=0?`(x − ${fmt(B.d,1)})²`:`(x + ${fmt(-B.d,1)})²`;
+    $('pSuccess').innerHTML=`<div class="success"><strong>Passt! Brücke ${PS.i+1} ist modelliert.</strong><span>f(x) = ${fmt(B.a,2)} · ${bT} + ${fmt(B.e,1)}, Scheitelpunkt S(${fmt(B.d,1)} | ${fmt(B.e,1)}).</span>${store.pSolved.length===3?'<span>Alle drei Brücken sind geschafft. Weiter mit dem Quiz unten.</span>':''}</div>`;
+  } else $('pSuccess').innerHTML='';
+  pDraw();
+}
+['a','d','e'].forEach(k=>bindPair($(`p-r-${k}`),$(`p-t-${k}`),PS,k,pUpdate));
+$('pReset').addEventListener('click',()=>{ PS.a=1;PS.d=0;PS.e=0; pUpdate(); });
+
+const QUIZ_P=[
+ { q:'Der Graph von f(x) = −2(x − 3)² + 1 ist … Entscheide, welche Ergänzung richtig ist.', o:['nach oben geöffnet und schmaler als die Normalparabel','nach unten geöffnet und breiter als die Normalparabel','nach unten geöffnet und schmaler als die Normalparabel','nach oben geöffnet und breiter als die Normalparabel'], c:2,
+   w:'a = −2 ist negativ, also nach unten geöffnet. Wegen |a| = 2 &gt; 1 ist die Parabel gestreckt, also schmaler.' },
+ { q:'Gib den Scheitelpunkt des Graphen von f(x) = 0,5(x + 4)² − 3 an.', o:['S(4 | −3)','S(−4 | −3)','S(−4 | 3)','S(0,5 | −3)'], c:1,
+   w:'(x + 4)² = (x − (−4))², also d = −4. Mit e = −3 ergibt sich S(−4 | −3).' },
+ { q:'Entscheide, wie der Graph von f(x) = (x − 2)² + 5 aus der Normalparabel entsteht.', o:['2 nach links und 5 nach oben','5 nach rechts und 2 nach oben','2 nach rechts und 5 nach unten','2 nach rechts und 5 nach oben'], c:3,
+   w:'d = 2 bedeutet 2 Einheiten nach rechts, e = 5 bedeutet 5 Einheiten nach oben.' },
+ { q:'Gib an, für welche Werte von a die Parabel breiter ist als die Normalparabel.', o:['für 0 &lt; |a| &lt; 1','für |a| &gt; 1','nur für a &lt; 0','für a = 1'], c:0,
+   w:'Bei 0 &lt; |a| &lt; 1 wird die Parabel in y-Richtung gestaucht. Sie wirkt dadurch breiter.' },
+ { q:'Eine Parabel ist nach unten geöffnet, so breit wie die Normalparabel und hat den Scheitelpunkt S(1 | 4). Gib ihre Funktionsgleichung an.', o:['f(x) = −(x + 1)² + 4','f(x) = −(x − 1)² + 4','f(x) = (x − 1)² + 4','f(x) = −(x − 4)² + 1'], c:1,
+   w:'a = −1 (nach unten, gleiche Breite), d = 1 und e = 4 ergeben f(x) = −(x − 1)² + 4.' },
+ { q:'Nenne die Parameter, die die Lage des Scheitelpunkts bestimmen.', o:['nur a','a und d','d und e','nur e'], c:2,
+   w:'Der Scheitelpunkt ist S(d | e). Der Parameter a ändert nur Öffnung und Form.' },
+ { q:'Beim Tragseil der Hängebrücke (Brücke 2) ist a … Entscheide, welche Ergänzung richtig ist.', o:['positiv, weil das Seil nach oben geöffnet ist','negativ, weil das Seil nach unten hängt','gleich null, weil das Seil gerade ist','größer als 1, weil das Seil lang ist'], c:0,
+   w:'Das Seil hängt durch und hat einen Tiefpunkt. Die Parabel ist also nach oben geöffnet, deshalb ist a &gt; 0.' },
+ { q:'In f(x) = a(x − d)² + e wird nur e um 3 vergrößert. Entscheide, wie sich der Graph verändert.', o:['Er wird 3 Einheiten nach rechts verschoben.','Er wird 3 Einheiten nach oben verschoben.','Er wird um den Faktor 3 gestreckt.','Er wird an der x-Achse gespiegelt.'], c:1,
+   w:'e beschreibt die Verschiebung in y-Richtung. Eine Vergrößerung um 3 verschiebt den Graphen um 3 nach oben.' }
+];
+makeQuiz($('quiz-par'),'par',QUIZ_P,'Station 1 · Teil B');
+
+/* ================= Anpass-Stationen (Exponential, Sinus) ================= */
+function makeFit(cfg){
+  const root=$(cfg.root); const S=Object.assign({i:0, ann:false}, cfg.start);
+  const solved=store.fit[cfg.key];
+  root.innerHTML=`
+  <div class="grid">
+    <div class="panel">
+      <div class="chips" data-r="chips"></div>
+      <div class="chartbox" style="aspect-ratio:16/9"><canvas data-r="cv" role="img" aria-label="Vorgegebener Graph (blau) und eigene Kurve (orange)"></canvas></div>
+      <label class="check"><input type="checkbox" data-r="ann"> Hilfslinien zu meiner Kurve einblenden</label>
+      <div class="term" data-r="term"></div>
+      <div class="sliders">${cfg.params.map(p=>`<div class="sl" data-k="${p.k}"><span class="name">${p.k}</span><input type="range" id="${cfg.key}-r-${p.k}" min="${p.min}" max="${p.max}" step="${p.step}"><input type="text" id="${cfg.key}-t-${p.k}" inputmode="decimal" aria-label="Wert von ${p.k}"><span class="desc">${p.desc}</span></div>`).join('')}</div>
+      <div class="fit"><div class="fithead"><span>Passgenauigkeit</span><span class="num" data-r="fitv"></span></div><div class="meter"><i data-r="fitb"></i></div></div>
+      <div class="readouts" data-r="read"></div>
+      <div data-r="succ"></div>
+      <div class="btns"><button class="btn ghost" type="button" data-r="reset">${cfg.resetLabel}</button></div>
+    </div>
+    <aside class="panel guide">
+      <p class="eyebrow">${cfg.eyebrow}</p>
+      <h2>${cfg.title}</h2>
+      <div class="info"><p>${cfg.formIntro}</p><div class="term" style="background:var(--surface)">${cfg.formHTML}</div><p>${cfg.intro}</p></div>
+      <div class="task" data-r="task"></div>
+      <div data-r="tip"></div>
+    </aside>
+  </div>
+  <section class="overview" aria-label="Zusammenfassung">
+    <div><p class="eyebrow">Zusammenfassung</p><h2>${cfg.summary.title}</h2></div>
+    <div class="ovgrid"><div class="ovintro">${cfg.summary.intro}</div>
+      <div class="chartbox" style="aspect-ratio:16/10"><canvas data-r="sumcv" role="img" aria-label="${cfg.summary.alt}"></canvas></div></div>
+    <ul class="ovlist">${cfg.summary.list}</ul>
+  </section>
+  <section class="panel" data-r="quiz"></section>`;
+  const q=r=>root.querySelector(`[data-r="${r}"]`);
+  const fn=x=>cfg.fn(S,x);
+  const R={}; cfg.params.forEach(p=>{ R[p.k]={r:$(`${cfg.key}-r-${p.k}`), t:$(`${cfg.key}-t-${p.k}`), p}; bindPair(R[p.k].r,R[p.k].t,S,p.k,update); });
+  function chips(){ q('chips').innerHTML=cfg.tasks.map((t,i)=>`<button type="button" class="chip" data-i="${i}" aria-pressed="${i===S.i}">Aufgabe ${i+1} ${solved.includes(i)?'<span class="ok">✓</span>':''}</button>`).join(''); }
+  q('chips').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return; S.i=+b.dataset.i; setup(); });
+  q('ann').addEventListener('change',e=>{ S.ann=e.target.checked; draw(); });
+  q('reset').addEventListener('click',()=>{ Object.assign(S,cfg.start); update(); });
+  function setup(){
+    const T=cfg.tasks[S.i]; Object.assign(S,cfg.start);
+    cfg.params.forEach(p=>{ const lock=T.lock.includes(p.k); root.querySelector(`.sl[data-k="${p.k}"]`).classList.toggle('locked',lock); R[p.k].r.disabled=lock; R[p.k].t.disabled=lock; });
+    q('task').innerHTML=`<h3>Aufgabe ${S.i+1}: ${T.title}</h3>${T.lock.length?`<p class="hint">Freigegeben sind nur ${cfg.params.filter(p=>!T.lock.includes(p.k)).map(p=>p.k).join(' und ')}. Gesperrt: ${T.lock.map(k=>`${k} = ${fmt(cfg.start[k],2)}`).join(', ')}.</p>`:''}${abc(T.task)}`;
+    q('tip').innerHTML=`<details><summary>Tipp</summary><p>${T.tip}</p></details>`;
+    chips(); update();
+  }
+  function target(x){ return cfg.fn(cfg.tasks[S.i].t,x); }
+  function update(){
+    cfg.params.forEach(p=>{ R[p.k].r.value=S[p.k]; R[p.k].t.value=(p.pi&&piFrac(S[p.k]))||fmt(S[p.k],p.dec); });
+    q('term').innerHTML=cfg.term(S);
+    q('read').innerHTML=cfg.readouts(S);
+    const T=cfg.tasks[S.i], v=T.view, lo=v.y0-2, hi=v.y1+2, cl=y=>Math.max(lo,Math.min(hi,y));
+    let s=0,N=300; for(let i=0;i<=N;i++){ const x=v.x0+(v.x1-v.x0)*i/N; s+=(cl(fn(x))-cl(target(x)))**2; } const rms=Math.sqrt(s/(N+1));
+    setMeter(q('fitb'),q('fitv'),1-rms/((v.y1-v.y0)/5));
+    if(rms<0.1){
+      if(!solved.includes(S.i)){ solved.push(S.i); save(); chips(); }
+      const last=S.i===cfg.tasks.length-1;
+      q('succ').innerHTML=`<div class="success"><strong>Deckungsgleich! Aufgabe ${S.i+1} ist gelöst.</strong><span>${last?'Vergleiche dein Vorgehen mit der Zusammenfassung unten und bearbeite danach das Quiz.':'Weiter mit der nächsten Aufgabe.'}</span></div>`;
+    } else q('succ').innerHTML='';
+    draw();
+  }
+  function draw(){
+    const r=prep(q('cv')); if(r){ const {ctx,W,H}=r, v=cfg.tasks[S.i].view;
+      ctx.fillStyle=css('--surface'); ctx.fillRect(0,0,W,H);
+      const M=mapper(W,H,v,{l:4,r:4,t:4,b:4});
+      gridAxes(ctx,M,v,{xs:1,ys:1});
+      ctx.save(); ctx.globalAlpha=.55; plotFn(ctx,M,v,target,css('--target'),9); ctx.restore();
+      if(S.ann) cfg.annotate(ctx,M,v,S);
+      plotFn(ctx,M,v,fn,css('--curve'),2.5);
+    }
+    const r2=prep(q('sumcv')); if(r2){ const {ctx,W,H}=r2, v=cfg.summary.view;
+      ctx.fillStyle=css('--surface'); ctx.fillRect(0,0,W,H);
+      const M=mapper(W,H,v,{l:4,r:4,t:4,b:4});
+      gridAxes(ctx,M,v,{xs:1,ys:1});
+      cfg.annotate(ctx,M,v,cfg.summary.p);
+      plotFn(ctx,M,v,x=>cfg.fn(cfg.summary.p,x),css('--ink'),2.6);
+      if(cfg.summary.extra) cfg.summary.extra(ctx,M,v);
+    }
+  }
+  makeQuiz(q('quiz'),cfg.key,cfg.quiz,cfg.quizEyebrow);
+  setup();
+  return {draw};
+}
+
+/* ---------- Exponentialfunktion ---------- */
+function annotateExp(ctx,M,v,p){
+  const G=css('--mark-green'), B=css('--mark-blue'), R=css('--mark-red');
+  const f=x=>p.a*Math.exp(p.b*(x-p.c))+p.d, y0=f(0);
+  dashLine(ctx,M.X(v.x0),M.Y(p.d),M.X(v.x1),M.Y(p.d),B);
+  label(ctx,'Asymptote y = d',M.X(v.x1)-6,M.Y(p.d)+(p.a>=0?14:-14),B,'right');
+  brace(ctx,M.X(0)-16,M.Y(p.d),M.Y(y0),G, Math.abs(p.c)<1e-9?'a':{t:'a·e',s:'−bc'});
+  dotAt(ctx,M.X(0),M.Y(y0),R);
+  label(ctx,`(0 | ${fmt(y0,2)})`,M.X(0)+8,M.Y(y0)+(p.a>=0?-12:12),R,'left');
+}
+const expFit=makeFit({
+  root:'st-exponential', key:'exp', eyebrow:'Station 2', title:'Exponentialfunktionen anpassen', resetLabel:'Zurück zu eˣ',
+  formIntro:'Die allgemeine natürliche Exponentialfunktion hat die Form', formHTML:'f(x) = a · e<sup>b · (x − c)</sup> + d',
+  intro:'Der blaue Graph ist vorgegeben. Passe deine orange Kurve mit den Reglern so an, dass sie genau darauf liegt. Zu Beginn siehst du f(x) = eˣ.',
+  start:{a:1,b:1,c:0,d:0},
+  params:[
+    {k:'a',min:-5,max:5,step:0.01,dec:2,desc:'Streckung in y-Richtung (a &lt; 0: Spiegelung an der x-Achse)'},
+    {k:'b',min:-2,max:2,step:0.01,dec:2,desc:'Streckung in x-Richtung (b &lt; 0: Spiegelung an der y-Achse)'},
+    {k:'c',min:-5,max:5,step:0.05,dec:2,desc:'Verschiebung in x-Richtung'},
+    {k:'d',min:-5,max:5,step:0.1,dec:2,desc:'Verschiebung in y-Richtung, Asymptote y = d'}],
+  fn:(p,x)=>p.a*Math.exp(p.b*(x-p.c))+p.d,
+  term:S=>{ const cS=S.c>=0?`x − <span class="va">${fmt(S.c,2)}</span>`:`x + <span class="va">${fmt(-S.c,2)}</span>`;
+    return `f(x) = <span class="va">${fmt(S.a,2)}</span> · e<sup><span class="va">${fmt(S.b,2)}</span> · (${cS})</sup>${plus(S.d)}`; },
+  readouts:S=>{ const y0=S.a*Math.exp(-S.b*S.c)+S.d, sl=S.a*S.b; return `<span>Asymptote y = <span class="num">${fmt(S.d,2)}</span></span><span>Schnittpunkt mit der y-Achse (0 | <span class="num">${fmt(y0,2)}</span>)</span><span>Graph ${sl>0?'steigt':sl<0?'fällt':'ist waagerecht'}</span>`; },
+  annotate:annotateExp,
+  tasks:[
+    { title:'Streckung und Verschiebung nach oben', t:{a:2,b:1,c:0,d:-1}, lock:['b','c'], view:{x0:-5,x1:3,y0:-3,y1:8},
+      task:['Gib die Gleichung der waagerechten Asymptote des vorgegebenen Graphen an.','Gib den Schnittpunkt des Graphen mit der y-Achse an und bestimme seinen Abstand zur Asymptote.','Bestimme a und d mithilfe der Regler so, dass deine Kurve auf dem vorgegebenen Graphen liegt.','Beschreibe, wie man a und d am Graphen abliest.'],
+      tip:'Bei eˣ ist der Schnittpunkt mit der y-Achse (0 | 1) und die Asymptote y = 0. Der Abstand ist also 1. Der Faktor a vervielfacht diesen Abstand. Schalte die Hilfslinien ein.' },
+    { title:'Wachstum und Zerfall', t:{a:3,b:-0.5,c:0,d:1}, lock:['c'], view:{x0:-3,x1:8,y0:-2,y1:9},
+      task:['Bestimme a und d wie in Aufgabe 1.','Begründe, welches Vorzeichen b haben muss, damit der Graph fällt.','Bestimme b mithilfe des Reglers.','Beschreibe, wie sich der Graph für |b| &gt; 1 und für 0 &lt; |b| &lt; 1 verändert.'],
+      tip:'Für b &lt; 0 wird der Graph an der y-Achse gespiegelt: Aus Wachstum wird Zerfall. Nutze einen zweiten Punkt, zum Beispiel bei x = 2. Dort ist der Abstand zur Asymptote a · e<sup>2b</sup>.' },
+    { title:'Alle vier Parameter', t:{a:-1,b:0.5,c:2,d:4}, lock:[], view:{x0:-4,x1:7,y0:-4,y1:6},
+      task:['Gib die Gleichung der Asymptote an und bestimme d.','Begründe, welches Vorzeichen a haben muss.','Bestimme a, b und c mithilfe der Regler.','Untersuche, ob es mehrere passende Kombinationen von a und c gibt, und erläutere dein Ergebnis.'],
+      tip:'Der Graph geht durch den Punkt (2 | 3). Dort ist der Abstand zur Asymptote genau 1. Eine Verschiebung in x-Richtung kann man auch durch einen anderen Faktor a erreichen, denn a · e<sup>b(x − c)</sup> = a · e<sup>−bc</sup> · e<sup>bx</sup>.' }
+  ],
+  summary:{
+    title:'So liest man die Parameter einer Exponentialfunktion am Graphen ab', view:{x0:-5.5,x1:5.5,y0:-3,y1:9}, p:{a:2,b:Math.LN2/2,c:0,d:-1},
+    alt:'Graph mit Asymptote y = d, Schnittpunkt mit der y-Achse, Abstand a und einem zweiten Punkt',
+    intro:'<p>Am Graphen rechts kann man mögliche Werte für die Parameter von f(x) = a · e<sup>b · (x − c)</sup> + d schrittweise ermitteln. Die Übersicht gehört in dein Heft.</p><p class="kv">Eine Verschiebung in x-Richtung lässt sich in den Faktor a einrechnen. Beim Ablesen wählt man deshalb c = 0.</p>',
+    extra:(ctx,M)=>{ const G=css('--mark-green'), R=css('--mark-red'); brace(ctx,M.X(2)-14,M.Y(-1),M.Y(3),G,{t:'a·e',s:'2b'}); dotAt(ctx,M.X(2),M.Y(3),R); label(ctx,'(2 | 3)',M.X(2)+8,M.Y(3)-12,R,'left'); },
+    list:`
+      <li><span>Waagerechte <span class="b">Asymptote</span></span><span class="v">y = −1, also <span class="b">d</span> = −1</span></li>
+      <li><span>Schnittpunkt mit der y-Achse</span><span class="v r">(0 | 1)</span></li>
+      <li><span>Abstand des Schnittpunkts von der Asymptote (mit c = 0 gilt f(0) = a + d)</span><span class="v"><span class="g">a</span> = 1 − (−1) = 2</span></li>
+      <li><span>Einen zweiten Punkt ablesen</span><span class="v r">(2 | 3)</span></li>
+      <li><span>Punkt einsetzen und nach b auflösen</span><span class="v">3 = 2 · e<sup>2b</sup> − 1 ⇒ e<sup>2b</sup> = 2 ⇒ b = ${fr('ln 2','2')} ≈ 0,35</span></li>
+      <li><span>Vorzeichen: Graph oberhalb der Asymptote und steigend</span><span class="v">a &gt; 0, b &gt; 0</span></li>
+      <li><span><strong>Funktionsterm</strong> f(x) = a · e<sup>b · x</sup> + d</span><span class="v"><strong>f(x) = 2 · e<sup>0,35x</sup> − 1</strong></span></li>`
+  },
+  quizEyebrow:'Station 2 · Quiz',
+  quiz:[
+    { q:'Gib die Gleichung der Asymptote des Graphen von f(x) = 3eˣ − 2 an.', o:['y = 3','y = −2','y = 0','x = −2'], c:1, w:'Für x → −∞ geht 3eˣ gegen 0. Deshalb nähert sich f(x) dem Wert −2.' },
+    { q:'Gib den Schnittpunkt des Graphen von f(x) = 2e<sup>0,5x</sup> + 1 mit der y-Achse an.', o:['(0 | 2)','(0 | 1)','(0 | 3)','(0 | 2,5)'], c:2, w:'f(0) = 2 · e⁰ + 1 = 2 · 1 + 1 = 3.' },
+    { q:'Der Graph von f(x) = −eˣ + 4 … Entscheide, welche Ergänzung richtig ist.', o:['liegt oberhalb von y = 4 und steigt','liegt unterhalb von y = 4 und fällt','liegt unterhalb von y = 4 und steigt','schneidet die Gerade y = 4'], c:1, w:'a = −1 spiegelt eˣ an der x-Achse. Der Graph liegt damit unterhalb der Asymptote y = 4 und fällt.' },
+    { q:'Gib die Funktion an, deren Graph oberhalb seiner Asymptote liegt und fällt.', o:['f(x) = 2e<sup>0,3x</sup>','f(x) = −2e<sup>0,3x</sup>','f(x) = eˣ − 2','f(x) = 2e<sup>−0,3x</sup>'], c:3, w:'Für b &lt; 0 wird eˣ an der y-Achse gespiegelt. Mit a &gt; 0 liegt der Graph oberhalb der Asymptote und fällt.' },
+    { q:'Entscheide, wie der Graph von g(x) = e<sup>x − 3</sup> aus dem Graphen von eˣ entsteht.', o:['Verschiebung um 3 nach links','Verschiebung um 3 nach rechts','Verschiebung um 3 nach unten','Streckung mit dem Faktor 3'], c:1, w:'In f(x − c) wird um c nach rechts verschoben, hier um 3.' },
+    { q:'Entscheide, welche Aussage über g(x) = e<sup>x − 3</sup> ebenfalls zutrifft.', o:['g(x) = eˣ − 3','g(x) = 3 · eˣ','g(x) = e<sup>−3</sup> · eˣ, also eine Stauchung in y-Richtung',`g(x) = ${fr('eˣ','−3')}`], c:2, w:'Nach dem Potenzgesetz gilt e<sup>x − 3</sup> = eˣ · e<sup>−3</sup>. Bei der e-Funktion wirkt eine Verschiebung nach rechts wie eine Stauchung in y-Richtung mit dem Faktor e<sup>−3</sup> ≈ 0,05.' },
+    { q:'Nenne den Parameter, der die Asymptote des Graphen von f(x) = a · e<sup>b(x − c)</sup> + d verändert.', o:['nur a','nur b','nur d','c und d'], c:2, w:'Für x → −∞ (b &gt; 0) geht a · e<sup>b(x − c)</sup> gegen 0. Übrig bleibt d. Die Asymptote ist also y = d.' },
+    { q:'Gib den Wert von b an, für den der an der y-Achse gespiegelte Graph von eˣ entsteht.', o:['b = −1','b = 0','b = 1','b = 2'], c:0, w:'e<sup>−x</sup> hat an der Stelle x denselben Wert wie eˣ an der Stelle −x.' }
+  ]
+});
+
+/* ---------- Sinusfunktion ---------- */
+function annotateSin(ctx,M,v,p){
+  const G=css('--mark-green'), B=css('--mark-blue'), R=css('--mark-red'), ink=css('--ink');
+  const f=x=>p.a*Math.sin(p.b*(x+p.c))+p.d, A=Math.abs(p.a), mx=p.d+A, mn=p.d-A;
+  const xl=v.x0+(v.x1-v.x0)*0.09;
+  dashLine(ctx,M.X(xl),M.Y(mx),M.X(v.x1),M.Y(mx),G); dashLine(ctx,M.X(xl),M.Y(mn),M.X(v.x1),M.Y(mn),G);
+  dashLine(ctx,M.X(xl),M.Y(p.d),M.X(v.x1),M.Y(p.d),B);
+  label(ctx,'Maximum',M.X(v.x1)-6,M.Y(mx)-10,G,'right'); label(ctx,'Minimum',M.X(v.x1)-6,M.Y(mn)+11,G,'right');
+  label(ctx,'d',M.X(xl)-6,M.Y(p.d),B,'right','middle',14);
+  if(A>1e-6){ brace(ctx,M.X(xl)+14,M.Y(p.d),M.Y(mx),G,'a'); brace(ctx,M.X(xl)+14,M.Y(p.d),M.Y(mn),G,'a'); }
+  if(A<1e-6 || Math.abs(p.b)<1e-6) return;
+  const h=0.002; let xr=null;
+  for(let x=0; x<v.x1; x+=h){ if(f(x)-p.d<=0 && f(x+h)-p.d>0){ xr=x+h/2; break; } }
+  if(xr!==null){ dotAt(ctx,M.X(xr),M.Y(p.d),R); dashLine(ctx,M.X(xr),M.Y(p.d),M.X(xr),M.Y(0),R,1.3); label(ctx,'x = −c',M.X(xr)+7,M.Y(p.d)-11,R,'left'); }
+  const mins=[]; for(let x=v.x0+0.05; x<v.x1-0.05 && mins.length<2; x+=0.005){ if(f(x)<f(x-0.005)&&f(x)<=f(x+0.005)&&Math.abs(f(x)-mn)<1e-3*Math.max(1,A)+1e-4) { mins.push(x); x+=0.2; } }
+  if(mins.length===2){ const yp=M.Y(mn)+22; dashLine(ctx,M.X(mins[0]),M.Y(mn),M.X(mins[0]),yp+4,ink,1); dashLine(ctx,M.X(mins[1]),M.Y(mn),M.X(mins[1]),yp+4,ink,1); hArrow(ctx,M.X(mins[0]),M.X(mins[1]),yp,ink,'p'); }
+}
+const sinFit=makeFit({
+  root:'st-sinus', key:'sin', eyebrow:'Station 3', title:'Sinuskurven anpassen', resetLabel:'Zurück zu sin(x)',
+  formIntro:'Die allgemeine Sinusfunktion hat die Form', formHTML:'f(x) = a · sin(b · (x + c)) + d',
+  intro:'Der blaue Graph ist vorgegeben. Passe deine orange Kurve mit den Reglern so an, dass sie genau darauf liegt. Beachte: Hier steht x + c, die Kurve wird also um −c verschoben.',
+  start:{a:1,b:1,c:0,d:0},
+  params:[
+    {k:'a',min:-5,max:5,step:0.1,dec:2,desc:'Amplitude: Streckung in y-Richtung'},
+    {k:'b',min:0.1,max:4,step:0.01,dec:2,pi:true,desc:`Streckung in x-Richtung, Periode p = ${fr('2π','b')}; Eingabe wie „pi/2“ möglich`},
+    {k:'c',min:-6,max:6,step:0.05,dec:2,desc:'Verschiebung in x-Richtung (um −c)'},
+    {k:'d',min:-5,max:5,step:0.1,dec:2,desc:'Verschiebung in y-Richtung'}],
+  fn:(p,x)=>p.a*Math.sin(p.b*(x+p.c))+p.d,
+  term:S=>{ const cS=S.c>=0?`x + <span class="va">${fmt(S.c,2)}</span>`:`x − <span class="va">${fmt(-S.c,2)}</span>`;
+    return `f(x) = <span class="va">${fmt(S.a,2)}</span> · sin<span class="big">(</span><span class="va">${fracHTML(S.b)}</span> · (${cS})<span class="big">)</span>${plus(S.d)}`; },
+  readouts:S=>{ const p=2*PI/S.b; return `<span>Periode p = <span class="num">${(piFrac(p)?fracHTML(p)+' ≈ ':'')+fmt(p,2)}</span></span><span>Maximum <span class="num">${fmt(S.d+Math.abs(S.a),2)}</span></span><span>Minimum <span class="num">${fmt(S.d-Math.abs(S.a),2)}</span></span>`; },
+  annotate:annotateSin,
+  tasks:[
+    { title:'Amplitude und Verschiebung nach oben', t:{a:2,b:1,c:0,d:1}, lock:['b','c'], view:{x0:-4,x1:13,y0:-3,y1:5},
+      task:['Gib das Maximum und das Minimum des vorgegebenen Graphen an.','Bestimme a und d mithilfe der Regler so, dass deine Kurve auf dem vorgegebenen Graphen liegt.','Beschreibe den Zusammenhang zwischen a und d auf der einen Seite und Maximum und Minimum auf der anderen Seite.'],
+      tip:'Die Mittellinie liegt genau zwischen Maximum und Minimum. Ihre Höhe ist d. Der Abstand von der Mittellinie zum Maximum ist a. Schalte die Hilfslinien ein.' },
+    { title:'Periodenlänge verändern', t:{a:1.5,b:2,c:0,d:-1}, lock:['c'], view:{x0:-4,x1:13,y0:-4,y1:2},
+      task:['Bestimme a und d wie in Aufgabe 1.','Gib die Periodenlänge p an, also den Abstand zweier benachbarter Tiefpunkte.',`Bestimme b mithilfe des Reglers und untersuche den Zusammenhang zwischen b und ${fr('2π','p')}.`],
+      tip:`Bei b = 1 ist die Periode 2π ≈ 6,28. Wird b größer, wird die Periode kleiner. Es gilt p = ${fr('2π','b')}, also b = ${fr('2π','p')}.` },
+    { title:'Alle vier Parameter', t:{a:2.5,b:PI/2,c:-1,d:0.5}, lock:[], view:{x0:-3,x1:13,y0:-3,y1:4},
+      task:['Bestimme d, a und b aus Maximum, Minimum und Periodenlänge.','Gib die erste positive Stelle an, an der der Graph die Mittellinie y = d schneidet und dabei ansteigt.','Bestimme c. Beachte, dass die Kurve um −c verschoben wird.'],
+      tip:'Die normale Sinuskurve schneidet ihre Mittellinie bei x = 0 steigend. Liegt diese Stelle beim vorgegebenen Graphen bei x = 1, musst du um 1 nach rechts verschieben. In b(x + c) heißt das c = −1. Für b kannst du „pi/2“ eintippen.' }
+  ],
+  summary:{
+    title:'So liest man die Parameter einer Sinusfunktion am Graphen ab', view:{x0:-3.4,x1:13,y0:-2.6,y1:4}, p:{a:2,b:PI/3,c:-2,d:1},
+    alt:'Graph mit Maximum, Minimum, Mittellinie d, Amplitude a, Stelle −c und Periode p',
+    intro:'<p>Auf folgende Weise kann man mögliche Werte für die Parameter einer allgemeinen Sinusfunktion f(x) = a · sin(b · (x + c)) + d aus dem Graphen ermitteln. Die Übersicht gehört in dein Heft.</p>',
+    list:`
+      <li><span>Größter Funktionswert (<span class="g">Maximum</span>)</span><span class="v">3</span></li>
+      <li><span>Kleinster Funktionswert (<span class="g">Minimum</span>)</span><span class="v">−1</span></li>
+      <li><span>Mittelwert aus Maximum und Minimum</span><span class="v"><span class="b">d</span> = ${fr('3 + (−1)','2')} = 1</span></li>
+      <li><span>Halbe Differenz von Maximum und Minimum</span><span class="v"><span class="g">a</span> = ${fr('3 − (−1)','2')} = 2</span></li>
+      <li><span>Gegenzahl der ersten positiven Stelle, an der der Funktionswert d beträgt und der Graph ansteigt</span><span class="v"><span class="r">c</span> = −2</span></li>
+      <li><span>Periodenlänge</span><span class="v">p = 6</span></li>
+      <li><span>Quotient aus 2π und der Periodenlänge p</span><span class="v">b = ${fr('2π','p')} = ${fr('2π','6')} = ${fr('π','3')}</span></li>
+      <li><span><strong>Funktionsterm</strong> f(x) = a · sin(b · (x + c)) + d</span><span class="v"><strong>f(x) = 2 · sin<span class="big">(</span>${fr('π','3')}(x − 2)<span class="big">)</span> + 1</strong></span></li>`
+  },
+  quizEyebrow:'Station 3 · Quiz',
+  quiz:[
+    { q:'Gib die Amplitude von f(x) = 3 · sin(2x) − 1 an.', o:['2','−1','3','6'], c:2, w:'Die Amplitude ist |a| = 3. Die Zahl 2 verändert die Periode, −1 verschiebt nach unten.' },
+    { q:'Gib die Periodenlänge von f(x) = sin(2x) an.', o:['2π','π','2','4π'], c:1, w:`p = ${fr('2π','b')} = ${fr('2π','2')} = π.` },
+    { q:'Gib das Maximum und das Minimum von f(x) = 2 · sin(x) + 1 an.', o:['Maximum 2, Minimum −2','Maximum 3, Minimum −1','Maximum 3, Minimum 1','Maximum 1, Minimum −1'], c:1, w:'Die Mittellinie ist y = 1, die Amplitude 2. Maximum 1 + 2 = 3, Minimum 1 − 2 = −1.' },
+    { q:'Ein Graph hat das Maximum 5 und das Minimum 1. Bestimme a und d (mit a &gt; 0).', o:['a = 2, d = 3','a = 4, d = 3','a = 2, d = 1','a = 3, d = 2'], c:0, w:`d = ${fr('5 + 1','2')} = 3 und a = ${fr('5 − 1','2')} = 2.` },
+    { q:'Die Periodenlänge beträgt 4. Bestimme b.', o:['b = 4','b = 2π',`b = ${fr('π','2')}`,'b = 8π'], c:2, w:`b = ${fr('2π','p')} = ${fr('2π','4')} = ${fr('π','2')}.` },
+    { q:'Entscheide, wie der Graph von f(x) = sin(x + 1) aus dem Graphen von sin(x) entsteht.', o:['Verschiebung um 1 nach rechts','Verschiebung um 1 nach links','Verschiebung um 1 nach oben','Die Periode wird 1.'], c:1, w:'In der Form sin(b(x + c)) wird um −c verschoben. Bei c = 1 also um 1 nach links.' },
+    { q:'Entscheide, was der Faktor −2 in f(x) = −2 · sin(x) bewirkt.', o:['Spiegelung an der x-Achse und Amplitude 2','Verschiebung um 2 nach unten','Periodenlänge 2','Verschiebung um 2 nach links'], c:0, w:'Der Faktor a = −2 streckt in y-Richtung mit dem Faktor 2 und spiegelt wegen des Minuszeichens an der x-Achse.' },
+    { q:'Nenne den Parameter, der die Periodenlänge verändert.', o:['a','b','c','d'], c:1, w:`Nur b, denn p = ${fr('2π','b')}. Die anderen Parameter verschieben oder strecken in y-Richtung.` }
+  ]
+});
+
+/* ================= STATION 4: Vergleich ================= */
+const ROWS=[
+  { w:'Streckung in y-Richtung', p:'a: Für |a| &gt; 1 schmaler, für 0 &lt; |a| &lt; 1 breiter.', e:'a: Der Abstand zur Asymptote wird mit a multipliziert.', s:'a: Amplitude |a|. Maximum und Minimum entfernen sich von der Mittellinie.',
+    sol:'<strong>a:</strong> Streckung in y-Richtung mit dem Faktor |a|. Alle Funktionswerte von f werden mit a multipliziert.' },
+  { w:'Spiegelung an der x-Achse', p:'a &lt; 0: Parabel nach unten geöffnet.', e:'a &lt; 0: Graph unterhalb der Asymptote.', s:'a &lt; 0: Kurve fällt hinter der Stelle −c zuerst.',
+    sol:'<strong>a &lt; 0:</strong> zusätzlich Spiegelung an der x-Achse.' },
+  { w:'Streckung in x-Richtung', p:'kein eigener Parameter: Eine Streckung in x-Richtung wirkt wie ein anderer Wert von a.', e:'b: Für |b| &gt; 1 steiler, für 0 &lt; |b| &lt; 1 flacher.', s:`b: Periode p = ${fr('2π','b')}. Großes b ergibt eine kurze Periode.`,
+    sol:`<strong>b:</strong> Streckung in x-Richtung mit dem Faktor ${fr('1','|b|')}. Für |b| &gt; 1 wird der Graph zur y-Achse hin gestaucht, für 0 &lt; |b| &lt; 1 gestreckt.` },
+  { w:'Spiegelung an der y-Achse', p:'ändert die Normalparabel nicht, da sie achsensymmetrisch zur y-Achse ist.', e:'b &lt; 0: Aus Wachstum wird Zerfall.', s:'b &lt; 0: wirkt wie eine Spiegelung an der x-Achse, da sin(−x) = −sin(x).',
+    sol:'<strong>b &lt; 0:</strong> zusätzlich Spiegelung an der y-Achse.' },
+  { w:'Verschiebung in x-Richtung', p:'d: für d &gt; 0 nach rechts.', e:'c: für c &gt; 0 nach rechts. Wirkt wie der Faktor e<sup>−bc</sup>.', s:'c: um −c, also für c &gt; 0 nach links (wegen x + c).',
+    sol:'<strong>c:</strong> Verschiebung um c in x-Richtung, für c &gt; 0 nach rechts. Steht x + c im Term, wird nach links verschoben.' },
+  { w:'Verschiebung in y-Richtung', p:'e: für e &gt; 0 nach oben.', e:'d: für d &gt; 0 nach oben. Die Asymptote ist y = d.', s:'d: für d &gt; 0 nach oben. Die Mittellinie ist y = d.',
+    sol:'<strong>d:</strong> Verschiebung um d in y-Richtung, für d &gt; 0 nach oben.' },
+  { w:'Typische Merkmale zum Ablesen', p:'Scheitelpunkt S(d | e), ein weiterer Punkt für a.', e:'Asymptote y = d, Schnittpunkt mit der y-Achse, ein weiterer Punkt für b.', s:'Maximum, Minimum, Mittellinie und Periodenlänge.',
+    sol:`Erst wird in x-Richtung gestreckt und verschoben, dann in y-Richtung. Ein Punkt (x₀ | y₀) auf dem Graphen von f wandert zum Punkt <span style="white-space:nowrap">(${fr('x₀','b')} + c | a · y₀ + d)</span>.` }
+];
+function renderTable(){
+  $('cmpTable').innerHTML=`<thead><tr><th>Wirkung</th><th>Quadratische Funktion<span class="f">f(x) = a(x − d)² + e</span></th><th>Exponentialfunktion<span class="f">f(x) = a · e<sup>b(x − c)</sup> + d</span></th><th>Sinusfunktion<span class="f">f(x) = a · sin(b(x + c)) + d</span></th><th class="mine">Beliebige Funktion f<span class="f">g(x) = a · f(b(x − c)) + d</span></th></tr></thead>
+  <tbody>${ROWS.map((r,i)=>`<tr><td>${r.w}</td><td>${r.p}</td><td>${r.e}</td><td>${r.s}</td><td class="mine"><textarea id="t4-${i}" aria-label="Deine Regel: ${r.w}" placeholder="?">${(store.table[i]||'').replace(/</g,'&lt;')}</textarea>
+    <div class="btns" style="margin-top:6px"><button class="btn ghost small" type="button" data-sol="${i}" aria-expanded="false">Lösung zeigen</button></div><div class="sol" id="sol-${i}" hidden>${r.sol}</div></td></tr>`).join('')}</tbody>`;
+}
+renderTable();
+$('cmpTable').addEventListener('input',e=>{ const m=e.target.id.match(/^t4-(\d+)$/); if(m){ store.table[m[1]]=e.target.value; save(); } });
+$('cmpTable').addEventListener('click',e=>{ const b=e.target.closest('[data-sol]'); if(!b) return; const s=$('sol-'+b.dataset.sol); s.hidden=!s.hidden; b.textContent=s.hidden?'Lösung zeigen':'Lösung ausblenden'; b.setAttribute('aria-expanded',!s.hidden); });
+
+const BASES=[
+  {n:'x²', f:x=>x*x}, {n:'x³', f:x=>x*x*x}, {n:'|x|', f:x=>Math.abs(x)}, {n:rt('x'), f:x=>x>=0?Math.sqrt(x):NaN}, {n:'eˣ', f:x=>Math.exp(x)}, {n:'sin(x)', f:x=>Math.sin(x)}
+];
+const XS={a:1,b:1,c:0,d:0,i:0};
+function xChips(){ $('xChips').innerHTML=BASES.map((B,i)=>`<button type="button" class="chip" data-i="${i}" aria-pressed="${i===XS.i}">f(x) = ${B.n}</button>`).join(''); }
+$('xChips').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return; XS.i=+b.dataset.i; xChips(); xUpdate(); });
+function xUpdate(){
+  ['a','b','c','d'].forEach(k=>{ $(`x-r-${k}`).value=XS[k]; $(`x-t-${k}`).value=fmt(XS[k],2); });
+  const B=BASES[XS.i], inner = XS.c>=0?`x − <span class="va">${fmt(XS.c,2)}</span>`:`x + <span class="va">${fmt(-XS.c,2)}</span>`;
+  $('xTerm').innerHTML=`f(x) = ${B.n} &nbsp;⇒&nbsp; g(x) = <span class="va">${fmt(XS.a,2)}</span> · f(<span class="va">${fmt(XS.b,2)}</span> · (${inner}))${plus(XS.d)}`;
+  const y1=B.f(1);
+  $('xP').textContent = Math.abs(XS.b)<1e-9 ? 'Bei b = 0 ist g konstant.' : `P(1 | ${fmt(y1,2)}) → P′(${fmt(1/XS.b+XS.c,2)} | ${fmt(XS.a*y1+XS.d,2)})`;
+  xDraw();
+}
+function xDraw(){
+  const r=prep($('xCv')); if(!r) return; const {ctx,W,H}=r, v={x0:-6,x1:6,y0:-4.5,y1:4.5};
+  ctx.fillStyle=css('--surface'); ctx.fillRect(0,0,W,H);
+  const M=mapper(W,H,v,{l:4,r:4,t:4,b:4});
+  gridAxes(ctx,M,v,{xs:1,ys:1});
+  const B=BASES[XS.i], g=x=>XS.a*B.f(XS.b*(x-XS.c))+XS.d;
+  plotFn(ctx,M,v,B.f,css('--ghost'),3);
+  plotFn(ctx,M,v,g,css('--curve'),2.6);
+  const y1=B.f(1); dotAt(ctx,M.X(1),M.Y(y1),css('--ghost'),5); label(ctx,'P',M.X(1)+7,M.Y(y1)-10,css('--muted'),'left');
+  if(Math.abs(XS.b)>1e-9){ const px=1/XS.b+XS.c, py=XS.a*y1+XS.d; if(px>v.x0&&px<v.x1&&py>v.y0&&py<v.y1){ dashLine(ctx,M.X(1),M.Y(y1),M.X(px),M.Y(py),css('--muted'),1.2); dotAt(ctx,M.X(px),M.Y(py),css('--curve'),5); label(ctx,'P′',M.X(px)+7,M.Y(py)-10,css('--curve'),'left'); } }
+}
+['a','b','c','d'].forEach(k=>bindPair($(`x-r-${k}`),$(`x-t-${k}`),XS,k,xUpdate));
+$('xReset').addEventListener('click',()=>{ Object.assign(XS,{a:1,b:1,c:0,d:0}); xUpdate(); });
+xChips(); xUpdate();
+
+/* ================= STATION 5: Gauß ================= */
+const gauss=(function(){
+  const G=store.g;
+  const S={n:20,p:0.5,a:1,b:1,c:0,infl:false,zoom:false,solved:false,checked:false,choice:{a:'',b:'',c:''}};
+  let P=[], mu=0, sigma=0;
+  const SQ2PI=Math.sqrt(2*PI), phi=x=>Math.exp(-x*x/2)/SQ2PI, f=x=>S.a*phi((x-S.c)/S.b);
+  const pDec=p=>(String(p).split('.')[1]||'').length||1;
+  function computeDist(){ const {n,p}=S, lf=[0]; for(let i=1;i<=n;i++) lf[i]=lf[i-1]+Math.log(i);
+    P=[]; for(let k=0;k<=n;k++) P[k]=Math.exp(lf[n]-lf[k]-lf[n-k]+k*Math.log(p)+(n-k)*Math.log(1-p)); mu=n*p; sigma=Math.sqrt(n*p*(1-p)); }
+  const R={ c:{r:$('g-rc'),t:$('g-nc'),d:2}, b:{r:$('g-rb'),t:$('g-nb'),d:2}, a:{r:$('g-ra'),t:$('g-na'),d:3} };
+  function setRanges(){ const bMax=Math.max(4,Math.ceil(Math.sqrt(S.n)*0.9)); const cfg={c:[-5,S.n+2,0.01], b:[0.2,bMax,0.01], a:[0.01,1.2,0.001]};
+    for(const k in cfg){ const [mn,mx,st]=cfg[k]; Object.assign(R[k].r,{min:mn,max:mx,step:st}); S[k]=Math.min(mx,Math.max(mn,S[k])); } }
+  function sync(){ for(const k in R){ R[k].r.value=S[k]; R[k].t.value=fmt(S[k],R[k].d); } }
+  for(const k in R) bindPair(R[k].r,R[k].t,S,k,()=>{ sync(); update(); });
+  const PRE=[[20,0.5],[50,0.3],[100,0.5],[100,0.2],[200,0.7],[60,0.1]];
+  function presets(){ $('g-presets').innerHTML=PRE.map(([n,p],i)=>`<button type="button" class="chip" data-i="${i}" aria-pressed="${S.n===n&&Math.abs(S.p-p)<1e-9}">${n}; ${fmt(p,1)}</button>`).join(''); }
+  $('g-presets').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return; const [n,p]=PRE[+b.dataset.i]; $('g-inN').value=n; $('g-inP').value=fmt(p,1); apply(); });
+  function apply(){
+    const n=Math.round(parseVal($('g-inN').value)), p=parseVal($('g-inP').value);
+    if(!(n>=1&&n<=500)||!(p>0&&p<1)){ toast('Gib für n eine ganze Zahl zwischen 1 und 500 und für p eine Zahl zwischen 0 und 1 ein, zum Beispiel 0,3.',true); return; }
+    S.n=n; S.p=p; $('g-inN').value=n; $('g-inP').value=fmt(p,pDec(p));
+    computeDist(); setRanges(); sync(); presets(); update();
+  }
+  $('g-apply').addEventListener('click',apply);
+  ['g-inN','g-inP'].forEach(id=>$(id).addEventListener('keydown',e=>{ if(e.key==='Enter') apply(); }));
+  let tT; function toast(html,warn){ const t=$('g-toast'); t.innerHTML=html; t.style.color=warn?'var(--warn)':'var(--good)'; clearTimeout(tT); tT=setTimeout(()=>t.innerHTML='',4500); }
+  function fitScore(){ let num=0,den=0; for(let k=0;k<=S.n;k++){ const d=f(k)-P[k]; num+=d*d; den+=P[k]*P[k]; } return Math.max(0,1-Math.sqrt(num/den)); }
+  function update(){
+    const cs=S.c>=0?`x − <span class="va">${fmt(S.c,2)}</span>`:`x + <span class="va">${fmt(-S.c,2)}</span>`;
+    $('g-term').innerHTML=`f(x) = <span class="va">${fmt(S.a,3)}</span> · φ<span class="big">(</span>${fr(cs,`<span class="va">${fmt(S.b,2)}</span>`)}<span class="big">)</span>`;
+    setMeter($('g-fitBar'),$('g-fitVal'),fitScore());
+    $('g-abVal').textContent=fmt(S.a*S.b,3);
+    draw();
+  }
+  function distInfo(){ $('g-distInfo').innerHTML=`Dargestellt: Binomialverteilung B(${S.n}; ${fmt(S.p,pDec(S.p))}) mit P(X = k) für k = 0, …, ${S.n}.`+(G.reveal?` &nbsp;μ = ${fmt(mu,2)}, σ = ${fmt(sigma,3)}`:''); }
+  function niceStep(range,target){ const raw=range/target, mag=10**Math.floor(Math.log10(raw)), nn=raw/mag; return (nn<1.5?1:nn<3?2:nn<7?5:10)*mag; }
+  function draw(){
+    distInfo();
+    const r=prep($('g-cv')); if(!r) return; const {ctx,W,H}=r;
+    const C={ink:css('--ink'),muted:css('--muted'),line:css('--line'),bar:css('--bar'),edge:css('--bar-edge'),curve:css('--curve')};
+    ctx.font='12px "IBM Plex Mono", ui-monospace, monospace';
+    const L=46,Rm=12,T=12,B=30,pw=W-L-Rm,ph=H-T-B;
+    let x0,x1;
+    if(S.zoom){ x0=Math.max(-0.5,mu-4.5*sigma-0.5); x1=Math.min(S.n+0.5,mu+4.5*sigma+0.5); if(x1-x0<6){ const m=(x0+x1)/2; x0=m-3; x1=m+3; } }
+    else { x0=Math.min(-4,mu-5*sigma); x1=Math.max(4,Math.min(S.n+1,mu+5*sigma)); x1=Math.max(x1,Math.min(S.n+1,S.c+3*S.b)); }
+    const pMax=Math.max(...P), y1=S.zoom?pMax*1.3:Math.max(0.42,pMax*1.2);
+    const X=x=>L+(x-x0)/(x1-x0)*pw, Y=y=>T+ph-(y/y1)*ph;
+    ctx.textBaseline='middle'; ctx.textAlign='right';
+    const ys=niceStep(y1,5);
+    for(let v=0; v<=y1+1e-9; v+=ys){ ctx.strokeStyle=C.line; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(L,Y(v)+.5); ctx.lineTo(L+pw,Y(v)+.5); ctx.stroke(); ctx.fillStyle=C.muted; ctx.fillText(fmt(v,ys<0.01?3:2),L-6,Y(v)); }
+    const xs=Math.max(1,niceStep(x1-x0,9)); ctx.textAlign='center'; ctx.textBaseline='top';
+    for(let v=Math.ceil(x0/xs)*xs; v<=x1; v+=xs){ ctx.strokeStyle=C.muted; ctx.beginPath(); ctx.moveTo(X(v)+.5,Y(0)); ctx.lineTo(X(v)+.5,Y(0)+4); ctx.stroke(); ctx.fillStyle=C.muted; ctx.fillText(fmt(v,0),X(v),Y(0)+7); }
+    ctx.save(); ctx.beginPath(); ctx.rect(L,T,pw,ph); ctx.clip();
+    const bw=Math.max(1,X(1)-X(0));
+    for(let k=0;k<=S.n;k++){ if(P[k]<y1*0.0015||k+0.5<x0||k-0.5>x1) continue; const xl=X(k-0.5), yt=Y(P[k]);
+      ctx.fillStyle=C.bar; ctx.fillRect(xl,yt,bw,Y(0)-yt); if(bw>4){ ctx.strokeStyle=C.edge; ctx.lineWidth=1; ctx.strokeRect(xl+.5,yt+.5,bw-1,Y(0)-yt-.5); } }
+    ctx.strokeStyle=C.curve; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.beginPath();
+    const N=Math.max(400,Math.round(pw*1.5)); for(let i=0;i<=N;i++){ const x=x0+(x1-x0)*i/N; i?ctx.lineTo(X(x),Y(f(x))):ctx.moveTo(X(x),Y(f(x))); } ctx.stroke();
+    if(S.infl){
+      ctx.setLineDash([4,4]); ctx.lineWidth=1.2; ctx.strokeStyle=C.curve;
+      [S.c-S.b,S.c,S.c+S.b].forEach((x,i)=>{ ctx.globalAlpha=i===1?.45:.9; ctx.beginPath(); ctx.moveTo(X(x),Y(0)); ctx.lineTo(X(x),Y(f(x))); ctx.stroke(); });
+      ctx.globalAlpha=1; ctx.setLineDash([]);
+      [S.c-S.b,S.c+S.b].forEach(x=>dotAt(ctx,X(x),Y(f(x)),C.curve,4.5));
+      label(ctx,'c − b',X(S.c-S.b),Y(f(S.c-S.b))-8,C.curve,'center','bottom',12); label(ctx,'c + b',X(S.c+S.b),Y(f(S.c+S.b))-8,C.curve,'center','bottom',12);
+    }
+    ctx.restore();
+    ctx.strokeStyle=C.ink; ctx.lineWidth=1.2; ctx.beginPath(); ctx.moveTo(L,Y(0)+.5); ctx.lineTo(L+pw,Y(0)+.5); ctx.stroke();
+    if(x0<0&&x1>0){ ctx.beginPath(); ctx.moveTo(X(0)+.5,T); ctx.lineTo(X(0)+.5,Y(0)); ctx.stroke(); }
+  }
+  $('g-chkInfl').addEventListener('change',e=>{ S.infl=e.target.checked; draw(); });
+  function setZoom(z){ S.zoom=z; $('g-zoomAll').setAttribute('aria-pressed',!z); $('g-zoomHist').setAttribute('aria-pressed',z); draw(); }
+  $('g-zoomAll').addEventListener('click',()=>setZoom(false)); $('g-zoomHist').addEventListener('click',()=>setZoom(true));
+  $('g-resetStd').addEventListener('click',()=>{ S.a=1;S.b=1;S.c=0; sync(); update(); });
+  function table(){
+    $('g-toggleCmp').textContent=G.reveal?'Vergleichsspalten ausblenden':'Vergleichsspalten μ und σ einblenden';
+    if(!G.rows.length){ $('g-tablewrap').innerHTML='<p class="empty">Noch keine Messwerte. Passe die Kurve an und klicke auf „Werte in Messreihe übernehmen“.</p>'; return; }
+    const cH=G.reveal?`<th class="cmpcol">μ = n · p</th><th class="cmpcol">σ = ${rt('n · p · (1 − p)')}</th><th class="cmpcol">${fr('1','σ')}</th>`:'';
+    const rows=G.rows.map((r,i)=>{ const m=r.n*r.p, s=Math.sqrt(r.n*r.p*(1-r.p));
+      const c=G.reveal?`<td class="cmpcol">${fmt(m,2)}</td><td class="cmpcol">${fmt(s,3)}</td><td class="cmpcol">${fmt(1/s,3)}</td>`:'';
+      return `<tr><td>${i+1}</td><td>${r.n}</td><td>${fmt(r.p,pDec(r.p))}</td><td>${fmt(r.c,2)}</td><td>${fmt(r.b,2)}</td><td>${fmt(r.a,3)}</td><td>${fmt(r.a*r.b,3)}</td>${c}<td><button class="del" type="button" data-i="${i}" aria-label="Zeile ${i+1} löschen">✕</button></td></tr>`; }).join('');
+    $('g-tablewrap').innerHTML=`<table class="gtable"><thead><tr><th>Nr.</th><th>n</th><th>p</th><th>c</th><th>b</th><th>a</th><th>a · b</th>${cH}<th></th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+  $('g-tablewrap').addEventListener('click',e=>{ const b=e.target.closest('.del'); if(!b) return; G.rows.splice(+b.dataset.i,1); save(); table(); step(); });
+  $('g-addRow').addEventListener('click',()=>{ G.rows.push({n:S.n,p:S.p,a:S.a,b:S.b,c:S.c}); save(); table(); step();
+    const pct=fitScore()*100; toast(pct<90?`Übernommen (Passgenauigkeit ${fmt(pct,0)} %). Tipp: Es geht noch genauer.`:`Übernommen als Zeile ${G.rows.length}.`, pct<90); });
+  function toggleReveal(){ G.reveal=!G.reveal; save(); table(); distInfo(); step(); }
+  $('g-toggleCmp').addEventListener('click',toggleReveal);
+  let armed=false;
+  $('g-clearRows').addEventListener('click',e=>{ if(!armed){ armed=true; e.target.textContent='Wirklich leeren?'; setTimeout(()=>{armed=false; e.target.textContent='Messreihe leeren';},3000); return; }
+    armed=false; e.target.textContent='Messreihe leeren'; G.rows=[]; save(); table(); step(); });
+  const PHI=`φ(x) = ${fr('1',rt('2π'))} · e<sup>−${fr('1','2')}x²</sup>`;
+  const OPTS={
+    c:[['n','n'],['mu','μ'],['sigma','σ'],['p','p']],
+    b:[['mu','μ'],['sigma','σ'],['var','σ²'],['inv',fr('1','σ')]],
+    a:[['sigma','σ'],['inv',fr('1','σ')],['invmu',fr('1','μ')],['sq',fr('1',rt('2π'))]]
+  };
+  const WANT={a:'inv',b:'sigma',c:'mu'};
+  const slot=k=>{ const o=OPTS[k].find(x=>x[0]===S.choice[k]); return `<span class="slot" aria-label="${k}">${o?o[1]:'?'}</span>`; };
+  function choiceRows(){ return ['a','b','c'].map(k=>`<div class="choicerow" role="group" aria-label="Wert für ${k}"><span>${k} =</span>${OPTS[k].map(([v,h])=>{ const sel=S.choice[k]===v; const cls=S.checked&&sel?(v===WANT[k]?'ok':'bad'):''; return `<button type="button" class="chip ${cls}" data-k="${k}" data-v="${v}" aria-pressed="${sel}">${h}</button>`; }).join('')}</div>`).join(''); }
+  const STEPS=[
+   { t:'Zwei Graphen vergleichen', h:()=>`
+     <p class="hint">Abkürzungen: B(n; p) ist die Binomialverteilung mit n Versuchen und der Trefferwahrscheinlichkeit p. φ ist die Standardgaußkurve.</p>
+     <p>Im Diagramm siehst du das Histogramm der Binomialverteilung B(20; 0,5) und den Graphen der <strong>Standardgaußkurve</strong></p>
+     <div class="term">${PHI}</div>
+     <div class="task"><h3>Aufgabe 1</h3><p>Beschreibe Gemeinsamkeiten und Unterschiede der beiden Graphen. Gehe dabei auf Symmetrie, Lage des Hochpunkts, Breite und Höhe ein.</p></div>
+     <div class="info"><p>Um φ an das Histogramm anzupassen, verwenden wir den Ansatz</p>
+     <div class="term" style="background:var(--surface)">f(x) = a · φ<span class="big">(</span>${fr('x − c','b')}<span class="big">)</span></div>
+     <p>Bei a = 1, b = 1 und c = 0 ist f genau die Standardgaußkurve.</p>
+     <p><strong>Bezug zu Station 4:</strong> Das ist die Form a · f(b′ · (x − c)) mit b′ = ${fr('1','b')}. Weil hier durch b geteilt wird, streckt b den Graphen in x-Richtung mit dem Faktor b.</p></div>` },
+   { t:'Verschieben mit c', h:()=>`
+     <div class="task"><h3>Aufgabe 2</h3>${abc([
+       'Bestimme c mithilfe des Reglers so, dass die Symmetrieachse der Kurve mit der Symmetrieachse des Histogramms übereinstimmt.',
+       'Bestimme c ebenso für B(50; 0,3) und B(100; 0,2).',
+       'Gib an, welcher Kennwert der Binomialverteilung an der Stelle c liegt, und begründe deine Antwort mit n und p.'])}</div>
+     <details><summary>Tipp</summary><p>Der Hochpunkt von f liegt bei x = c. Bei welchem k ist P(X = k) am größten, und wie berechnet man diesen Wert aus n und p?</p></details>` },
+   { t:'Breite mit b', h:()=>`
+     <div class="task"><h3>Aufgabe 3</h3><p class="hint">Stelle B(20; 0,5) ein und lass c an der passenden Stelle.</p>${abc([
+       'Beschreibe, wie sich der Graph verändert, wenn du b vergrößerst oder verkleinerst. Gehe dabei auch auf die Höhe des Hochpunkts ein.',
+       'Bestimme b so, dass die Kurve ungefähr so breit ist wie das Histogramm. Die Höhe spielt dabei noch keine Rolle. Nutze „Wendestellen anzeigen“.'])}</div>
+     <details><summary>Tipp</summary><p>Für b &gt; 1 wird der Graph in x-Richtung gestreckt, für b &lt; 1 gestaucht. Die Wendestellen liegen bei c − b und c + b, sie sind also genau b vom Hochpunkt entfernt.</p></details>` },
+   { t:'Höhe mit a', h:()=>`
+     <div class="task"><h3>Aufgabe 4</h3>${abc([
+       'Bestimme a so, dass die Kurve die Säulen möglichst gut trifft. Verbessere dabei abwechselnd b und a und nutze die Anzeige „Passgenauigkeit“.',
+       'Beschreibe, was dir am Produkt a · b auffällt, und untersuche es an einer zweiten Verteilung.'])}</div>
+     <details><summary>Tipp</summary><p>Jede Säule hat die Breite 1 und die Höhe P(X = k). Alle Säulen zusammen haben also den Flächeninhalt 1. Auch die Fläche unter φ ist 1. Wie ändert sich die Fläche, wenn man den Graphen in x-Richtung mit dem Faktor b streckt?</p></details>` },
+   { t:'Messreihe aufnehmen', h:()=>`
+     <div class="task"><h3>Aufgabe 5</h3><p class="hint">Abkürzungen: μ ist der Erwartungswert, σ die Standardabweichung der Binomialverteilung.</p>${abc([
+       'Bestimme für mindestens vier verschiedene Binomialverteilungen die Parameter a, b und c möglichst genau. Halte die Werte jeweils mit „Werte in Messreihe übernehmen“ fest.',
+       'Blende die Vergleichsspalten ein und beschreibe, was dir auffällt.',
+       'Gib Vermutungen an, wie c, b und a mit μ und σ zusammenhängen.'])}</div>
+     <div class="btns"><button class="btn ghost" type="button" data-act="reveal">${G.reveal?'Vergleichsspalten ausblenden':'Vergleichsspalten einblenden'}</button></div>
+     <p class="kv">Du hast ${G.rows.length} Messwert${G.rows.length===1?'':'e'} aufgenommen${G.rows.length<4?`, es fehlen noch ${4-G.rows.length}.`:'.'}</p>
+     <div class="info"><p><strong>Hinweis:</strong> Bei kleiner Standardabweichung passt die Kurve sichtbar schlechter. Als Faustregel gilt die Laplace-Bedingung σ &gt; 3.</p></div>` },
+   { t:'Die allgemeine Glockenfunktion', h:()=>`
+     <div class="task"><h3>Aufgabe 6</h3><p>Gib mithilfe deiner Messreihe an, welche Werte für a, b und c in den Ansatz gehören.</p></div>
+     <div class="fill">f(x) = ${slot('a')} · φ<span class="big">(</span>${fr('x − '+slot('c'),slot('b'))}<span class="big">)</span></div>
+     <div class="choices">${choiceRows()}</div>
+     <div class="btns"><button class="btn" type="button" data-act="check">Prüfen</button></div>
+     <p class="feedback" id="g-fb" aria-live="polite"></p>
+     <div id="g-solution" ${S.solved?'':'hidden'} class="result">
+       <h3>Gaußsche Glockenfunktion</h3>
+       <div class="term">φ<sub>μ;σ</sub>(x) = ${fr('1','σ')} · φ<span class="big">(</span>${fr('x − μ','σ')}<span class="big">)</span></div>
+       <ul>
+         <li><strong>c = μ:</strong> Die Kurve wird um μ in x-Richtung verschoben. Der Hochpunkt liegt beim Erwartungswert.</li>
+         <li><strong>b = σ:</strong> Die Kurve wird mit dem Faktor σ in x-Richtung gestreckt. Die Wendestellen liegen bei μ − σ und μ + σ.</li>
+         <li><strong>a = ${fr('1','σ')}:</strong> Die Streckung in x-Richtung vergrößert die Fläche unter der Kurve um den Faktor σ. Damit die Fläche wie beim Histogramm wieder 1 ist, wird mit dem Faktor ${fr('1','σ')} in y-Richtung gestaucht.</li>
+       </ul>
+       <p>Für die Binomialverteilung gilt damit näherungsweise P(X = k) ≈ φ<sub>μ;σ</sub>(k), wenn σ &gt; 3 ist.</p>
+       <div class="btns"><button class="btn ghost" type="button" data-act="probe">Probe: μ, σ und 1 durch σ einsetzen</button></div>
+       <div class="task"><h3>Aufgabe 7</h3><p>Bestimme den Funktionsterm von φ<sub>μ;σ</sub>, indem du die Funktionsgleichung von φ einsetzt, und vereinfache ihn so weit wie möglich.</p></div>
+       <details><summary>Lösung anzeigen</summary>
+         <div class="term">φ<sub>μ;σ</sub>(x) = ${fr('1','σ · '+rt('2π'))} · e<sup>−${fr('(x − μ)²','2σ²')}</sup></div></details>
+     </div>` }
+  ];
+  function step(){
+    if(G.step>=STEPS.length) G.step=0;
+    $('g-stepnav').innerHTML=STEPS.map((s,i)=>`<button type="button" class="dot" data-i="${i}" ${i===G.step?'aria-current="step"':''} title="${s.t}" aria-label="Schritt ${i+1}: ${s.t}">${i+1}</button>`).join('');
+    $('g-stepbody').innerHTML=`<div><p class="eyebrow">Schritt ${G.step+1} von ${STEPS.length}</p><h2>${STEPS[G.step].t}</h2></div>`+STEPS[G.step].h();
+    $('g-prev').style.visibility=G.step===0?'hidden':'visible'; $('g-next').style.visibility=G.step===STEPS.length-1?'hidden':'visible';
+  }
+  $('g-stepnav').addEventListener('click',e=>{ const b=e.target.closest('.dot'); if(!b) return; G.step=+b.dataset.i; save(); step(); });
+  $('g-prev').addEventListener('click',()=>{ if(G.step>0){ G.step--; save(); step(); } });
+  $('g-next').addEventListener('click',()=>{ if(G.step<STEPS.length-1){ G.step++; save(); step(); } });
+  $('g-stepbody').addEventListener('click',e=>{
+    const c=e.target.closest('[data-k][data-v]');
+    if(c){ S.choice[c.dataset.k]=c.dataset.v; S.checked=false; const keep=S.solved; step(); if(keep) $('g-solution').hidden=false; return; }
+    const b=e.target.closest('[data-act]'); if(!b) return; const act=b.dataset.act;
+    if(act==='reveal') toggleReveal();
+    if(act==='probe'){ S.c=mu; S.b=sigma; S.a=1/sigma; setRanges(); sync(); update(); toast(`Gesetzt: c = μ = ${fmt(mu,2)}, b = σ = ${fmt(sigma,3)}, a = ${fr('1','σ')} = ${fmt(1/sigma,3)}`); }
+    if(act==='check'){
+      let right=0, filled=0; for(const k of ['a','b','c']){ if(S.choice[k]) filled++; if(S.choice[k]===WANT[k]) right++; }
+      S.checked=filled===3; if(right===3) S.solved=true; step();
+      const fb=$('g-fb');
+      if(right===3){ fb.className='feedback ok'; fb.textContent='Richtig! Damit hast du die allgemeine Glockenfunktion hergeleitet.'; $('g-solution').hidden=false; }
+      else if(filled<3){ fb.className='feedback bad'; fb.textContent='Wähle für a, b und c jeweils einen Wert aus.'; }
+      else { fb.className='feedback bad'; fb.textContent=`${right} von 3 richtig. Schau dir die Messreihe mit den Vergleichsspalten noch einmal an. Für a hilft dir das Produkt a · b.`; }
+    }
+  });
+  computeDist(); setRanges(); sync(); presets(); table(); step(); update();
+  return {draw};
+})();
+
+/* ---------- Reiter ---------- */
+const STATIONS=[
+  {id:'parabel', t:'Parabeln an Brücken', draw:pDraw},
+  {id:'exponential', t:'Exponentialfunktion', draw:()=>expFit.draw()},
+  {id:'sinus', t:'Sinusfunktion', draw:()=>sinFit.draw()},
+  {id:'uebersicht', t:'Alle Funktionen im Vergleich', draw:xDraw},
+  {id:'gauss', t:'Gaußsche Glockenkurve', draw:()=>gauss.draw()}
+];
+$('tabs').innerHTML=STATIONS.map((s,i)=>`<button class="tab" role="tab" id="tab-${s.id}" aria-controls="st-${s.id}" aria-selected="false" data-id="${s.id}">Station ${i+1} <small>${s.t}</small></button>`).join('');
+STATIONS.forEach(s=>$('st-'+s.id).setAttribute('aria-labelledby','tab-'+s.id));
+let current='parabel';
+function show(id){
+  if(!STATIONS.some(s=>s.id===id)) id='parabel';
+  current=id;
+  STATIONS.forEach(s=>{ $('st-'+s.id).hidden=s.id!==id; $('tab-'+s.id).setAttribute('aria-selected',s.id===id); });
+  requestAnimationFrame(()=>STATIONS.find(s=>s.id===id).draw());
+}
+function go(id){ location.hash=id; show(id); }
+$('tabs').addEventListener('click',e=>{ const b=e.target.closest('.tab'); if(b) go(b.dataset.id); });
+window.addEventListener('hashchange',()=>show(location.hash.slice(1)));
+const redraw=()=>STATIONS.find(s=>s.id===current).draw();
+new ResizeObserver(redraw).observe(document.body);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redraw);
+new MutationObserver(redraw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+setupBridge();
+show(location.hash.slice(1)||'parabel');
+})();
+</script>
+
+</body>
+</html>
